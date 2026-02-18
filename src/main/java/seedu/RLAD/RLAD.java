@@ -1,39 +1,59 @@
 package seedu.RLAD;
 
-import java.util.Scanner;
-import java.util.ArrayList;
+import seedu.RLAD.command.Command;
+import seedu.RLAD.exception.RLADException;
 
 public class RLAD {
-    public static void main(String[] args) {
-        Scanner in = new Scanner(System.in);
-        ArrayList<Double> income = new ArrayList<>();
-        ArrayList<Double> expenses = new ArrayList<>();
-        ArrayList<String> itemType = new ArrayList<>();
-        Logo.printRLAD();
+   private final Ui ui;
+   private final TransactionManager transactions;
 
-        boolean isRunning = true;
+    public RLAD() {
+        this.ui = new Ui();
+        this.transactions = new TransactionManager();
+    }
 
-        while(isRunning)
-        {
-            System.out.println("Enter command (add, list, bye):");
-            String command = in.nextLine().trim();
+    public void run() {
+        ui.printWelcomeGuide();
+        boolean isExit = false;
 
-            switch (command){
-            case "add":
-                new addTransaction(income, expenses, itemType, in);
-                break;
-            case "list":
-                new TransactionList(income, expenses, itemType);
-                break;
-            case "bye":
-                System.out.println("Exiting application. Goodbye!");
-                isRunning = false;
-                break;
-            default:
-                System.out.println("Unknown command. Please try again.");
+        while (!isExit) {
+            try {
+                String input = ui.readCommand();
+
+                if (input.trim().equalsIgnoreCase("exit")) {
+                    isExit = true;
+                    ui.showExit();
+                    continue;
+                }
+
+                ui.showLine();
+
+                // The parser returns the exact command type to execute
+                Command cmd = Parser.parse(input);
+
+                // Custom error check for each Command class
+                if (cmd.hasValidArgs()) {
+                    cmd.execute(transactions, ui);
+                } else {
+                    ui.showError("Invalid arguments for " + input.split(" ")[0]);
+                    ui.printPossibleOptions();
+                }
+
+            } catch (RLADException e) {
+                ui.showError(e.getMessage());
+                ui.printPossibleOptions();
+            } catch (Exception e) {
+                    ui.showError("An unexpected error occurred: " + e.getMessage());
+                    ui.printPossibleOptions();
+            }
+
+            if (!isExit) {
+                ui.showLine();
             }
         }
+    }
 
-        in.close();
+    public static void main(String[] args) {
+        new RLAD().run();
     }
 }

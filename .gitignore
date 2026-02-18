@@ -3,6 +3,9 @@
 /out/
 /*.iml
 
+# Ignore all compiled Java files
+*.class
+
 # Gradle build files
 /.gradle/
 /build/
