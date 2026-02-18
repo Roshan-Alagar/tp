@@ -10,30 +10,6 @@ public class RLAD {
         ArrayList<Double> expenses = new ArrayList<>();
         ArrayList<String> itemType = new ArrayList<>();
         Logo.printRLAD();
-
-        boolean isRunning = true;
-
-        while(isRunning)
-        {
-            System.out.println("Enter command (add, list, bye):");
-            String command = in.nextLine().trim();
-
-            switch (command){
-            case "add":
-                new addTransaction(income, expenses, itemType, in);
-                break;
-            case "list":
-                new TransactionList(income, expenses, itemType);
-                break;
-            case "bye":
-                System.out.println("Exiting application. Goodbye!");
-                isRunning = false;
-                break;
-            default:
-                System.out.println("Unknown command. Please try again.");
-            }
-        }
-
-        in.close();
+        addTransaction userTransaction = new addTransaction(income, expenses, itemType, in);
     }
 }
