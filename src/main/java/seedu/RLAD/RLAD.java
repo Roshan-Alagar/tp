@@ -4,8 +4,8 @@ import seedu.RLAD.command.Command;
 import seedu.RLAD.exception.RLADException;
 
 public class RLAD {
-   private final Ui ui;
-   private final TransactionManager transactions;
+    private final Ui ui;
+    private final TransactionManager transactions;
 
     public RLAD() {
         this.ui = new Ui();
@@ -43,8 +43,8 @@ public class RLAD {
                 ui.showError(e.getMessage());
                 ui.printPossibleOptions();
             } catch (Exception e) {
-                    ui.showError("An unexpected error occurred: " + e.getMessage());
-                    ui.printPossibleOptions();
+                ui.showError("An unexpected error occurred: " + e.getMessage());
+                ui.printPossibleOptions();
             }
 
             if (!isExit) {

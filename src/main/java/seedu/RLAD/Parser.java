@@ -20,7 +20,7 @@ public class Parser {
     public static String[] parseCommand(String command) throws RLADException {
         String commandToParse = command.trim();
         if (commandToParse.isEmpty()) {
-             throw new RLADException("Empty commands are invalid");
+            throw new RLADException("Empty commands are invalid");
         }
 
         String[] parts = commandToParse.split("\\s+", 2);
@@ -56,20 +56,20 @@ public class Parser {
 
         // The Parser acts as a "Factory"
         switch (action) {
-            case "add":
-                return new AddCommand(arguments);
-            case "delete":
-                return new DeleteCommand(arguments);
-            case "list":
-                return new ListCommand(arguments);
-            case "help":
-                return new HelpCommand(arguments);
-            case "summarize":
-                return new SummarizeCommand();
-            case "modify":
-                return new ModifyCommand(action, arguments);
-            default:
-                throw new RLADException("Unknown command: " + action);
+        case "add":
+            return new AddCommand(arguments);
+        case "delete":
+            return new DeleteCommand(arguments);
+        case "list":
+            return new ListCommand(arguments);
+        case "help":
+            return new HelpCommand(arguments);
+        case "summarize":
+            return new SummarizeCommand();
+        case "modify":
+            return new ModifyCommand(action, arguments);
+        default:
+            throw new RLADException("Unknown command: " + action);
         }
     }
 }
