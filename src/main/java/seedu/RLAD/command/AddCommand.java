@@ -50,7 +50,8 @@ public class AddCommand extends Command {
             if (c == ' ' && !insideQuotes) {
                 //If we have a complete flag and value , store it
                 if (currentFlag != null && currentValue.length() > 0) {
-                    argsMap.put(currentFlag.toString(), currentValue.toString().trim());    //Add or updates the flag-string pair into the HashMap. Updates if the key is already present
+                    //Add or updates the flag-string pair into the HashMap. Updates if the key is already present
+                    argsMap.put(currentFlag.toString(), currentValue.toString().trim());
                     currentFlag = null; //Reset flag
                     currentValue.setLength(0);  //Clear value
                 }
@@ -78,7 +79,8 @@ public class AddCommand extends Command {
             }
 
             /*
-            The flag is found, the code can now go to the input string after the flag, so add character/string to currentValue.
+            The flag is found, the code can now go to the input string after the flag,
+            so add character/string to currentValue.
             You'll then get a matching <flag, string> pair
              */
             if (currentFlag != null) {
@@ -88,7 +90,8 @@ public class AddCommand extends Command {
 
         /*
         Save the last flag-string pair
-        The last flag-string pair is found but not stored yet in the previous for-loop since it onyl saves when it reaches a space
+        The last flag-string pair is found but not stored yet in
+        the previous for-loop since it only saves when it reaches a space
         So need this code to assign the last pair
          */
         if (currentFlag != null && currentValue.length() > 0) {
@@ -135,7 +138,8 @@ public class AddCommand extends Command {
         try {
             return Double.parseDouble(amountStr);   //Code that may cause an exception
         } catch (NumberFormatException e) {
-            throw new RLADException("Invalid amount format. Please enter a valid number (e.g., 15.50)");    //Code to execute if the exception is true
+            //Code to execute if the exception is true
+            throw new RLADException("Invalid amount format. Please enter a valid number (e.g., 15.50)");
         }
     }
 
@@ -187,7 +191,8 @@ public class AddCommand extends Command {
         // TODO: Provide success feedback to the user via ui.showResult().
         // Step 7: Show success message with the hashId
         String successMessage = String.format(
-                "✅ Transaction added successfully!\n   HashID: %s\n   %s: $%.2f on %s\n   Category: %s\n   Description: %s",
+                "✅ Transaction added successfully!\n   HashID: %s\n   " +
+                    "%s: $%.2f on %s\n   Category: %s\n   Description: %s",
                 newTransaction.getHashId(),
                 type.toUpperCase(),
                 amount,

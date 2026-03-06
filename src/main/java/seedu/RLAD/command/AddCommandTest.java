@@ -15,7 +15,8 @@ public class AddCommandTest {
         // Test 1: Valid input with all fields
         System.out.println("Test 1: Valid input with all fields");
         try {
-            AddCommand cmd1 = new AddCommand("--type debit --amount 15.50 --date 2026-02-18 --category food --description \"Dinner at UTown\"");
+            AddCommand cmd1 = new AddCommand("--type debit --amount 15.50 " +
+                    "--date 2026-02-18 --category food --description \"Dinner at UTown\"");
             cmd1.execute(tm, ui);
             System.out.println("✓ PASS\n");
         } catch (RLADException e) {
