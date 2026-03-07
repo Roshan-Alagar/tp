@@ -22,7 +22,9 @@ public class Transaction {
         this.description = description;
     }
 
-    public String getHashId() { return hashId; }
+    public String getHashId() {
+        return hashId;
+    }
 
     @Override
     public String toString() {
