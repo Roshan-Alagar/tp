@@ -8,6 +8,7 @@ public class Ui {
     private static final String SEPARATOR =
             "▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀";
     private final Scanner userScanner = new Scanner(System.in);
+
     public Ui() {
         Logo.printRLAD();
     }
@@ -59,11 +60,12 @@ public class Ui {
     public void printAddManual() {
         System.out.println("Command: add");
         System.out.println("Description: Adds a new credit (income) or debit (expense) entry.");
-        System.out.println("Parameters: --type [REQUIRED], --category, --amount [REQUIRED],");
-        System.out.println("  --date [REQUIRED], --description");
+        System.out.println(
+                "Parameters: --type [REQUIRED], --category, --amount [REQUIRED], --date [REQUIRED], --description");
         System.out.println("Example:");
-        System.out.println("  add --type credit --category food --amount 15.00");
-        System.out.println("    --date 2026.02.18 --description `Hawker stall lunch set`");
+        System.out.println(
+                "  add --type credit --category food --amount 15.00 --date 2026.02.18 --description " +
+                "`Hawker stall lunch set` ");
     }
 
     public void printModifyManual() {
