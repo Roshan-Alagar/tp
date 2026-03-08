@@ -27,7 +27,7 @@ filter transactions, and get quick summaries of where your money is going -- all
 ## Quick Start
 
 1. Ensure that you have **Java 17** or above installed.
-2. Download the latest `RLAD.jar` from the [Releases](https://github.com/AY2526S2-CS2113-T06-4/tp/releases) page.
+2. Download the latest `RLAD.jar` from the [Releases](https://github.com/AY2526S2-CS2113-W13-4/tp/releases) page.
 3. Copy the file to the folder you want to use as the home folder for RLAD.
 4. Open a command terminal, `cd` into the folder, and run:
    ```
@@ -74,7 +74,7 @@ add --type TYPE --amount AMOUNT --date DATE [--category CATEGORY] [--description
 |------|----------|-------------|
 | `--type` | Yes | `credit` (income) or `debit` (expense) |
 | `--amount` | Yes | Dollar amount (e.g. `15.00`) |
-| `--date` | Yes | Date in `YYYY.MM.DD` format |
+| `--date` | Yes | Date in `YYYY-MM-DD` format (e.g. `2026-02-18`) |
 | `--category` | No | Category label (e.g. `food`, `transport`) |
 | `--description` | No | Short description of the transaction |
 
@@ -82,7 +82,7 @@ add --type TYPE --amount AMOUNT --date DATE [--category CATEGORY] [--description
 
 **Example:**
 ```
-> add --type credit --category food --amount 15.00 --date 2026.02.18 --description Hawker stall lunch set
+> add --type credit --category food --amount 15.00 --date 2026-02-18 --description Hawker stall lunch set
 ```
 
 ### Listing transactions: `list`
@@ -219,10 +219,10 @@ Removes a transaction from the records permanently using its hash ID.
 
 **Format:**
 ```
-delete --hashID HASH_ID
+delete <id>
 ```
 
-- `HASH_ID` is the 4-character identifier shown in square brackets when you run `list` (e.g. `a7b2`).
+- `id` is the 4-character identifier shown in square brackets when you run `list` (e.g. `a7b2`).
 
 > **Caution:** This action is irreversible. Once deleted, the transaction cannot be recovered.
 
@@ -231,7 +231,7 @@ delete --hashID HASH_ID
 
 **Example:**
 ```
-> delete --hashID a7b2
+> delete a7b2
 ```
 
 ### Modifying a transaction: `modify`
@@ -241,14 +241,14 @@ all other fields remain unchanged.
 
 **Format:**
 ```
-modify --hashID HASH_ID [--type TYPE] [--amount AMOUNT] [--date DATE] [--category CATEGORY] [--description DESCRIPTION]
+modify <id> --amount <new amount>
 ```
 
-- `--hashID` is required. All other flags are optional but at least one must be provided.
+- `id` is the 4-character identifier shown in square brackets when you run `list` (e.g. `a7b2`).
 
 **Example:**
 ```
-> modify --hashID a7b2 --amount 20.00 --description Fancy hawker lunch
+> modify a7b2 --amount 20.00
 ```
 
 > **Caution:** `modify` is currently under development. The command is recognised but execution logic is not
@@ -377,8 +377,8 @@ at the start, e.g. `[a7b2]`.
 | **list** | `list [--sort FIELD [DIRECTION]]` | Working |
 | **filter** | `filter --FLAG VALUE [--FLAG VALUE ...] [--sort FIELD [DIRECTION]]` | Working |
 | **sort** | `sort [FIELD [DIRECTION]]` / `sort reset` | Working |
-| **delete** | `delete --hashID ID` | Planned |
-| **modify** | `modify --hashID ID [--type TYPE] [--amount AMT] [--date DATE] ...` | Planned |
+| **delete** | `delete <id>` | Planned |
+| **modify** | `modify <id> --amount <new amount>` | Planned |
 | **summarize** | `summarize [--by category\|month\|type]` | Planned |
-| **help** | `help [COMMAND]` | Working |
+| **help** | `help [COMMAND]` | Planned |
 | **exit** | `exit` | Working |
