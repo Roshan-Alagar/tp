@@ -1,66 +1,128 @@
-# Duke project template
+# RLAD - Record Losses And Debt
 
-This is a project template for a greenfield Java project. It's named after the Java mascot _Duke_. Given below are instructions on how to use it.
+A minimalistic, user-centric financial tracker.
 
-## Setting up in Intellij
+## Project Structure
 
-Prerequisites: JDK 17 (use the exact version), update Intellij to the most recent version.
+```
+src/main/java/seedu/RLAD/
+├── RLAD.java                 # Main entry point
+├── Parser.java               # Parses user input, creates Command objects
+├── Transaction.java          # Transaction data model
+├── TransactionManager.java   # Data storage (Model layer)
+├── Ui.java                   # User interface / output display
+├── Logo.java                 # ASCII logo
+├── exception/
+│   └── RLADException.java    # Custom exception
+└── command/
+    ├── Command.java          # Abstract base class
+    ├── AddCommand.java       # Add new transaction
+    ├── DeleteCommand.java    # Delete transaction by ID
+    ├── ModifyCommand.java    # Modify existing transaction
+    ├── ListCommand.java      # List transactions (with filtering)
+    ├── FilterCommand.java    # Helper: filtering logic (Predicate)
+    ├── SummarizeCommand.java # Summarize transactions
+    └── HelpCommand.java      # Show help
+```
 
-1. **Ensure Intellij JDK 17 is defined as an SDK**, as described [here](https://www.jetbrains.com/help/idea/sdk.html#set-up-jdk) -- this step is not needed if you have used JDK 17 in a previous Intellij project.
-1. **Import the project _as a Gradle project_**, as described [here](https://se-education.org/guides/tutorials/intellijImportGradleProject.html).
-1. **Verify the setup**: After the importing is complete, locate the `src/main/java/seedu/duke/Duke.java` file, right-click it, and choose `Run Duke.main()`. If the setup is correct, you should see something like the below:
-   ```
-   > Task :compileJava
-   > Task :processResources NO-SOURCE
-   > Task :classes
-   
-   > Task :Duke.main()
-   Hello from
-    ____        _        
-   |  _ \ _   _| | _____ 
-   | | | | | | | |/ / _ \
-   | |_| | |_| |   <  __/
-   |____/ \__,_|_|\_\___|
-   
-   What is your name?
-   ```
-   Type some word and press enter to let the execution proceed to the end.
+## Architecture
 
-**Warning:** Keep the `src\main\java` folder as the root folder for Java files (i.e., don't rename those folders or move Java files to another folder outside of this folder path), as this is the default location some tools (e.g., Gradle) expect to find Java files.
+The project follows the **MVC pattern** with the **Command Design Pattern**:
 
-## Build automation using Gradle
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                           USER INPUT                            │
+│               (e.g., "add --type credit --amount 50")          │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  PARSER (Parser.java)                                           │
+│  • Validates command format                                     │
+│  • Acts as Factory - creates appropriate Command object        │
+│  • Does NOT interact with TransactionManager                   │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                    returns Command object
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  COMMAND (Command.java - base class)                            │
+│                                                                  │
+│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐           │
+│  │ AddCommand   │ │DeleteCommand │ │ ListCommand  │  ...       │
+│  │              │ │              │ │              │           │
+│  │ execute()    │ │ execute()    │ │ execute()    │           │
+│  │ → addTrans() │ │ → delete()   │ │ → getTrans() │           │
+│  │              │ │ → find()     │ │ + filter     │           │
+│  └──────────────┘ └──────────────┘ └──────────────┘           │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+              uses TransactionManager methods
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  TRANSACTION MANAGER (TransactionManager.java)                  │
+│  • Model layer - handles data storage                          │
+│  • CRUD operations: add, find, delete, update, get              │
+│                                                                  │
+│  ┌────────────────┐ ┌────────────────┐ ┌────────────────┐      │
+│  │addTransaction()│ │findTransaction()│ │getTransactions()    │
+│  │deleteTransaction()    │updateTransaction()  │                    │
+│  └────────────────┘ └────────────────┘ └────────────────┘      │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│  UI (Ui.java)                                                   │
+│  • Displays results to user                                    │
+└─────────────────────────────────────────────────────────────────┘
+```
 
-* This project uses Gradle for build automation and dependency management. It includes a basic build script as well (i.e. the `build.gradle` file).
-* If you are new to Gradle, refer to the [Gradle Tutorial at se-education.org/guides](https://se-education.org/guides/tutorials/gradle.html).
+## How Commands Use TransactionManager
 
-## Testing
+| Command | TransactionManager Methods Used |
+|---------|--------------------------------|
+| **AddCommand** | `addTransaction(t)` |
+| **DeleteCommand** | `findTransaction(id)`, `deleteTransaction(id)` |
+| **ModifyCommand** | `findTransaction(id)`, `updateTransaction(id, t)` |
+| **ListCommand** | `getTransactions()` + `FilterCommand.buildPredicate()` |
+| **SummarizeCommand** | `getTransactions()` + `FilterCommand.buildPredicate()` |
 
-### I/O redirection tests
+## Filtering (FilterCommand)
 
-* To run _I/O redirection_ tests (aka _Text UI tests_), navigate to the `text-ui-test` and run the `runtest(.bat/.sh)` script.
+**Important:** `FilterCommand` is NOT a user-facing command. It's a helper class that provides filtering logic.
 
-### JUnit tests
+```java
+// ListCommand uses FilterCommand
+Predicate<Transaction> filter = FilterCommand.buildPredicate(rawArgs);
+List<Transaction> filtered = transactions.getTransactions().stream()
+    .filter(filter)
+    .collect(Collectors.toList());
+```
 
-* A skeleton JUnit test (`src/test/java/seedu/duke/DukeTest.java`) is provided with this project template. 
-* If you are new to JUnit, refer to the [JUnit Tutorial at se-education.org/guides](https://se-education.org/guides/tutorials/junit.html).
+## Setup
 
-## Checkstyle
+### Prerequisites
+- JDK 17
 
-* A sample CheckStyle rule configuration is provided in this project.
-* If you are new to Checkstyle, refer to the [Checkstyle Tutorial at se-education.org/guides](https://se-education.org/guides/tutorials/checkstyle.html).
+### Build
+```bash
+./gradlew build
+```
 
-## CI using GitHub Actions
+### Run
+```bash
+./gradlew run
+```
 
-The project uses [GitHub actions](https://github.com/features/actions) for CI. When you push a commit to this repo or PR against it, GitHub actions will run automatically to build and verify the code as updated by the commit/PR.
+## Usage
 
-## Documentation
-
-`/docs` folder contains a skeleton version of the project documentation.
-
-Steps for publishing documentation to the public: 
-1. If you are using this project template for an individual project, go your fork on GitHub.<br>
-   If you are using this project template for a team project, go to the team fork on GitHub.
-1. Click on the `settings` tab.
-1. Scroll down to the `GitHub Pages` section.
-1. Set the `source` as `master branch /docs folder`.
-1. Optionally, use the `choose a theme` button to choose a theme for your documentation.
+```
+add --type <credit/debit> --amount <amount> --category <category>
+list
+list --type <credit/debit>
+list --category <category>
+delete <id>
+modify <id> --amount <new amount>
+summarize
+help
+```
