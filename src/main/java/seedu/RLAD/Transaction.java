@@ -31,7 +31,7 @@ public class Transaction {
     }
 
     public String getCategory() {
-        return category;
+        return category != null ? category : "";
     }
 
     public double getAmount() {
@@ -43,13 +43,15 @@ public class Transaction {
     }
 
     public String getDescription() {
-        return description;
+        return description != null ? description : "";
     }
 
     @Override
     public String toString() {
         return String.format("[%s] %s | %s | $%.2f | %s | %s",
-                hashId, type.toUpperCase(), date, amount, category, description);
+                hashId, type.toUpperCase(), date, amount,
+                category != null ? category : "(none)",
+                description != null ? description : "(none)");
     }
 
     // TODO: Generate a new 4-character substring of a UUID.

@@ -1,25 +1,41 @@
 package seedu.RLAD.command;
 
+import java.util.List;
+import java.util.Comparator;
+import java.util.Map;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import seedu.RLAD.Transaction;
 import seedu.RLAD.TransactionManager;
 import seedu.RLAD.TransactionSorter;
 import seedu.RLAD.Ui;
-
-import java.util.ArrayList;
+import seedu.RLAD.exception.RLADException;
 
 /**
- * Displays all transactions with optional sort override.
- * Uses the global sort order by default.
- * A --sort flag temporarily overrides the global sort for this command only.
+ * ListCommand displays transactions, with optional filtering and sorting.
  *
- * Example usage:
- *   list                -> Show all transactions (global sort)
- *   list --sort amount  -> Override: sort by amount ascending
- *   list --sort date desc -> Override: sort by date descending
+ * Supported flags (all optional):
+ *   --type       credit | debit
+ *   --category   any string
+ *   --amount     [operator] value  e.g. "-gt 50"
+ *   --date       exact date
+ *   --date-from  range start
+ *   --date-to    range end
+ *   --sort       date | amount
+ *
+ * Examples:
+ *   list
+ *   list --type credit
+ *   list --category food --sort amount
+ *   list --date-from 2024-01-01 --date-to 2024-03-01 --sort date
  */
+
+
 public class ListCommand extends Command {
     private String sortField;
     private String sortDirection;
+
+    private static final String DIVIDER = "-".repeat(75);
 
     public ListCommand(String rawArgs) {
         super(rawArgs);
@@ -46,25 +62,68 @@ public class ListCommand extends Command {
     }
 
     @Override
-    public void execute(TransactionManager transactions, Ui ui) {
-        ArrayList<Transaction> results = transactions.getTransactions();
+    public void execute(TransactionManager transactions, Ui ui) throws RLADException {
+        // 1. Parse flags from rawArgs
+        Map<String, String> flags = FilterCommand.parseFlags(this.rawArgs);
 
+        // 2. Validate --sort value if provided
+        String sortBy = null;
+        if (flags.containsKey("sort")) {
+            sortBy = flags.get("sort").toLowerCase();
+            if (!sortBy.equals("date") && !sortBy.equals("amount")) {
+                throw new RLADException("--sort must be 'date' or 'amount', got: '" + sortBy + "'");
+            }
+        }
+
+        // 3. Build filter predicate via shared FilterCommand logic
+        //    (this also validates --type, --amount operators, date formats, etc.)
+        Predicate<Transaction> filter = FilterCommand.buildPredicate(this.rawArgs);
+
+        // 4. Apply filter — we do NOT modify the original list in TransactionManager
+        List<Transaction> results = transactions.getTransactions().stream().filter(filter).collect(Collectors.toList());
+
+        // 5. Handle empty result gracefully
         if (results.isEmpty()) {
-            ui.showResult("Your wallet is empty! Use 'add' to record a transaction.");
+            ui.showResult("Empty Wallet — no transactions match your criteria.");
             return;
         }
 
-        results = applySorting(results, transactions);
-
-        for (Transaction transaction : results) {
-            ui.showResult(transaction.toString());
+        // 6. Apply sorting if --sort was supplied
+        if (sortBy != null) {
+            switch (sortBy) {
+            case "date":
+                results.sort(Comparator.comparing(Transaction::getDate));
+                break;
+            case "amount":
+                results.sort(Comparator.comparingDouble(Transaction::getAmount));
+                break;
+            default:
+                break; // already validated above
+            }
         }
+
+        // 7. Print formatted table
+        ui.showResult(DIVIDER);
+        ui.showResult(String.format("  %-6s %-8s %-12s %10s  %-12s  %s",
+                "ID", "TYPE", "DATE", "AMOUNT", "CATEGORY", "DESCRIPTION"));
+        ui.showResult(DIVIDER);
+        for (Transaction t : results) {
+            ui.showResult(String.format("  %-6s %-8s %-12s %10s  %-12s  %s",
+                    t.getHashId(),
+                    t.getType().toUpperCase(),
+                    t.getDate().toString(),
+                    String.format("$%.2f", t.getAmount()),
+                    t.getCategory().isEmpty() ? "(none)" : t.getCategory(),
+                    t.getDescription().isEmpty() ? "(none)" : t.getDescription()));
+        }
+        ui.showResult(DIVIDER);
+        ui.showResult("  Total: " + results.size() + " transaction(s) shown.");
     }
 
     /**
      * Applies sorting: uses --sort override if provided, otherwise falls back to global sort.
      */
-    private ArrayList<Transaction> applySorting(ArrayList<Transaction> results,
+    private java.util.ArrayList<Transaction> applySorting(java.util.ArrayList<Transaction> results,
                                                 TransactionManager transactions) {
         if (!sortField.isEmpty()) {
             return TransactionSorter.sort(results, sortField, sortDirection);
@@ -78,12 +137,7 @@ public class ListCommand extends Command {
 
     @Override
     public boolean hasValidArgs() {
-        if (rawArgs == null || rawArgs.isEmpty()) {
-            return true;
-        }
-        if (!sortField.isEmpty() && !TransactionSorter.isValidSortField(sortField)) {
-            return false;
-        }
+        // No required flags for list — all are optional
         return true;
     }
 }
