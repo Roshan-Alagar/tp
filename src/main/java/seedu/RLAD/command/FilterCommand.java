@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.function.Predicate;
 import seedu.RLAD.Transaction;
 import seedu.RLAD.TransactionManager;
-import seedu.RLAD.TransactionSorter;
 import seedu.RLAD.Ui;
 import seedu.RLAD.exception.RLADException;
 
@@ -27,30 +26,9 @@ import seedu.RLAD.exception.RLADException;
  */
 
 public class FilterCommand extends Command {
-    private String sortField;
-    private String sortDirection;
 
     public FilterCommand(String rawArgs) {
-
         super(rawArgs);
-        parseSortOverride(rawArgs);
-    }
-
-    private void parseSortOverride(String rawArgs) {
-        this.sortField = "";
-        this.sortDirection = "asc";
-        if (rawArgs == null || rawArgs.isEmpty()) {
-            return;
-        }
-        String[] tokens = rawArgs.trim().split("\\s+");
-        for (int i = 0; i < tokens.length; i++) {
-            if (tokens[i].equals("--sort") && i + 1 < tokens.length) {
-                this.sortField = tokens[i + 1].toLowerCase();
-                if (i + 2 < tokens.length && TransactionSorter.isValidDirection(tokens[i + 2].toLowerCase())) {
-                    this.sortDirection = tokens[i + 2].toLowerCase();
-                }
-            }
-        }
     }
 
     public static Map<String, String> parseFlags(String rawArgs) {
