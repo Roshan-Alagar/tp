@@ -65,7 +65,7 @@ public class Parser {
         case "help":
             return new HelpCommand(arguments);
         case "summarize":
-            return new SummarizeCommand();
+            return new SummarizeCommand(arguments);
         case "modify":
             return new ModifyCommand(action, arguments);
         default:
