@@ -31,7 +31,7 @@ public class Transaction {
     }
 
     public String getCategory() {
-        return category != null ? category : "";
+        return category;
     }
 
     public double getAmount() {
