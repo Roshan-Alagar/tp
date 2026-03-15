@@ -30,7 +30,7 @@ public class BudgetCommand extends Command {
     @Override
     public void execute(TransactionManager transactions, Ui ui) throws RLADException {
         // This method is required by the abstract Command class
-        // But we need a BudgetManager to work, so throw an error
+        // We need a BudgetManager to work, so throw an error
         throw new RLADException("BudgetCommand requires a BudgetManager. Please use the version with BudgetManager.");
     }
 
