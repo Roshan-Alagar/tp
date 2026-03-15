@@ -22,7 +22,29 @@ public class Transaction {
         this.description = description;
     }
 
-    public String getHashId() { return hashId; }
+    public String getHashId() {
+        return hashId;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public double getAmount() {
+        return amount;
+    }
+
+    public LocalDate getDate() {
+        return date;
+    }
+
+    public String getDescription() {
+        return description != null ? description : "";
+    }
 
     // Add these getter methods
     public String getType() {
@@ -48,7 +70,9 @@ public class Transaction {
     @Override
     public String toString() {
         return String.format("[%s] %s | %s | $%.2f | %s | %s",
-                hashId, type.toUpperCase(), date, amount, category, description);
+                hashId, type.toUpperCase(), date, amount,
+                category != null ? category : "(none)",
+                description != null ? description : "(none)");
     }
 
     // TODO: Generate a new 4-character substring of a UUID.
