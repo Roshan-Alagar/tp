@@ -1,4 +1,4 @@
-package seedu.rlad;
+package seedu.RLAD;
 
 import java.time.LocalDate;
 import java.util.UUID;

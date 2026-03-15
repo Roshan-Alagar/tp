@@ -1,6 +1,6 @@
-package seedu.rlad.budget;
+package seedu.RLAD.budget;
 
-import seedu.rlad.exception.RLADException;
+import seedu.RLAD.exception.RLADException;
 
 /**
  * Represents the predefined budget categories.

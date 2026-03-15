@@ -1,6 +1,6 @@
-package seedu.rlad;
+package seedu.RLAD;
 
-import seedu.rlad.budget.BudgetManager;
+import seedu.RLAD.budget.BudgetManager;
 
 import java.util.ArrayList;
 

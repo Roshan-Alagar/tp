@@ -1,9 +1,9 @@
-package seedu.rlad;
+package seedu.RLAD;
 
-import seedu.rlad.command.Command;
-import seedu.rlad.exception.RLADException;
-import seedu.rlad.budget.BudgetManager;
-import seedu.rlad.budget.BudgetCommand;
+import seedu.RLAD.command.Command;
+import seedu.RLAD.exception.RLADException;
+import seedu.RLAD.budget.BudgetManager;
+import seedu.RLAD.budget.BudgetCommand;
 
 public class RLAD {
     private final Ui ui;

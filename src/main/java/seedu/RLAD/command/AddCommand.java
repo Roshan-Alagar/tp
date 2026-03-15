@@ -1,9 +1,9 @@
-package seedu.rlad.command;
+package seedu.RLAD.command;
 
-import seedu.rlad.TransactionManager;
-import seedu.rlad.Transaction;
-import seedu.rlad.Ui;
-import seedu.rlad.exception.RLADException;
+import seedu.RLAD.TransactionManager;
+import seedu.RLAD.Transaction;
+import seedu.RLAD.Ui;
+import seedu.RLAD.exception.RLADException;
 
 import java.util.HashMap;
 import java.util.Map;

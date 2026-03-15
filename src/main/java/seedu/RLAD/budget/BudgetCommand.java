@@ -1,9 +1,9 @@
-package seedu.rlad.budget;
+package seedu.RLAD.budget;
 
-import seedu.rlad.TransactionManager;
-import seedu.rlad.Ui;
-import seedu.rlad.command.Command;
-import seedu.rlad.exception.RLADException;
+import seedu.RLAD.TransactionManager;
+import seedu.RLAD.Ui;
+import seedu.RLAD.command.Command;
+import seedu.RLAD.exception.RLADException;
 
 import java.time.YearMonth;
 import java.time.format.DateTimeParseException;

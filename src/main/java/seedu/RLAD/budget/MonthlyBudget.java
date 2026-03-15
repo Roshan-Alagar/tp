@@ -1,6 +1,6 @@
-package seedu.rlad.budget;
+package seedu.RLAD.budget;
 
-import seedu.rlad.exception.RLADException;
+import seedu.RLAD.exception.RLADException;
 
 import java.time.YearMonth;
 import java.util.HashMap;

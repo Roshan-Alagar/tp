@@ -1,14 +1,14 @@
-package seedu.rlad;
+package seedu.RLAD;
 
-import seedu.rlad.command.AddCommand;
-import seedu.rlad.command.Command;
-import seedu.rlad.command.DeleteCommand;
-import seedu.rlad.command.HelpCommand;
-import seedu.rlad.command.ListCommand;
-import seedu.rlad.command.ModifyCommand;
-import seedu.rlad.command.SummarizeCommand;
-import seedu.rlad.exception.RLADException;
-import seedu.rlad.budget.BudgetCommand;
+import seedu.RLAD.command.AddCommand;
+import seedu.RLAD.command.Command;
+import seedu.RLAD.command.DeleteCommand;
+import seedu.RLAD.command.HelpCommand;
+import seedu.RLAD.command.ListCommand;
+import seedu.RLAD.command.ModifyCommand;
+import seedu.RLAD.command.SummarizeCommand;
+import seedu.RLAD.exception.RLADException;
+import seedu.RLAD.budget.BudgetCommand;
 
 public class Parser {
 

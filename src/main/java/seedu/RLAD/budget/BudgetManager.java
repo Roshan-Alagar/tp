@@ -1,8 +1,8 @@
-package seedu.rlad.budget;
+package seedu.RLAD.budget;
 
-import seedu.rlad.Transaction;
-import seedu.rlad.TransactionManager;
-import seedu.rlad.exception.RLADException;
+import seedu.RLAD.Transaction;
+import seedu.RLAD.TransactionManager;
+import seedu.RLAD.exception.RLADException;
 
 import java.time.YearMonth;
 import java.util.HashMap;

@@ -1,6 +1,6 @@
-package seedu.rlad;
+package seedu.RLAD;
 
-import seedu.rlad.command.Command;
+import seedu.RLAD.command.Command;
 
 import java.util.Scanner;
 
