@@ -34,31 +34,8 @@ import seedu.RLAD.exception.RLADException;
 public class ListCommand extends Command {
     private static final String DIVIDER = "-".repeat(75);
 
-    private String sortField;
-    private String sortDirection;
-
     public ListCommand(String rawArgs) {
         super(rawArgs);
-        parseSortArgs(rawArgs);
-    }
-
-    private void parseSortArgs(String rawArgs) {
-        this.sortField = "";
-        this.sortDirection = "";
-        if (rawArgs == null || rawArgs.isEmpty()) {
-            return;
-        }
-        String[] tokens = rawArgs.split("\\s+");
-        for (int i = 0; i < tokens.length; i++) {
-            if (tokens[i].equals("--sort") && i + 1 < tokens.length) {
-                this.sortField = tokens[i + 1].toLowerCase();
-                if (i + 2 < tokens.length && TransactionSorter.isValidDirection(tokens[i + 2].toLowerCase())) {
-                    this.sortDirection = tokens[i + 2].toLowerCase();
-                } else {
-                    this.sortDirection = "asc";
-                }
-            }
-        }
     }
 
     @Override
@@ -88,7 +65,7 @@ public class ListCommand extends Command {
             return;
         }
 
-        // 6. Apply sorting if --sort was supplied
+        // 6. Apply sorting: --sort flag overrides, otherwise fall back to global sort
         if (sortBy != null) {
             switch (sortBy) {
             case "date":
@@ -99,6 +76,14 @@ public class ListCommand extends Command {
                 break;
             default:
                 break; // already validated above
+            }
+        } else {
+            String globalField = transactions.getGlobalSortField();
+            if (!globalField.isEmpty()) {
+                java.util.ArrayList<Transaction> sorted = TransactionSorter.sort(
+                        new java.util.ArrayList<>(results),
+                        globalField, transactions.getGlobalSortDirection());
+                results = sorted;
             }
         }
 
@@ -118,21 +103,6 @@ public class ListCommand extends Command {
         }
         ui.showResult(DIVIDER);
         ui.showResult("  Total: " + results.size() + " transaction(s) shown.");
-    }
-
-    /**
-     * Applies sorting: uses --sort override if provided, otherwise falls back to global sort.
-     */
-    private java.util.ArrayList<Transaction> applySorting(java.util.ArrayList<Transaction> results,
-                                                TransactionManager transactions) {
-        if (!sortField.isEmpty()) {
-            return TransactionSorter.sort(results, sortField, sortDirection);
-        }
-        String globalField = transactions.getGlobalSortField();
-        if (!globalField.isEmpty()) {
-            return TransactionSorter.sort(results, globalField, transactions.getGlobalSortDirection());
-        }
-        return results;
     }
 
     @Override
