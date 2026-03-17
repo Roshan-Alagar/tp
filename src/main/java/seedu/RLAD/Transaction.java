@@ -43,7 +43,7 @@ public class Transaction {
     }
 
     public String getDescription() {
-        return description;
+        return description != null ? description : "";
     }
 
     @Override
