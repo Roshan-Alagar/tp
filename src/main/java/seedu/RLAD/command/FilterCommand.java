@@ -14,7 +14,7 @@ import java.util.logging.Logger;
 /**
  * FilterCommand handles filtering transactions based on various criteria.
  * Provides shared filtering logic that can be used by other commands
- * (e.g., ListCommand, DeleteCommand).
+ * (e.g., ListCommand, DeleteCommand, SummarizeCommand).
  * Supported flags for buildPredicate():
  *   --type       credit | debit
  *   --category   any string (case-insensitive)
