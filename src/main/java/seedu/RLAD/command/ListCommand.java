@@ -54,6 +54,7 @@ public class ListCommand extends Command {
 
         // 3. Build filter predicate via shared FilterCommand logic
         //    (this also validates --type, --amount operators, date formats, etc.)
+        assert transactions != null : "TransactionManager should not be null";
         Predicate<Transaction> filter = FilterCommand.buildPredicate(this.rawArgs);
 
         // 4. Apply filter — we do NOT modify the original list in TransactionManager

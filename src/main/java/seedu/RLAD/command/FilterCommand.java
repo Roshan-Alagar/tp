@@ -116,6 +116,7 @@ public class FilterCommand extends Command {
      */
 
     public static Predicate<Transaction> buildPredicate(String rawArgs) throws RLADException {
+        assert rawArgs != null : "rawArgs should not be null";
         Predicate<Transaction> predicate = t -> true; // start with "match all"
         Map<String, String> flags = parseFlags(rawArgs);
 
