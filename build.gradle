@@ -5,6 +5,11 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '7.1.2'
 }
 
+// Force UTF-8 encoding for all Java compilation
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
+
 repositories {
     mavenCentral()
 }

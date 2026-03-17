@@ -1,1 +1,4 @@
+help
+list
+add --type credit --amount 1000 --date 2026-03-16
 exit

@@ -2,6 +2,7 @@ package seedu.RLAD.command;
 
 import seedu.RLAD.TransactionManager;
 import seedu.RLAD.Ui;
+import seedu.RLAD.budget.BudgetManager;
 import seedu.RLAD.exception.RLADException;
 
 public abstract class Command {
@@ -31,6 +32,16 @@ public abstract class Command {
      * sends output to 'ui'.
      */
     public abstract void execute(TransactionManager transactions, Ui ui) throws RLADException;
+
+    /**
+     * New method for commands that need BudgetManager
+     * Default implementation calls the old execute method for backward compatibility
+     */
+    public void execute(TransactionManager transactions, Ui ui, BudgetManager budgetManager) throws RLADException {
+        // Default implementation - override in commands that need BudgetManager
+        execute(transactions, ui);
+    }
+
     /**
      * Validates if the internal state of the command (parsed args)
      * is actually runnable.
