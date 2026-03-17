@@ -7,6 +7,7 @@
   - [Adding a transaction: `add`](#adding-a-transaction-add)
   - [Listing transactions: `list`](#listing-transactions-list)
   - [Sorting transactions: `sort`](#sorting-transactions-sort)
+  - [Managing budgets: `budget`](#managing-budgets-budget)
   - [Deleting a transaction: `delete`](#deleting-a-transaction-delete)
   - [Modifying a transaction: `modify`](#modifying-a-transaction-modify)
   - [Viewing a summary: `summarize`](#viewing-a-summary-summarize)
@@ -34,18 +35,31 @@ filter transactions, and get quick summaries of where your money is going -- all
    ```
 5. You should see the RLAD welcome screen:
    ```
-   ╔════════════════════════════════════════════════╗
-   ║       ██████╗  ██╗       █████╗  ██████╗       ║
-   ║       ██╔══██╗ ██║      ██╔══██╗ ██╔══██╗      ║
-   ║       ██████╔╝ ██║      ███████║ ██║  ██║      ║
-   ║       ██╔══██╗ ██║      ██╔══██║ ██║  ██║      ║
-   ║       ██║  ██║ ███████╗ ██║  ██║ ██████╔╝      ║
-   ║       ╚═╝  ╚═╝ ╚══════╝ ╚═╝  ╚═╝ ╚═════╝       ║
-   ║              Record Losses And Debt            ║
-   ╚════════════════════════════════════════════════╝
+               +================================================+
+               |       ██████╗  ██╗       █████╗  ██████╗       |
+               |       ██╔══██╗ ██║      ██╔══██╗ ██╔══██╗      |
+               |       ██████╔╝ ██║      ███████║ ██║  ██║      |
+               |       ██╔══██╗ ██║      ██╔══██║ ██║  ██║      |
+               |       ██║  ██║ ███████╗ ██║  ██║ ██████╔╝      |
+               |       ╚═╝  ╚═╝ ╚══════╝ ╚═╝  ╚═╝ ╚═════╝       |
+               |              Record Losses And Debt            |
+               +================================================+
 
+   ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
    Hello and welcome to RLAD!
    Handle your financial life from one spot without the spreadsheet headaches
+   Available actions:
+     add       : Record a new transaction
+     modify    : Edit an existing entry
+     delete    : Remove an entry
+     sort      : Set or view the global sort order (amount/date, asc/desc)
+     list      : View your transaction history (with filtering and sorting)
+     summarize : Get a high-level breakdown of your spending
+
+   Format:
+   	$action --option_0 $argument_0 ... --option_k $argument_k
+   Type 'help' for the full list or '$action help' for specific argument details.
+   ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
    ```
 6. Type a command at the `>` prompt and press Enter. Refer to [Commands](#commands) below for details on each command.
 
@@ -184,6 +198,69 @@ Clear the sort order:
 Sort order cleared. Transactions will be shown in insertion order.
 ```
 
+### Managing budgets: `budget`
+
+Set, view, edit, or delete monthly budgets by category. Budgets track your spending against
+allocated amounts and show progress bars when viewed.
+
+**Format:**
+```
+budget set --month YYYY-MM --category CODE --amount AMOUNT
+budget view [--month YYYY-MM]
+budget edit --month YYYY-MM --category CODE --amount AMOUNT
+budget delete --month YYYY-MM --category CODE
+```
+
+| Flag | Required | Description |
+|------|----------|-------------|
+| `--month` | Yes (except `view` all) | Month in `YYYY-MM` format (e.g. `2026-03`) |
+| `--category` | Yes (except `view`) | Category code (1-12, see table below) |
+| `--amount` | Yes (`set`/`edit`) | Budget amount (e.g. `500.00`) |
+
+**Budget categories:**
+
+| Code | Category |
+|------|----------|
+| 1 | Food |
+| 2 | Transport |
+| 3 | Utilities |
+| 4 | Housing |
+| 5 | Health & Insurance |
+| 6 | Debt & Financial Obligation |
+| 7 | Child & Financial Dependent Care |
+| 8 | Shopping & Personal Care |
+| 9 | Gifts & Donations |
+| 10 | Investments |
+| 11 | Emergency Fund |
+| 12 | Savings |
+
+- `budget view` with no `--month` flag shows all months that have budgets.
+- `budget view --month YYYY-MM` shows a detailed breakdown with progress bars for the specified month.
+- Budgets automatically track spending from debit transactions that match the category.
+- Income (credit) transactions are used to calculate disposable income.
+
+**Examples:**
+
+Set a food budget for March 2026:
+```
+> budget set --month 2026-03 --category 1 --amount 500.00
+```
+
+View all budgets for March 2026:
+```
+> budget view --month 2026-03
+```
+
+Edit an existing budget:
+```
+> budget edit --month 2026-03 --category 1 --amount 600.00
+```
+
+Delete a budget category:
+```
+> budget delete --month 2026-03 --category 1
+```
+
 ### Deleting a transaction: `delete`
 
 Removes a transaction from the records permanently using its hash ID.
@@ -287,6 +364,16 @@ Thank you for abusing me!
 Here is what a typical session looks like:
 
 ```
+               +================================================+
+               |       ██████╗  ██╗       █████╗  ██████╗       |
+               |       ██╔══██╗ ██║      ██╔══██╗ ██╔══██╗      |
+               |       ██████╔╝ ██║      ███████║ ██║  ██║      |
+               |       ██╔══██╗ ██║      ██╔══██║ ██║  ██║      |
+               |       ██║  ██║ ███████╗ ██║  ██║ ██████╔╝      |
+               |       ╚═╝  ╚═╝ ╚══════╝ ╚═╝  ╚═╝ ╚═════╝       |
+               |              Record Losses And Debt            |
+               +================================================+
+
 ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
 Hello and welcome to RLAD!
 Handle your financial life from one spot without the spreadsheet headaches
@@ -303,7 +390,7 @@ Format:
 Type 'help' for the full list or '$action help' for specific argument details.
 ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
 > list --sort amount
-Your wallet is empty! Use 'add' to record a transaction.
+Empty Wallet — no transactions match your criteria.
 ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
 > exit
 Thank you for abusing me!
@@ -346,8 +433,9 @@ at the start, e.g. `[a7b2]`.
 | **add** | `add --type TYPE --amount AMOUNT --date DATE [--category CAT] [--description DESC]` | Working |
 | **list** | `list [--type TYPE] [--category CAT] [--sort FIELD [DIRECTION]]` | Working |
 | **sort** | `sort [FIELD [DIRECTION]]` / `sort reset` | Working |
+| **budget** | `budget set\|view\|edit\|delete --month YYYY-MM [--category CODE] [--amount AMT]` | Working |
 | **delete** | `delete <id>` | Planned |
 | **modify** | `modify <id> --amount <new amount>` | Planned |
 | **summarize** | `summarize [--by category\|month\|type]` | Planned |
-| **help** | `help [COMMAND]` | Planned |
+| **help** | `help [COMMAND]` | Working |
 | **exit** | `exit` | Working |
