@@ -14,7 +14,7 @@ public class Transaction {
 
     public Transaction(String type, String category, double amount, LocalDate date, String description) {
         // Generate a short 4-character HashID for the user
-        this.hashId = UUID.randomUUID().toString().substring(0, 4);
+        this.hashId = UUID.randomUUID().toString().substring(0, 6);
         this.type = type;
         this.category = category;
         this.amount = amount;
@@ -52,9 +52,7 @@ public class Transaction {
                 hashId, type.toUpperCase(), date, amount, category, description);
     }
 
-    // TODO: Generate a new 4-character substring of a UUID.
-    // Ensure this remains consistent with the initial ID generation logic in the constructor.
     public void regenerateHashId() {
-        // this.hashId = ... (Note: hashId needs to be non-final for this to work)
+        this.hashId = UUID.randomUUID().toString().substring(0, 6);
     }
 }

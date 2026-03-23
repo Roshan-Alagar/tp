@@ -3,6 +3,7 @@ package seedu.RLAD;
 import seedu.RLAD.budget.BudgetManager;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * TransactionManager - The Model layer of the application.
@@ -39,7 +40,8 @@ import java.util.ArrayList;
  */
 
 public class TransactionManager {
-    private final ArrayList<Transaction> transactions = new ArrayList<>();
+    private ArrayList<Transaction> transactions = new ArrayList<>();
+    private HashMap<String, Transaction> transMap = new HashMap<String, Transaction>();
     private String globalSortField = "";
     private String globalSortDirection = "asc";
     private BudgetManager budgetManager;
@@ -47,11 +49,13 @@ public class TransactionManager {
     /**
      * Creates a new transaction and adds it to storage.
      * Used by: AddCommand
+     *
      * @param t the Transaction to add
      */
 
     public TransactionManager() {
-        // Default constructor
+        this.transactions = new ArrayList<>();
+        this.transMap = new HashMap<String, Transaction>();
     }
 
     public void setBudgetManager(BudgetManager budgetManager) {
@@ -59,8 +63,12 @@ public class TransactionManager {
     }
 
     public void addTransaction(Transaction t) {
-        // TODO: Implement a loop to regenerate ID if idExists(t.getHashId()) is true
+        // Ensure ID uniqueness
+        t = hashCollisionPrevention(t);
+
+        // Mirror changes to both arrayList and hashMap
         transactions.add(t);
+        transMap.put(t.getHashId(), t);
 
         // Notify budget manager about the new transaction
         if (budgetManager != null) {
@@ -73,12 +81,13 @@ public class TransactionManager {
      * TODO: Replace O(N) list search with a HashSet for O(1) lookups to improve scaling.
      */
     private boolean idExists(String hashId) {
-        return false;
+        return transMap.containsKey(hashId);
     }
 
     /**
      * Retrieves all transactions from storage.
      * Used by: ListCommand, SummarizeCommand (with FilterCommand applied afterwards)
+     *
      * @return ArrayList of all transactions
      */
     public ArrayList<Transaction> getTransactions() {
@@ -88,29 +97,26 @@ public class TransactionManager {
     /**
      * Finds a transaction by its ID.
      * Used by: DeleteCommand, ModifyCommand
+     *
      * @param id the transaction ID to search for
      * @return the Transaction if found, null otherwise
      */
     public Transaction findTransaction(String id) {
-        for (Transaction t : transactions) {
-            if (t.getHashId().equals(id)) {
-                return t;
-            }
-        }
-        return null;
+        return (transMap.containsKey(id)) ? (Transaction) transMap.get(id) : null;
     }
 
     /**
      * Deletes a transaction by its ID.
      * Used by: DeleteCommand
+     *
      * @param id the transaction ID to delete
      * @return true if deletion was successful, false if ID not found
      */
     public boolean deleteTransaction(String id) {
         Transaction toDelete = findTransaction(id);
         if (toDelete != null) {
-            transactions.remove(toDelete);
-            // Notify budget manager about deletion if needed
+            transactions.remove(toDelete); //  remove in arrayList
+            transMap.remove(id); // remove in hashMap
             return true;
         }
         return false;
@@ -119,17 +125,22 @@ public class TransactionManager {
     /**
      * Updates an existing transaction with new data.
      * Used by: ModifyCommand
-     * @param id the transaction ID to update
+     *
+     * @param id      the transaction ID to update
      * @param updated the new transaction data
      * @return true if update was successful, false if ID not found
      */
     public boolean updateTransaction(String id, Transaction updated) {
-        for (int i = 0; i < transactions.size(); i++) {
-            if (transactions.get(i).getHashId().equals(id)) {
-                transactions.set(i, updated);
-                // Notify budget manager about update if needed
-                return true;
-            }
+        Transaction old = findTransaction(id);
+        if (old != null) {
+            // 1. Update the Map
+            transMap.put(id, updated);
+
+            // 2. Update the ArrayList at the exact same position
+            int index = transactions.indexOf(old);
+            transactions.set(index, updated);
+
+            return true;
         }
         return false;
     }
@@ -150,5 +161,13 @@ public class TransactionManager {
     public void clearGlobalSort() {
         this.globalSortField = "";
         this.globalSortDirection = "asc";
+    }
+
+    // Forces the transaction hashID to regen until unique
+    public Transaction hashCollisionPrevention(Transaction t) {
+        while (transMap.containsKey(t.getHashId())) {
+            t.regenerateHashId();
+        }
+        return t;
     }
 }
