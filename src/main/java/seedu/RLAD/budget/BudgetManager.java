@@ -6,6 +6,7 @@ import seedu.RLAD.exception.RLADException;
 
 import java.time.YearMonth;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -14,6 +15,12 @@ import java.util.Set;
  * Manages all monthly budgets and handles progress calculations.
  */
 public class BudgetManager {
+    // Threshold constants
+    private static final double THRESHOLD_80 = 0.80;
+    private static final double THRESHOLD_90 = 0.90;
+    private static final double THRESHOLD_100 = 1.00;
+
+    private final Map<String, Set<Integer>> notifiedThresholds = new HashMap<>();
     private final Map<YearMonth, MonthlyBudget> budgets;
     private final TransactionManager transactionManager;
 
@@ -128,6 +135,9 @@ public class BudgetManager {
         } else if (transaction.getType().equalsIgnoreCase("debit")) {
             // This is expense - find matching budget category and update
             updateCategorySpending(month, transaction);
+
+            //Check thresholds for this month
+            checkBudgetThresholds(month, null);
         }
     }
 
@@ -154,6 +164,10 @@ public class BudgetManager {
 
         if (transaction.getType().equalsIgnoreCase("credit")) {
             updateTotalIncome(month);
+        } else if (transaction.getType().equalsIgnoreCase("debit")) {
+            // Re-check thresholds after deletion (spending decreased)
+            // This might need to reset notifications if spending falls below threshold
+            checkBudgetThresholds(month, null);
         }
         // For debits, the spent amount will automatically update on next view
     }
@@ -271,6 +285,101 @@ public class BudgetManager {
                 bar.append(i < filled ? "█" : "░");
             }
             return bar.toString();
+        }
+    }
+
+    /**
+     * Checks all budgets for a given month and sends notifications if thresholds are crossed.
+     * Call this method after transactions are added, deleted, or modified.
+     *
+     * @param month The month to check
+     * @param ui The UI instance to display messages
+     */
+    public void checkBudgetThresholds(YearMonth month, Ui ui) {
+        MonthlyBudget budget = budgets.get(month);
+        if (budget == null) {
+            return;
+        }
+
+        for (Map.Entry<BudgetCategory, Double> entry : budget.getCategoryBudgets().entrySet()) {
+            BudgetCategory category = entry.getKey();
+            double allocated = entry.getValue();
+            double spent = getSpentForCategory(month, category);
+
+            // Calculate percentage spent
+            double percentage = (spent / allocated) * 100;
+
+            // Create unique key for this month and category
+            String key = month.toString() + "_" + category.getCode();
+            Set<Integer> notified = notifiedThresholds.getOrDefault(key, new HashSet<>());
+
+            // Check each threshold
+            if (percentage >= 80 && !notified.contains(80)) {
+                sendNotification(category, month, percentage, spent, allocated, ui);
+                notified.add(80);
+            }
+
+            if (percentage >= 90 && !notified.contains(90)) {
+                sendNotification(category, month, percentage, spent, allocated, ui);
+                notified.add(90);
+            }
+
+            if (percentage >= 100 && !notified.contains(100)) {
+                sendNotification(category, month, percentage, spent, allocated, ui);
+                notified.add(100);
+            }
+
+            // Store back the updated notified set
+            notifiedThresholds.put(key, notified);
+        }
+    }
+
+    /**
+     * Sends a notification for a budget threshold.
+     *
+     * @param category The budget category
+     * @param month The month
+     * @param percentage The percentage spent
+     * @param spent Amount spent
+     * @param budget Total budget amount
+     * @param ui The UI instance
+     */
+    private void sendNotification(BudgetCategory category, YearMonth month,
+                                  double percentage, double spent, double budget, Ui ui) {
+        // Format month string (e.g., "March 2026")
+        String monthStr = month.getMonth().toString() + " " + month.getYear();
+        int percentInt = (int) Math.round(percentage);
+
+        // Round to 2 decimal places
+        double spentRounded = Math.round(spent * 100.0) / 100.0;
+        double budgetRounded = Math.round(budget * 100.0) / 100.0;
+
+        if (category == BudgetCategory.SAVINGS) {
+            // Positive message for savings
+            String message;
+            if (percentInt >= 100) {
+                message = String.format(
+                        "🎉 AMAZING! You have reached or exceeded your savings goal for %s!\n" +
+                                "   Saved: $%.2f / $%.2f. Outstanding dedication to your financial future!",
+                        monthStr, spentRounded, budgetRounded
+                );
+            } else {
+                message = String.format(
+                        "🎉 GREAT JOB! You have reached %d%% of your savings goal for %s!\n" +
+                                "   Saved: $%.2f / $%.2f. Keep up the great work!",
+                        percentInt, monthStr, spentRounded, budgetRounded
+                );
+            }
+            ui.showResult(message);
+        } else {
+            // Warning message for other categories
+            String warningType = percentInt >= 100 ? "EXCEEDED" : "WARNING";
+            String message = String.format(
+                    "⚠️ %s: You have used %d%% of your %s budget for %s!\n" +
+                            "   Spent: $%.2f / $%.2f. Consider reducing your spending.",
+                    warningType, percentInt, category.getDisplayName(), monthStr, spentRounded, budgetRounded
+            );
+            ui.showResult(message);
         }
     }
 }

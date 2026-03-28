@@ -32,48 +32,48 @@ The project follows the **MVC pattern** with the **Command Design Pattern**:
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                           USER INPUT                            │
-│               (e.g., "add --type credit --amount 50")          │
+│               (e.g., "add --type credit --amount 50")           │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │  PARSER (Parser.java)                                           │
 │  • Validates command format                                     │
-│  • Acts as Factory - creates appropriate Command object        │
-│  • Does NOT interact with TransactionManager                   │
+│  • Acts as Factory - creates appropriate Command object         │
+│  • Does NOT interact with TransactionManager                    │
 └─────────────────────────────────────────────────────────────────┘
                               │
                     returns Command object
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │  COMMAND (Command.java - base class)                            │
-│                                                                  │
-│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐           │
-│  │ AddCommand   │ │DeleteCommand │ │ ListCommand  │  ...       │
-│  │              │ │              │ │              │           │
-│  │ execute()    │ │ execute()    │ │ execute()    │           │
-│  │ → addTrans() │ │ → delete()   │ │ → getTrans() │           │
-│  │              │ │ → find()     │ │ + filter     │           │
-│  └──────────────┘ └──────────────┘ └──────────────┘           │
+│                                                                 │
+│  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐             │
+│  │ AddCommand   │ │DeleteCommand │ │ ListCommand  │  ...        │
+│  │              │ │              │ │              │             │
+│  │ execute()    │ │ execute()    │ │ execute()    │             │
+│  │ → addTrans() │ │ → delete()   │ │ → getTrans() │             │
+│  │              │ │ → find()     │ │ + filter     │             │
+│  └──────────────┘ └──────────────┘ └──────────────┘             │
 └─────────────────────────────────────────────────────────────────┘
                               │
               uses TransactionManager methods
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │  TRANSACTION MANAGER (TransactionManager.java)                  │
-│  • Model layer - handles data storage                          │
+│  • Model layer - handles data storage                           │
 │  • CRUD operations: add, find, delete, update, get              │
-│                                                                  │
-│  ┌────────────────┐ ┌────────────────┐ ┌────────────────┐      │
-│  │addTransaction()│ │findTransaction()│ │getTransactions()    │
-│  │deleteTransaction()    │updateTransaction()  │                    │
-│  └────────────────┘ └────────────────┘ └────────────────┘      │
+│                                                                 │
+│  ┌────────────────┐ ┌────────────────┐ ┌────────────────┐       │
+│  │addTransaction()│ │findTransaction()│ │getTransactions()      │
+│  │deleteTransaction()    │updateTransaction()  │                │
+│  └────────────────┘ └────────────────┘ └────────────────┘       │
 └─────────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │  UI (Ui.java)                                                   │
-│  • Displays results to user                                    │
+│  • Displays results to user                                     │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
@@ -117,7 +117,7 @@ List<Transaction> filtered = transactions.getTransactions().stream()
 ## Usage
 
 ```
-add --type <credit/debit> --amount <amount> --category <category>
+add --type <credit/debit> --amount <amount> --date <YYYY-MM-DD>
 list
 list --type <credit/debit>
 list --category <category>
@@ -126,3 +126,51 @@ modify <id> --amount <new amount>
 summarize
 help
 ```
+
+### Setting Budget Goals
+
+The budget supports the following predefined categories:
+
+[1] Food
+[2] Transport
+[3] Utilities
+[4] Housing
+[5] Health & Insurance
+[6] Debt & Financial Obligation
+[7] Child & Financial Dependent Care
+[8] Shopping & Personal Care
+[9] Gifts & Donations
+[10] Investments
+[11] Emergency Fund
+[12] Savings
+### Example Format
+**Setting Budgets**
+`budget set --month 2026-03 --category 1 --amount 500`
+`budget set --month 2026-03 --category 2 --amount 120`
+`budget set --month 2026-03 --category 3 --amount 150`
+`budget set --month 2026-03 --category 4 --amount 2000`
+`budget set --month 2026-03 --category 12 --amount 300`
+
+**Viewing Budget**
+`budget view --month 2026-03`
+
+**Expected Output:**
+```
+=== BUDGET SUMMARY FOR MARCH 2026 ===
+Category Budget Spent Remaining Progress
+────────────────────────────────────────────────────────────────
+[1] Food $500.00 $327.50 $172.50 ████████░░ 65%
+[2] Transport $120.00 $45.00 $75.00 ████░░░░░░ 38%
+[3] Utilities $150.00 $0.00 $150.00 ░░░░░░░░░░ 0%
+[4] Housing $2000.00 $850.00 $1150.00 ████░░░░░░ 43%
+[12] Savings $300.00 $0.00 $300.00 ░░░░░░░░░░ 0%
+────────────────────────────────────────────────────────────────
+Disposable Income $1230.00 $450.00 $780.00 ███░░░░░░░ 37%
+TOTAL $4000.00 $1672.50 $2327.50 ████░░░░░░ 42%
+```
+
+**Editing Budget**
+`budget edit --month 2026-03 --category 1 --amount 600`
+
+**Deleting Budget Category**
+`budget delete --month 2026-03 --category 2`
