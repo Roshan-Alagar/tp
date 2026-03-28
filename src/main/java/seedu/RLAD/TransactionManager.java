@@ -22,29 +22,33 @@ import java.util.ArrayList;
  *   │     └─> deleteTransaction(id) : Removes transaction from storage
  *   │
  *   ├─ ListCommand
- *   │     └─> getTransactions() : Retrieves all transactions, then applies
- *   │         FilterCommand.buildPredicate() for filtering
+ *   │     └─> getTransactions() : Retrieves all transactions, applies sorting
+ *   │
+ *   ├─ FilterCommand
+ *   │     └─> getTransactions() : Retrieves all, applies buildPredicate() + sorting
+ *   │
+ *   ├─ SortCommand
+ *   │     └─> setGlobalSort() / clearGlobalSort() : Manages global sort state
  *   │
  *   ├─ ModifyCommand
  *   │     ├─> findTransaction(id) : Locates transaction to modify
  *   │     └─> updateTransaction(id, updated) : Replaces old transaction
  *   │
  *   └─ SummarizeCommand
- *         └─> getTransactions() : Retrieves all, then applies
- *             FilterCommand.buildPredicate() for filtered summaries
- *
- * NOTE: FilterCommand is NOT a command the user types. It is a helper class
- * that provides filtering logic used by ListCommand and SummarizeCommand.
+ *         └─> getTransactions() : Retrieves all for summaries
  */
 
 public class TransactionManager {
+    private final ArrayList<Transaction> transactions = new ArrayList<>();
+    private String globalSortField = "";
+    private String globalSortDirection = "asc";
+    private BudgetManager budgetManager;
+
     /**
      * Creates a new transaction and adds it to storage.
      * Used by: AddCommand
      * @param t the Transaction to add
      */
-    private final ArrayList<Transaction> transactions = new ArrayList<>();
-    private BudgetManager budgetManager; // Add reference to BudgetManager
 
     public TransactionManager() {
         // Default constructor
@@ -128,5 +132,23 @@ public class TransactionManager {
             }
         }
         return false;
+    }
+
+    public String getGlobalSortField() {
+        return globalSortField;
+    }
+
+    public String getGlobalSortDirection() {
+        return globalSortDirection;
+    }
+
+    public void setGlobalSort(String field, String direction) {
+        this.globalSortField = field;
+        this.globalSortDirection = direction;
+    }
+
+    public void clearGlobalSort() {
+        this.globalSortField = "";
+        this.globalSortDirection = "asc";
     }
 }

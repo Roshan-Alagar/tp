@@ -1,14 +1,15 @@
 package seedu.RLAD.command;
 
 import java.util.List;
-import java.util.Comparator;
 import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import seedu.RLAD.Transaction;
 import seedu.RLAD.TransactionManager;
+import seedu.RLAD.TransactionSorter;
 import seedu.RLAD.Ui;
 import seedu.RLAD.exception.RLADException;
+import java.util.logging.Logger;
 
 /**
  * ListCommand displays transactions, with optional filtering and sorting.
@@ -32,6 +33,7 @@ import seedu.RLAD.exception.RLADException;
 
 public class ListCommand extends Command {
 
+    private static final Logger logger = Logger.getLogger(ListCommand.class.getName());
     private static final String DIVIDER = "-".repeat(75);
 
     public ListCommand(String rawArgs) {
@@ -40,20 +42,30 @@ public class ListCommand extends Command {
 
     @Override
     public void execute(TransactionManager transactions, Ui ui) throws RLADException {
+        logger.info("Executing ListCommand with args: " + rawArgs);
         // 1. Parse flags from rawArgs
         Map<String, String> flags = FilterCommand.parseFlags(this.rawArgs);
 
-        // 2. Validate --sort value if provided
+        // 2. Validate --sort value if provided (format: --sort FIELD [asc|desc])
         String sortBy = null;
+        String sortDirection = "asc";
         if (flags.containsKey("sort")) {
-            sortBy = flags.get("sort").toLowerCase();
+            String[] sortParts = flags.get("sort").toLowerCase().trim().split("\\s+");
+            sortBy = sortParts[0];
             if (!sortBy.equals("date") && !sortBy.equals("amount")) {
                 throw new RLADException("--sort must be 'date' or 'amount', got: '" + sortBy + "'");
+            }
+            if (sortParts.length > 1) {
+                sortDirection = sortParts[1];
+                if (!sortDirection.equals("asc") && !sortDirection.equals("desc")) {
+                    throw new RLADException("Sort direction must be 'asc' or 'desc', got: '" + sortDirection + "'");
+                }
             }
         }
 
         // 3. Build filter predicate via shared FilterCommand logic
         //    (this also validates --type, --amount operators, date formats, etc.)
+        assert transactions != null : "TransactionManager should not be null";
         Predicate<Transaction> filter = FilterCommand.buildPredicate(this.rawArgs);
 
         // 4. Apply filter — we do NOT modify the original list in TransactionManager
@@ -65,17 +77,16 @@ public class ListCommand extends Command {
             return;
         }
 
-        // 6. Apply sorting if --sort was supplied
+        // 6. Apply sorting: --sort flag overrides, otherwise fall back to global sort
         if (sortBy != null) {
-            switch (sortBy) {
-            case "date":
-                results.sort(Comparator.comparing(Transaction::getDate));
-                break;
-            case "amount":
-                results.sort(Comparator.comparingDouble(Transaction::getAmount));
-                break;
-            default:
-                break; // already validated above
+            results = TransactionSorter.sort(new java.util.ArrayList<>(results), sortBy, sortDirection);
+        } else {
+            String globalField = transactions.getGlobalSortField();
+            if (!globalField.isEmpty()) {
+                java.util.ArrayList<Transaction> sorted = TransactionSorter.sort(
+                        new java.util.ArrayList<>(results),
+                        globalField, transactions.getGlobalSortDirection());
+                results = sorted;
             }
         }
 
