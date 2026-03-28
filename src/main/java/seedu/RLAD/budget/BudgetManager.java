@@ -320,7 +320,6 @@ public class BudgetManager {
      * Call this method after transactions are added, deleted, or modified.
      *
      * @param month The month to check
-     * @param ui The UI instance to display messages
      */
     public void checkBudgetThresholds(YearMonth month) {
         if (ui == null) {
