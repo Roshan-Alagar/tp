@@ -55,6 +55,9 @@ public class Ui {
         System.out.println("  sort      : Set or view the global sort order (amount/date, asc/desc)");
         System.out.println("  list      : View your transaction history (with filtering and sorting)");
         System.out.println("  summarize : Get a high-level breakdown of your spending");
+        System.out.println("  export    : Export transactions to a CSV file");
+        System.out.println("  import    : Import transactions from a CSV file");
+        System.out.println("  clear     : Delete all transactions permanently");
         System.out.println("\nFormat:");
         System.out.println("\t$action --option_0 $argument_0 ... --option_k $argument_k");
     }
@@ -100,6 +103,45 @@ public class Ui {
         System.out.println("Options: --by [category|month|type]");
         System.out.println("Example:");
         System.out.println("  summarize --by category");
+    }
+
+    /**
+     * Prompts the user for confirmation and returns true if they type CONFIRM.
+     * @param promptMessage the warning message to display before asking
+     * @return true if user typed CONFIRM
+     */
+    public boolean askConfirmation(String promptMessage) {
+        System.out.println(promptMessage);
+        System.out.print("Type CONFIRM to proceed: ");
+        String input = userScanner.nextLine().trim();
+        return input.equals("CONFIRM");
+    }
+
+    public void printExportManual() {
+        System.out.println("Command: export");
+        System.out.println("Description: Exports all transactions to a CSV file.");
+        System.out.println("Options: --file [filename], --path [directory]");
+        System.out.println("Example:");
+        System.out.println("  export --file backup.csv");
+        System.out.println("  export --path /Users/name/Documents/");
+    }
+
+    public void printImportManual() {
+        System.out.println("Command: import");
+        System.out.println("Description: Imports transactions from a CSV file.");
+        System.out.println("Options: --file [filename] (required), --merge");
+        System.out.println("Example:");
+        System.out.println("  import --file backup.csv");
+        System.out.println("  import --file backup.csv --merge");
+    }
+
+    public void printClearManual() {
+        System.out.println("Command: clear");
+        System.out.println("Description: Deletes ALL transactions permanently.");
+        System.out.println("Options: --force (skip confirmation)");
+        System.out.println("Example:");
+        System.out.println("  clear");
+        System.out.println("  clear --force");
     }
 
     public void printCommandOutput(Command command) {

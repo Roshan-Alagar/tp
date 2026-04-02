@@ -19,6 +19,9 @@ Available actions:
   sort      : Set or view the global sort order (amount/date, asc/desc)
   list      : View your transaction history (with filtering and sorting)
   summarize : Get a high-level breakdown of your spending
+  export    : Export transactions to a CSV file
+  import    : Import transactions from a CSV file
+  clear     : Delete all transactions permanently
 
 Format:
 	$action --option_0 $argument_0 ... --option_k $argument_k
