@@ -11,6 +11,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Manages all monthly budgets and handles progress calculations.
@@ -414,5 +416,110 @@ public class BudgetManager {
             );
             ui.showResult(message);
         }
+    }
+    public String getYearlySummary(int year) {
+        List<String> monthNames = Arrays.asList(
+                "January", "February", "March", "April",
+                "May", "June", "July", "August",
+                "September", "October", "November", "December");
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("=== YEARLY BUDGET SUMMARY FOR ").append(year).append(" ===\n\n");
+        sb.append(String.format("%-10s | %-9s | %-9s | %-9s | %-5s | %s%n",
+                "Month", "Budget", "Spent", "Remaining", "Used", "Trend"));
+        sb.append("-----------+-----------+-----------+-----------+-------+------------------\n");
+
+        double annualBudget = 0;
+        double annualSpent = 0;
+        int monthsWithData = 0;
+
+        for (int m = 1; m <= 12; m++) {
+            YearMonth month = YearMonth.of(year, m);
+            double budget = getTotalBudgetForMonth(month);
+            double spent = getTotalSpentForMonth(month);
+            double remaining = budget - spent;
+            int percentage = budget > 0 ? (int) Math.min(100, (spent / budget) * 100) : 0;
+            String bar = createProgressBar(percentage, 14);
+            sb.append(String.format("%-10s | $%7.2f | $%7.2f | $%7.2f | %3d%%  | %s %d%%%n",
+                    monthNames.get(m - 1), budget, spent, remaining, percentage, bar, percentage));
+            annualBudget += budget;
+            annualSpent += spent;
+            if (budget > 0 || spent > 0) {
+                monthsWithData++;
+            }
+        }
+
+        sb.append("\n=== PER CATEGORY BREAKDOWN ===\n\n");
+        sb.append(String.format("%-30s | %-11s | %-11s | %-10s | %s%n",
+                "Category", "Budget", "Spent", "Difference", "Status"));
+        sb.append("--------------------------------+-------------+-------------+------------+-----------\n");
+
+        for (BudgetCategory category : BudgetCategory.values()) {
+            double catBudget = getYearlyBudgetForCategory(year, category);
+            double catSpent = getYearlySpentForCategory(year, category);
+            if (catBudget == 0 && catSpent == 0) {
+                continue;
+            }
+            double diff = catBudget - catSpent;
+            String status = diff >= 0 ? "✓ Under" : "⚠ Over";
+            String diffStr = diff >= 0
+                    ? String.format("+$%.2f", diff)
+                    : String.format("-$%.2f", Math.abs(diff));
+            sb.append(String.format("%-30s | $%9.2f | $%9.2f | %-10s | %s%n",
+                    category.getDisplayName(), catBudget, catSpent, diffStr, status));
+        }
+
+        double netBalance = annualBudget - annualSpent;
+        double avgMonthly = monthsWithData > 0 ? annualSpent / monthsWithData : 0;
+        sb.append("\n=== ANNUAL TOTALS ===\n\n");
+        sb.append(String.format("Total Budget:     $%.2f%n", annualBudget));
+        sb.append(String.format("Total Spent:      $%.2f%n", annualSpent));
+        sb.append(String.format("Net Balance:      %s$%.2f%n",
+                netBalance >= 0 ? "+" : "-", Math.abs(netBalance)));
+        sb.append(String.format("Average Monthly:  $%.2f%n", avgMonthly));
+        return sb.toString();
+    }
+
+    private double getTotalBudgetForMonth(YearMonth month) {
+        return getBudget(month)
+                .map(b -> b.getTotalAllocatedBudget() + b.getDisposableIncome())
+                .orElse(0.0);
+    }
+
+    private double getTotalSpentForMonth(YearMonth month) {
+        return transactionManager.getTransactions().stream()
+                .filter(t -> YearMonth.from(t.getDate()).equals(month))
+                .filter(t -> "debit".equalsIgnoreCase(t.getType()))
+                .mapToDouble(Transaction::getAmount)
+                .sum();
+    }
+
+    private double getYearlyBudgetForCategory(int year, BudgetCategory category) {
+        double total = 0;
+        for (int m = 1; m <= 12; m++) {
+            YearMonth month = YearMonth.of(year, m);
+            total += getBudget(month)
+                    .map(b -> b.getBudgetForCategory(category))
+                    .orElse(0.0);
+        }
+        return total;
+    }
+
+    private double getYearlySpentForCategory(int year, BudgetCategory category) {
+        double total = 0;
+        for (int m = 1; m <= 12; m++) {
+            YearMonth month = YearMonth.of(year, m);
+            total += getSpentForCategory(month, category);
+        }
+        return total;
+    }
+
+    private String createProgressBar(int percentage, int length) {
+        int filled = (int) Math.round((percentage / 100.0) * length);
+        StringBuilder bar = new StringBuilder();
+        for (int i = 0; i < length; i++) {
+            bar.append(i < filled ? "█" : "░");
+        }
+        return bar.toString();
     }
 }
