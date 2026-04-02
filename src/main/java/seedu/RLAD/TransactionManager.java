@@ -3,6 +3,8 @@ package seedu.RLAD;
 import seedu.RLAD.budget.BudgetManager;
 
 import java.util.ArrayList;
+import java.time.YearMonth;
+import java.util.HashMap;
 
 /**
  * TransactionManager - The Model layer of the application.
@@ -22,24 +24,34 @@ import java.util.ArrayList;
  *   │     └─> deleteTransaction(id) : Removes transaction from storage
  *   │
  *   ├─ ListCommand
- *   │     └─> getTransactions() : Retrieves all transactions, applies sorting
+ *   │     └─> getTransactions() : Retrieves all transactions, applies sorting and filtering
  *   │
  *   ├─ FilterCommand
  *   │     └─> getTransactions() : Retrieves all, applies buildPredicate() + sorting
  *   │
- *   ├─ SortCommand
- *   │     └─> setGlobalSort() / clearGlobalSort() : Manages global sort state
- *   │
  *   ├─ ModifyCommand
  *   │     ├─> findTransaction(id) : Locates transaction to modify
- *   │     └─> updateTransaction(id, updated) : Replaces old transaction
+ *   │     └─> updateTransaction(id, updated) : Replaces old transaction with new data
  *   │
- *   └─ SummarizeCommand
- *         └─> getTransactions() : Retrieves all for summaries
+ *   ├─ SummarizeCommand
+ *   │     └─> getTransactions() : Retrieves all transactions for generating summaries
+ *   │
+ *   └─ Budget Integration
+ *         ├─> setBudgetManager(budgetManager) : Sets reference for budget tracking
+ *         ├─> addTransaction(t) : Notifies BudgetManager of new transaction
+ *         ├─> deleteTransaction(id) : Notifies BudgetManager of deleted transaction
+ *         └─> updateTransaction(id, updated) : Notifies BudgetManager of updated transaction
+ *
+ * NOTE: Filtering logic is handled by FilterCommand.buildPredicate(), which is used by
+ * ListCommand and SummarizeCommand to filter transactions before display/summary.
+ *
+ * NOTE: BudgetManager is notified of all transaction changes to maintain accurate
+ * budget tracking and trigger notifications when budget thresholds are crossed.
  */
 
 public class TransactionManager {
     private final ArrayList<Transaction> transactions = new ArrayList<>();
+    private HashMap<String, Transaction> transMap = new HashMap<String, Transaction>();
     private String globalSortField = "";
     private String globalSortDirection = "asc";
     private BudgetManager budgetManager;
@@ -51,7 +63,7 @@ public class TransactionManager {
      */
 
     public TransactionManager() {
-        // Default constructor
+        this.transMap = new HashMap<String, Transaction>();
     }
 
     public void setBudgetManager(BudgetManager budgetManager) {
@@ -59,12 +71,18 @@ public class TransactionManager {
     }
 
     public void addTransaction(Transaction t) {
-        // TODO: Implement a loop to regenerate ID if idExists(t.getHashId()) is true
+        // Ensure ID uniqueness
+        t = hashCollisionPrevention(t);
+
+        // Mirror changes to both arrayList and hashMap
         transactions.add(t);
+        transMap.put(t.getHashId(), t);
 
         // Notify budget manager about the new transaction
         if (budgetManager != null) {
             budgetManager.onTransactionAdded(t);
+            // Check threshold after adding
+            budgetManager.checkBudgetThresholds(YearMonth.from(t.getDate()));
         }
     }
 
@@ -73,7 +91,7 @@ public class TransactionManager {
      * TODO: Replace O(N) list search with a HashSet for O(1) lookups to improve scaling.
      */
     private boolean idExists(String hashId) {
-        return false;
+        return transMap.containsKey(hashId);
     }
 
     /**
@@ -92,12 +110,7 @@ public class TransactionManager {
      * @return the Transaction if found, null otherwise
      */
     public Transaction findTransaction(String id) {
-        for (Transaction t : transactions) {
-            if (t.getHashId().equals(id)) {
-                return t;
-            }
-        }
-        return null;
+        return transMap.containsKey(id) ? transMap.get(id) : null;
     }
 
     /**
@@ -110,7 +123,14 @@ public class TransactionManager {
         Transaction toDelete = findTransaction(id);
         if (toDelete != null) {
             transactions.remove(toDelete);
-            // Notify budget manager about deletion if needed
+            transMap.remove(id);
+            // Notify budget manager about the deleted transaction
+            if (budgetManager != null) {
+                budgetManager.onTransactionDeleted(toDelete);
+                // Re-check thresholds after deletion
+                budgetManager.checkBudgetThresholds(YearMonth.from(toDelete.getDate()));
+            }
+
             return true;
         }
         return false;
@@ -124,12 +144,23 @@ public class TransactionManager {
      * @return true if update was successful, false if ID not found
      */
     public boolean updateTransaction(String id, Transaction updated) {
-        for (int i = 0; i < transactions.size(); i++) {
-            if (transactions.get(i).getHashId().equals(id)) {
-                transactions.set(i, updated);
-                // Notify budget manager about update if needed
-                return true;
+        Transaction old = findTransaction(id);
+        if (old != null) {
+            // 1. Update the Map
+            transMap.put(id, updated);
+
+            // 2. Update the ArrayList at the exact same position
+            int index = transactions.indexOf(old);
+            transactions.set(index, updated);
+
+            // Notify budget manager about the updated transaction
+            if (budgetManager != null) {
+                budgetManager.onTransactionUpdated(old, updated);
+                // Check thresholds for the month of the updated transaction
+                budgetManager.checkBudgetThresholds(YearMonth.from(updated.getDate()));
             }
+
+            return true;
         }
         return false;
     }
@@ -150,5 +181,13 @@ public class TransactionManager {
     public void clearGlobalSort() {
         this.globalSortField = "";
         this.globalSortDirection = "asc";
+    }
+
+    // Forces the transaction hashID to regen until unique
+    private Transaction hashCollisionPrevention(Transaction t) {
+        while (transMap.containsKey(t.getHashId())) {
+            t.regenerateHashId();
+        }
+        return t;
     }
 }

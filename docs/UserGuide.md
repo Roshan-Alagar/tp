@@ -51,6 +51,7 @@ filter transactions, and get quick summaries of where your money is going -- all
    Available actions:
      add       : Record a new transaction
      modify    : Edit an existing entry
+     budget    : Setting budget goals for the month
      delete    : Remove an entry
      sort      : Set or view the global sort order (amount/date, asc/desc)
      list      : View your transaction history (with filtering and sorting)
@@ -83,15 +84,15 @@ Adds a new credit (income) or debit (expense) entry.
 add --type TYPE --amount AMOUNT --date DATE [--category CATEGORY] [--description DESCRIPTION]
 ```
 
-| Flag | Required | Description |
-|------|----------|-------------|
-| `--type` | Yes | `credit` (income) or `debit` (expense) |
-| `--amount` | Yes | Dollar amount (e.g. `15.00`) |
-| `--date` | Yes | Date in `YYYY-MM-DD` format (e.g. `2026-02-18`) |
-| `--category` | No | Category label (e.g. `food`, `transport`) |
-| `--description` | No | Short description of the transaction |
+| Flag | Required | Description                                                                                                                                                                                                                                                                                                                                          |
+|------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `--type` | Yes | `credit` (income) or `debit` (expense)                                                                                                                                                                                                                                                                                                               |
+| `--amount` | Yes | Dollar amount (e.g. `15.00`)                                                                                                                                                                                                                                                                                                                         |
+| `--date` | Yes | Date in `YYYY-MM-DD` format (e.g. `2026-02-18`)                                                                                                                                                                                                                                                                                                      |
+| `--category` | No | Category label<br/>Recommended labels:<br/>1. `Food`<br/>2. `Transport`<br/>3. `Utilities`<br/>4. `Housing`<br/>5. `Health & Insurance`<br/>6. `Debt & Financial Obligation`<br/>7. `Child & Financial Dependent Care`<br/>8. `Shopping & Personal Care`<br/>9. `Gifts & Donations`<br/>10. `Investments`<br/>11. `Emergency Fund`<br/>12. `Savings` |
+| `--description` | No | Short description of the transaction                                                                                                                                                                                                                                                                                                                 |
 
-> **Tip:** Always include a category and description -- it makes filtering and summarizing much more useful later.
+> **Tip:** Highly recommend including a category and description -- it makes filtering and summarizing much more useful later.
 
 **Example:**
 ```
@@ -203,63 +204,167 @@ Sort order cleared. Transactions will be shown in insertion order.
 Set, view, edit, or delete monthly budgets by category. Budgets track your spending against
 allocated amounts and show progress bars when viewed.
 
-**Format:**
-```
-budget set --month YYYY-MM --category CODE --amount AMOUNT
-budget view [--month YYYY-MM]
-budget edit --month YYYY-MM --category CODE --amount AMOUNT
-budget delete --month YYYY-MM --category CODE
-```
-
 | Flag | Required | Description |
 |------|----------|-------------|
 | `--month` | Yes (except `view` all) | Month in `YYYY-MM` format (e.g. `2026-03`) |
 | `--category` | Yes (except `view`) | Category code (1-12, see table below) |
 | `--amount` | Yes (`set`/`edit`) | Budget amount (e.g. `500.00`) |
 
+Users are given 12 optional budget categories to set their budgets for in the month, the remaining 
+unallocated amount will be set as `Disposable Income`. 
+
 **Budget categories:**
 
 | Code | Category |
 |------|----------|
-| 1 | Food |
-| 2 | Transport |
-| 3 | Utilities |
-| 4 | Housing |
-| 5 | Health & Insurance |
-| 6 | Debt & Financial Obligation |
-| 7 | Child & Financial Dependent Care |
-| 8 | Shopping & Personal Care |
-| 9 | Gifts & Donations |
-| 10 | Investments |
-| 11 | Emergency Fund |
-| 12 | Savings |
+| 1 | `Food` |
+| 2 | `Transport` |
+| 3 | `Utilities` |
+| 4 | `Housing` |
+| 5 | `Health & Insurance` |
+| 6 | `Debt & Financial Obligation` |
+| 7 | `Child & Financial Dependent Care` |
+| 8 | `Shopping & Personal Care` |
+| 9 | `Gifts & Donations` |
+| 10 | `Investments` |
+| 11 | `Emergency Fund` |
+| 12 | `Savings` |
 
-- `budget view` with no `--month` flag shows all months that have budgets.
-- `budget view --month YYYY-MM` shows a detailed breakdown with progress bars for the specified month.
-- Budgets automatically track spending from debit transactions that match the category.
-- Income (credit) transactions are used to calculate disposable income.
+**Format:**\
+Set a budget for a category for a specific month of the year
+```
+budget set --month YYYY-MM --category CODE --amount AMOUNT
+```
+View all budget allocations and progress for a specific month
+```
+budget view --month YYYY-MM
+```
+View the summary of all months with budget data
+```
+budget view
+```
+Edit an existing category budget
+```
+budget edit --month YYYY-MM --category CODE --amount AMOUNT
+```
+Remove a budget category for a month
+```
+budget delete --month YYYY-MM --category CODE
+```
 
 **Examples:**
 
-Set a food budget for March 2026:
+Set a `Food` budget for March 2026:
 ```
 > budget set --month 2026-03 --category 1 --amount 500.00
+▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+✅ Budget set successfully for 2026-03
+   Category [1]: $500.00
+▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
 ```
 
 View all budgets for March 2026:
 ```
 > budget view --month 2026-03
+▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+=== BUDGET SUMMARY FOR 2026-03 ===
+Category                  |     Budget |      Spent |  Remaining | Progress
+---------------------------+------------+------------+------------+----------------------
+[1] Food                  | $  500.00 | $    0.00 | $  500.00 | ░░░░░░░░░░░░░░░░░░░░   0%
+---------------------------+------------+------------+------------+----------------------
+Disposable Income         | $ -500.00 | $    0.00 | $ -500.00 | ░░░░░░░░░░░░░░░░░░░░   0%
+TOTAL                     | $    0.00 | $    0.00 | $    0.00 | ░░░░░░░░░░░░░░░░░░░░   0%
+▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+```
+> **Note**: `Disposable Income` will reflect a negative value unless you `add` an income transaction (`credit`) 
+
+View budgets for all months of the year
+```
+> budget view
+▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+=== ALL MONTHLY BUDGETS ===
+Month      | Category               |     Budget |      Spent |  Remaining
+------------+------------------------+------------+------------+------------
+2026-03    | [1] Food               | $  500.00 | $    0.00 | $  500.00
+           | Disposable Income      | $ -500.00 | $    0.00 | $ -500.00
+------------+------------------------+------------+------------+------------
+▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
 ```
 
 Edit an existing budget:
 ```
 > budget edit --month 2026-03 --category 1 --amount 600.00
+▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+✅ Budget updated for 2026-03
+   Category [1]: $600.00
+▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
 ```
 
 Delete a budget category:
 ```
 > budget delete --month 2026-03 --category 1
+▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+✅ Budget deleted for 2026-03
+   Category [1]
+▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
 ```
+
+### Budget Notification Feature:
+In addition to the `budget` command, the system will alert users when they are close or have exceeded their budget 
+limits.\
+There will be 3 notification thresholds at 80%, 90% & 100%.
+
+| Category | 80% Message | 90% Message | 100% Message | Example Message                                                                                                                |
+|----------|-------------|-------------|--------------|--------------------------------------------------------------------------------------------------------------------------------|
+| Savings | Positive | Positive | Positive | 🎉 GREAT JOB! You have reached 80% of your savings goal for March 2026! Saved: \$240.00 / \$300.00. Keep up the great work!    |
+| Others | Warning | Warning | Warning | ⚠️ WARNING: You have used 80% of your Food budget for March 2026! Spent: \$400.00 / \$500.00. Consider reducing your spending. |
+
+ **Example:**\
+80% Threshold:
+```
+> budget set --month 2026-03 --category 1 --amount 100
+▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+✅ Budget set successfully for 2026-03
+   Category [1]: $100.00
+▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+> add --type debit --amount 80 --date 2026-03-15 --category food
+▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+⚠️ WARNING: You have used 80% of your Food budget for MARCH 2026!
+   Spent: $80.00 / $100.00. Consider reducing your spending.
+✅ Transaction added successfully!
+   HashID: 8c2e
+   DEBIT: $80.00 on 2026-03-15
+   Category: food
+   Description: (none)
+▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+```
+90% Threshold (Continued):
+```
+> add --type debit --amount 10 --date 2026-03-20 --category food
+▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+⚠️ WARNING: You have used 90% of your Food budget for MARCH 2026!
+   Spent: $90.00 / $100.00. Consider reducing your spending.
+✅ Transaction added successfully!
+   HashID: 6da3
+   DEBIT: $10.00 on 2026-03-20
+   Category: food
+   Description: (none)
+▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+```
+100% Threshold (Continued):
+```
+> add --type debit --amount 20 --date 2026-03-25 --category food
+▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+⚠️ EXCEEDED: You have used 110% of your Food budget for MARCH 2026!
+   Spent: $110.00 / $100.00. Consider reducing your spending.
+✅ Transaction added successfully!
+   HashID: 366d
+   DEBIT: $20.00 on 2026-03-25
+   Category: food
+   Description: (none)
+▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+```
+
 
 ### Deleting a transaction: `delete`
 

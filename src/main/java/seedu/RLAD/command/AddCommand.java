@@ -26,7 +26,7 @@ public class AddCommand extends Command {
     private Map<String, String> parseArguments(String rawArgs) {
         Map<String, String> argsMap = new HashMap<>();
 
-        //Check if the string is empty, if it's empty then the empty map is returned, nothing to parse
+        // Check if the string is empty, if it's empty then the empty map is returned, nothing to parse
         if (rawArgs == null || rawArgs.trim().isEmpty()) {
             return argsMap;
         }
