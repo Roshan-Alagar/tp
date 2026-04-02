@@ -183,6 +183,26 @@ public class TransactionManager {
         this.globalSortDirection = "asc";
     }
 
+    /**
+     * Returns the number of transactions currently stored.
+     * @return the transaction count
+     */
+    public int getTransactionCount() {
+        return transactions.size();
+    }
+
+    /**
+     * Removes all transactions from storage and notifies BudgetManager.
+     * Used by: ClearCommand, ImportCommand (replace mode)
+     */
+    public void clearAllTransactions() {
+        transactions.clear();
+        transMap.clear();
+        if (budgetManager != null) {
+            budgetManager.onAllDataCleared();
+        }
+    }
+
     // Forces the transaction hashID to regen until unique
     private Transaction hashCollisionPrevention(Transaction t) {
         while (transMap.containsKey(t.getHashId())) {
