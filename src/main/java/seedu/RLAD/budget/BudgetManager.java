@@ -274,8 +274,10 @@ public class BudgetManager {
         }
     }
     public String getYearlySummary(int year) {
-        String[] monthNames = {"January", "February", "March", "April", "May", "June",
-                "July", "August", "September", "October", "November", "December"};
+        String[] monthNames =
+                {"January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"
+                };
 
         StringBuilder sb = new StringBuilder();
         sb.append("=== YEARLY BUDGET SUMMARY FOR ").append(year).append(" ===\n\n");
