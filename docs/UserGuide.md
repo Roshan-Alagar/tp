@@ -1,546 +1,611 @@
 # RLAD User Guide
 
 ## Table of Contents
-- [Introduction](#introduction)
-- [Quick Start](#quick-start)
-- [Commands](#commands)
-  - [Adding a transaction: `add`](#adding-a-transaction-add)
-  - [Listing transactions: `list`](#listing-transactions-list)
-  - [Sorting transactions: `sort`](#sorting-transactions-sort)
-  - [Managing budgets: `budget`](#managing-budgets-budget)
-  - [Deleting a transaction: `delete`](#deleting-a-transaction-delete)
-  - [Modifying a transaction: `modify`](#modifying-a-transaction-modify)
-  - [Viewing a summary: `summarize`](#viewing-a-summary-summarize)
-  - [Getting help: `help`](#getting-help-help)
-  - [Exiting the app: `exit`](#exiting-the-app-exit)
-- [UI Examples](#ui-examples)
-- [FAQ](#faq)
-- [Known Issues](#known-issues)
-- [Command Summary](#command-summary)
 
-## Introduction
+1. [Introduction](#1-introduction)
+2. [Quick Start](#2-quick-start)
+3. [Features Overview](#3-features-overview)
+4. [Command Reference](#4-command-reference)
+    - 4.1 [add — Record a Transaction](#41-add--record-a-transaction)
+    - 4.2 [delete — Remove a Transaction](#42-delete--remove-a-transaction)
+    - 4.3 [modify — Edit a Transaction](#43-modify--edit-a-transaction)
+    - 4.4 [list — View Transactions](#44-list--view-transactions)
+    - 4.5 [sort — Set Global Sort Order](#45-sort--set-global-sort-order)
+    - 4.6 [summarize — Financial Summary](#46-summarize--financial-summary)
+    - 4.7 [budget — Budget Management](#47-budget--budget-management)
+    - 4.8 [export — Export to CSV](#48-export--export-to-csv)
+    - 4.9 [import — Import from CSV](#49-import--import-from-csv)
+    - 4.10 [clear — Clear All Data](#410-clear--clear-all-data)
+    - 4.11 [help — Get Help](#411-help--get-help)
+    - 4.12 [exit — Exit RLAD](#412-exit--exit-rlad)
+5. [Budget Categories](#5-budget-categories)
+6. [Date & Amount Formats](#6-date--amount-formats)
+7. [FAQ](#7-faq)
+8. [Command Summary](#8-command-summary)
 
-Record Losses And Debt (RLAD) is a minimalist CLI finance tracker for users who want to manage their
-spending without the overhead of spreadsheets or bloated apps. Track your income and expenses, sort and
-filter transactions, and get quick summaries of where your money is going -- all from your terminal.
+---
 
-## Quick Start
+## 1. Introduction
 
-1. Ensure that you have **Java 17** or above installed.
-2. Download the latest `RLAD.jar` from the [Releases](https://github.com/AY2526S2-CS2113-W13-4/tp/releases) page.
-3. Copy the file to the folder you want to use as the home folder for RLAD.
-4. Open a command terminal, `cd` into the folder, and run:
-   ```
-   java -jar RLAD.jar
-   ```
-5. You should see the RLAD welcome screen:
-   ```
-               +================================================+
-               |       ██████╗  ██╗       █████╗  ██████╗       |
-               |       ██╔══██╗ ██║      ██╔══██╗ ██╔══██╗      |
-               |       ██████╔╝ ██║      ███████║ ██║  ██║      |
-               |       ██╔══██╗ ██║      ██╔══██║ ██║  ██║      |
-               |       ██║  ██║ ███████╗ ██║  ██║ ██████╔╝      |
-               |       ╚═╝  ╚═╝ ╚══════╝ ╚═╝  ╚═╝ ╚═════╝       |
-               |              Record Losses And Debt            |
-               +================================================+
+**RLAD** (Record Losses And Debt) is a fast, keyboard-driven personal finance manager built for the command line. No spreadsheets, no GUI — just clean, structured commands for people who prefer efficiency over aesthetics.
 
-   ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
-   Hello and welcome to RLAD!
-   Handle your financial life from one spot without the spreadsheet headaches
-   Available actions:
-     add       : Record a new transaction
-     modify    : Edit an existing entry
-     budget    : Setting budget goals for the month
-     delete    : Remove an entry
-     sort      : Set or view the global sort order (amount/date, asc/desc)
-     list      : View your transaction history (with filtering and sorting)
-     summarize : Get a high-level breakdown of your spending
+RLAD lets you:
+- Record income (credits) and expenses (debits)
+- Filter and sort your transaction history
+- Set monthly budgets per category and track spending against them
+- Export your data to CSV for backup or analysis in Excel/Sheets
+- Import transaction data from CSV files
 
-   Format:
-   	$action --option_0 $argument_0 ... --option_k $argument_k
-   Type 'help' for the full list or '$action help' for specific argument details.
-   ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
-   ```
-6. Type a command at the `>` prompt and press Enter. Refer to [Commands](#commands) below for details on each command.
+RLAD is best suited for NUS students or young professionals who are comfortable with the terminal and want a lightweight tool to stay on top of their finances.
 
-## Commands
+> **Note:** RLAD is a CLI application. All interaction happens through typed commands.
 
-> **Notes about the command format:**
-> - Words in `UPPER_CASE` are parameters to be supplied by the user.
->   e.g. in `add --type TYPE`, `TYPE` is a parameter: `add --type credit`.
-> - Items in square brackets are optional.
->   e.g. `list [--sort FIELD]` can be used as `list` or `list --sort amount`.
-> - Flags can be provided in any order.
->   e.g. `--type credit --amount 15.00` and `--amount 15.00 --type credit` are both valid.
-> - Extra whitespace between flags is ignored.
+---
 
-### Adding a transaction: `add`
+## 2. Quick Start
 
-Adds a new credit (income) or debit (expense) entry.
+**Prerequisites:** Java 17 or above must be installed.
+
+1. Download the latest `RLAD.jar` from the releases page.
+2. Open a terminal and navigate to the directory containing `RLAD.jar`.
+3. Run the application:
+
+```
+java -jar RLAD.jar
+```
+
+4. The welcome banner and a list of available commands will appear.
+5. Type a command and press Enter. Example:
+
+```
+add --type credit --amount 3000.00 --date 2026-03-01 --category salary --description "March salary"
+```
+
+6. Type `exit` to quit.
+
+---
+
+## 3. Features Overview
+
+| Feature    | Description                                              |
+|------------|----------------------------------------------------------|
+| add        | Record a credit (income) or debit (expense) transaction  |
+| delete     | Remove a transaction by its HashID                       |
+| modify     | Update one or more fields of an existing transaction     |
+| list       | View all transactions with optional filters and sorting  |
+| sort       | Set a persistent global sort order for list              |
+| summarize  | View totals and category breakdowns                      |
+| budget     | Set, view, edit, or delete monthly category budgets      |
+| export     | Export all transactions to a CSV file                    |
+| import     | Import transactions from a CSV file (replace or merge)   |
+| clear      | Permanently delete all transactions                      |
+| help       | Print usage instructions                                 |
+
+---
+
+## 4. Command Reference
+
+### Command Format
+
+All commands follow this structure:
+
+```
+<action> --option_1 value_1 --option_2 value_2 ...
+```
+
+- Items in `[square brackets]` are **optional**.
+- Items without brackets are **required**.
+- Descriptions containing spaces should be wrapped in `"double quotes"`.
+
+---
+
+### 4.1 `add` — Record a Transaction
+
+Records a new credit or debit transaction.
 
 **Format:**
 ```
 add --type TYPE --amount AMOUNT --date DATE [--category CATEGORY] [--description DESCRIPTION]
 ```
 
-| Flag | Required | Description                                                                                                                                                                                                                                                                                                                                          |
-|------|----------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `--type` | Yes | `credit` (income) or `debit` (expense)                                                                                                                                                                                                                                                                                                               |
-| `--amount` | Yes | Dollar amount (e.g. `15.00`)                                                                                                                                                                                                                                                                                                                         |
-| `--date` | Yes | Date in `YYYY-MM-DD` format (e.g. `2026-02-18`)                                                                                                                                                                                                                                                                                                      |
-| `--category` | No | Category label<br/>Recommended labels:<br/>1. `Food`<br/>2. `Transport`<br/>3. `Utilities`<br/>4. `Housing`<br/>5. `Health & Insurance`<br/>6. `Debt & Financial Obligation`<br/>7. `Child & Financial Dependent Care`<br/>8. `Shopping & Personal Care`<br/>9. `Gifts & Donations`<br/>10. `Investments`<br/>11. `Emergency Fund`<br/>12. `Savings` |
-| `--description` | No | Short description of the transaction                                                                                                                                                                                                                                                                                                                 |
+**Parameters:**
 
-> **Tip:** Highly recommend including a category and description -- it makes filtering and summarizing much more useful later.
+| Parameter       | Required | Description                                 |
+|-----------------|----------|---------------------------------------------|
+| `--type`        | Yes      | `credit` (income) or `debit` (expense)      |
+| `--amount`      | Yes      | Positive number, up to 2 decimal places     |
+| `--date`        | Yes      | Date in `yyyy-MM-dd` format                 |
+| `--category`    | No       | Free-text label (e.g., `food`, `transport`) |
+| `--description` | No       | Short description; use quotes for spaces    |
 
-**Example:**
+**Examples:**
 ```
-> add --type credit --category food --amount 15.00 --date 2026-02-18 --description Hawker stall lunch set
+add --type credit --amount 3000.00 --date 2026-03-01 --category salary
+add --type debit --amount 15.50 --date 2026-03-05 --category food --description "Chicken rice at Clementi"
+add --type debit --amount 1.50 --date 2026-03-06
 ```
 
-### Listing transactions: `list`
+**Expected Output:**
+```
+✅ Transaction added successfully!
+   HashID: a7b2c3
+   DEBIT: $15.50 on 2026-03-05
+   Category: food
+   Description: "Chicken rice at Clementi"
+```
 
-Displays your recorded transactions with optional filtering and sorting. Uses the global sort order
-by default, or you can override with `--sort` for a one-time sort.
+> **Note:** Each transaction is assigned a unique 6-character **HashID** upon creation. Keep a note of it if you plan to delete or modify the transaction later.
+
+---
+
+### 4.2 `delete` — Remove a Transaction
+
+Permanently removes a transaction by its HashID.
 
 **Format:**
 ```
-list [--type TYPE] [--category CATEGORY] [--amount [OPERATOR] VALUE] [--date DATE] [--date-from DATE] [--date-to DATE] [--sort FIELD [DIRECTION]]
+delete --hashID HASHID
 ```
 
-| Flag | Required | Description |
-|------|----------|-------------|
-| `--type` | No | Filter by `credit` or `debit` |
-| `--category` | No | Filter by category name (case-insensitive) |
-| `--amount` | No | Filter by amount with optional operator (`-gt`, `-gte`, `-eq`, `-lt`, `-leq`). Defaults to `-eq` if no operator given |
-| `--date` | No | Filter by exact date (`YYYY-MM-DD`) |
-| `--date-from` | No | Filter for transactions on or after this date (inclusive) |
-| `--date-to` | No | Filter for transactions on or before this date (inclusive) |
-| `--sort` | No | Override sort by `amount` or `date`. Optionally add `asc` or `desc` (default: `asc`) |
+**Parameters:**
 
-- If no filter flags are provided, all transactions are shown.
-- `--date-from` and `--date-to` can be combined for date ranges.
-- If no `--sort` flag is provided, the global sort order is used (set via the `sort` command).
-- If no global sort is set either, transactions are shown in insertion order.
-- The `--sort` flag only affects this command -- it does not change the global sort setting.
+| Parameter  | Required | Description                    |
+|------------|----------|--------------------------------|
+| `--hashID` | Yes      | The 6-character transaction ID |
+
+**Example:**
+```
+delete --hashID a7b2c3
+```
+
+**Expected Output:**
+```
+Transaction deleted successfully!
+   HashID: a7b2c3
+   [a7b2c3] DEBIT | 2026-03-05 | $15.50 | food | Chicken rice at Clementi
+```
+
+> **Warning:** Deletion is permanent and cannot be undone.
+
+---
+
+### 4.3 `modify` — Edit a Transaction
+
+Updates one or more fields of an existing transaction by its HashID. At least one optional field must be provided.
+
+**Format:**
+```
+modify --hashID HASHID [--type TYPE] [--amount AMOUNT] [--date DATE] [--category CATEGORY] [--description DESCRIPTION]
+```
+
+**Parameters:**
+
+| Parameter       | Required | Description                              |
+|-----------------|----------|------------------------------------------|
+| `--hashID`      | Yes      | The HashID of the transaction to update  |
+| `--type`        | No       | New type: `credit` or `debit`            |
+| `--amount`      | No       | New amount                               |
+| `--date`        | No       | New date in `yyyy-MM-dd`                 |
+| `--category`    | No       | New category label                       |
+| `--description` | No       | New description                          |
+
+**Example:**
+```
+modify --hashID a7b2c3 --amount 20.00 --description "Fancy chicken rice"
+```
+
+---
+
+### 4.4 `list` — View Transactions
+
+Displays your transaction history. All filter and sort options are optional.
+
+**Format:**
+```
+list [--type TYPE] [--category CATEGORY] [--amount [OPERATOR] VALUE]
+     [--date DATE] [--date-from DATE] [--date-to DATE] [--sort FIELD [DIRECTION]]
+```
+
+**Filter Parameters:**
+
+| Parameter     | Description                                                           |
+|---------------|-----------------------------------------------------------------------|
+| `--type`      | `credit` or `debit`                                                   |
+| `--category`  | Exact category match (case-insensitive)                               |
+| `--amount`    | Exact match, or with operator: `-gt`, `-gte`, `-eq`, `-lt`, `-leq`   |
+| `--date`      | Exact date match (`yyyy-MM-dd`)                                       |
+| `--date-from` | Show transactions on or after this date                               |
+| `--date-to`   | Show transactions on or before this date                              |
+| `--sort`      | `date` or `amount`, optionally followed by `asc` or `desc`           |
 
 **Examples:**
-
-List all transactions:
 ```
-> list
-```
-
-List only debit transactions:
-```
-> list --type debit
+list
+list --type debit
+list --category food
+list --amount -gt 50
+list --date-from 2026-01-01 --date-to 2026-03-31
+list --type debit --sort amount desc
 ```
 
-List by category:
-```
-> list --category food
-```
-
-List transactions in a date range, sorted by amount descending:
-```
-> list --date-from 2024-01-01 --date-to 2024-06-30 --sort amount desc
-```
-
-**Sample output:**
+**Expected Output:**
 ```
 ---------------------------------------------------------------------------
-  ID     TYPE     DATE             AMOUNT  CATEGORY      DESCRIPTION
+  ID     TYPE     DATE           AMOUNT  CATEGORY      DESCRIPTION
 ---------------------------------------------------------------------------
-  e9d4   CREDIT   2026-01-01     $3000.00  salary        Monthly salary
-  f1c3   DEBIT    2026-02-15       $25.00  food          Lunch
-  a7b2   DEBIT    2026-02-10        $5.50  transport     Bus fare
+  a7b2c3 DEBIT    2026-03-05     $15.50  food          Chicken rice at Clementi
+  d4e5f6 CREDIT   2026-03-01   $3000.00  salary        March salary
 ---------------------------------------------------------------------------
-  Total: 3 transaction(s) shown.
+  Total: 2 transaction(s) shown.
 ```
 
-### Sorting transactions: `sort`
+**Amount operators:**
 
-Sets or views the global sort order. This affects how `list` displays transactions by default.
+| Operator | Meaning               |
+|----------|-----------------------|
+| `-gt`    | Greater than          |
+| `-gte`   | Greater than or equal |
+| `-eq`    | Equal to              |
+| `-lt`    | Less than             |
+| `-leq`   | Less than or equal    |
+
+---
+
+### 4.5 `sort` — Set Global Sort Order
+
+Sets a persistent default sort order applied to all future `list` commands.
 
 **Format:**
 ```
 sort [FIELD [DIRECTION]]
 sort reset
+sort
 ```
 
-| Argument | Required | Description |
-|----------|----------|-------------|
-| `FIELD` | No | Sort by `amount` or `date` |
-| `DIRECTION` | No | `asc` (ascending, default) or `desc` (descending) |
-
-- `sort` with no arguments shows the current sort setting.
-- `sort reset` clears the global sort, returning to insertion order.
-- The global sort persists for the session and is applied to `list`.
-- Use `--sort` on `list` to override the global sort for a single command.
+| Usage              | Effect                                         |
+|--------------------|------------------------------------------------|
+| `sort`             | Shows the current global sort setting          |
+| `sort amount`      | Sort by amount ascending (default direction)   |
+| `sort date desc`   | Sort by date descending                        |
+| `sort reset`       | Clears global sort; reverts to insertion order |
 
 **Examples:**
-
-Set global sort to amount descending:
 ```
-> sort amount desc
-Sort order set: amount (desc)
-```
-
-View current sort setting:
-```
-> sort
-Current sort: amount (desc)
+sort date asc
+sort amount desc
+sort reset
 ```
 
-Clear the sort order:
+> **Note:** A `--sort` flag in a `list` command overrides the global sort for that command only.
+
+---
+
+### 4.6 `summarize` — Financial Summary
+
+Displays totals and a breakdown by category. Accepts the same filter flags as `list`.
+
+**Format:**
 ```
-> sort reset
-Sort order cleared. Transactions will be shown in insertion order.
+summarize [--type TYPE] [--category CATEGORY] [--date-from DATE] [--date-to DATE]
 ```
 
-### Managing budgets: `budget`
+**Examples:**
+```
+summarize
+summarize --date-from 2026-01-01 --date-to 2026-03-31
+summarize --type debit
+```
 
-Set, view, edit, or delete monthly budgets by category. Budgets track your spending against
-allocated amounts and show progress bars when viewed.
+**Expected Output:**
+```
+===== Financial Summary =====
+  Total Credit : $3000.00
+  Total Debit  : $15.50
+  Net Balance  : $2984.50
 
-| Flag | Required | Description |
-|------|----------|-------------|
-| `--month` | Yes (except `view` all) | Month in `YYYY-MM` format (e.g. `2026-03`) |
-| `--category` | Yes (except `view`) | Category code (1-12, see table below) |
-| `--amount` | Yes (`set`/`edit`) | Budget amount (e.g. `500.00`) |
+--- Category Breakdown ---
+  salary:              $3000.00
+  food:                $15.50
+=============================
+```
 
-Users are given 12 optional budget categories to set their budgets for in the month, the remaining 
-unallocated amount will be set as `Disposable Income`. 
+---
 
-**Budget categories:**
+### 4.7 `budget` — Budget Management
 
-| Code | Category |
-|------|----------|
-| 1 | `Food` |
-| 2 | `Transport` |
-| 3 | `Utilities` |
-| 4 | `Housing` |
-| 5 | `Health & Insurance` |
-| 6 | `Debt & Financial Obligation` |
-| 7 | `Child & Financial Dependent Care` |
-| 8 | `Shopping & Personal Care` |
-| 9 | `Gifts & Donations` |
-| 10 | `Investments` |
-| 11 | `Emergency Fund` |
-| 12 | `Savings` |
+Manage monthly spending budgets per category. Uses numeric category codes (see Section 5).
 
-**Format:**\
-Set a budget for a category for a specific month of the year
+#### 4.7.1 Set a Budget
+
 ```
 budget set --month YYYY-MM --category CODE --amount AMOUNT
 ```
-View all budget allocations and progress for a specific month
+
+**Example:**
 ```
-budget view --month YYYY-MM
+budget set --month 2026-03 --category 1 --amount 500.00
 ```
-View the summary of all months with budget data
+
+Sets a $500.00 budget for Food in March 2026.
+
+**Expected Output:**
 ```
-budget view
+✅ Budget set successfully for 2026-03
+   Category [1]: $500.00
 ```
-Edit an existing category budget
+
+#### 4.7.2 View Budgets
+
+```
+budget view [--month YYYY-MM]
+```
+
+Without `--month`, all months with budgets are listed. With `--month`, a detailed table is shown for that month including a progress bar, amount spent, and remaining balance.
+
+**Example:**
+```
+budget view --month 2026-03
+```
+
+**Expected Output:**
+```
+=== BUDGET SUMMARY FOR 2026-03 ===
+Category                  |     Budget |      Spent |  Remaining | Progress
+---------------------------+------------+------------+------------+----------------------
+[1] Food                   |   $500.00  |   $120.00  |   $380.00  | ████░░░░░░░░░░░░░░░░  24%
+---------------------------+------------+------------+------------+----------------------
+Disposable Income          |  $1500.00  |  $2880.00  | -$1380.00  | ████████████████████ 192%
+TOTAL                      |  $2000.00  |  $3000.00  | -$1000.00  | ████████████████████ 150%
+```
+
+#### 4.7.3 Edit a Budget
+
 ```
 budget edit --month YYYY-MM --category CODE --amount AMOUNT
 ```
-Remove a budget category for a month
+
+The budget for the specified month and category must already exist. Use `budget set` to create a new one.
+
+**Example:**
+```
+budget edit --month 2026-03 --category 1 --amount 600.00
+```
+
+#### 4.7.4 Delete a Budget
+
 ```
 budget delete --month YYYY-MM --category CODE
 ```
 
-**Examples:**
-
-Set a `Food` budget for March 2026:
+**Example:**
 ```
-> budget set --month 2026-03 --category 1 --amount 500.00
-▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
-✅ Budget set successfully for 2026-03
-   Category [1]: $500.00
-▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+budget delete --month 2026-03 --category 1
 ```
 
-View all budgets for March 2026:
+**Expected Output:**
 ```
-> budget view --month 2026-03
-▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
-=== BUDGET SUMMARY FOR 2026-03 ===
-Category                  |     Budget |      Spent |  Remaining | Progress
----------------------------+------------+------------+------------+----------------------
-[1] Food                  | $  500.00 | $    0.00 | $  500.00 | ░░░░░░░░░░░░░░░░░░░░   0%
----------------------------+------------+------------+------------+----------------------
-Disposable Income         | $ -500.00 | $    0.00 | $ -500.00 | ░░░░░░░░░░░░░░░░░░░░   0%
-TOTAL                     | $    0.00 | $    0.00 | $    0.00 | ░░░░░░░░░░░░░░░░░░░░   0%
-▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
-```
-> **Note**: `Disposable Income` will reflect a negative value unless you `add` an income transaction (`credit`) 
-
-View budgets for all months of the year
-```
-> budget view
-▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
-=== ALL MONTHLY BUDGETS ===
-Month      | Category               |     Budget |      Spent |  Remaining
-------------+------------------------+------------+------------+------------
-2026-03    | [1] Food               | $  500.00 | $    0.00 | $  500.00
-           | Disposable Income      | $ -500.00 | $    0.00 | $ -500.00
-------------+------------------------+------------+------------+------------
-▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
-```
-
-Edit an existing budget:
-```
-> budget edit --month 2026-03 --category 1 --amount 600.00
-▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
-✅ Budget updated for 2026-03
-   Category [1]: $600.00
-▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
-```
-
-Delete a budget category:
-```
-> budget delete --month 2026-03 --category 1
-▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
 ✅ Budget deleted for 2026-03
    Category [1]
-▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
 ```
 
-### Budget Notification Feature:
-In addition to the `budget` command, the system will alert users when they are close or have exceeded their budget 
-limits.\
-There will be 3 notification thresholds at 80%, 90% & 100%.
+---
 
-| Category | 80% Message | 90% Message | 100% Message | Example Message                                                                                                                |
-|----------|-------------|-------------|--------------|--------------------------------------------------------------------------------------------------------------------------------|
-| Savings | Positive | Positive | Positive | 🎉 GREAT JOB! You have reached 80% of your savings goal for March 2026! Saved: \$240.00 / \$300.00. Keep up the great work!    |
-| Others | Warning | Warning | Warning | ⚠️ WARNING: You have used 80% of your Food budget for March 2026! Spent: \$400.00 / \$500.00. Consider reducing your spending. |
+### 4.8 `export` — Export to CSV
 
- **Example:**\
-80% Threshold:
-```
-> budget set --month 2026-03 --category 1 --amount 100
-▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
-✅ Budget set successfully for 2026-03
-   Category [1]: $100.00
-▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
-> add --type debit --amount 80 --date 2026-03-15 --category food
-▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
-⚠️ WARNING: You have used 80% of your Food budget for MARCH 2026!
-   Spent: $80.00 / $100.00. Consider reducing your spending.
-✅ Transaction added successfully!
-   HashID: 8c2e
-   DEBIT: $80.00 on 2026-03-15
-   Category: food
-   Description: (none)
-▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
-```
-90% Threshold (Continued):
-```
-> add --type debit --amount 10 --date 2026-03-20 --category food
-▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
-⚠️ WARNING: You have used 90% of your Food budget for MARCH 2026!
-   Spent: $90.00 / $100.00. Consider reducing your spending.
-✅ Transaction added successfully!
-   HashID: 6da3
-   DEBIT: $10.00 on 2026-03-20
-   Category: food
-   Description: (none)
-▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
-```
-100% Threshold (Continued):
-```
-> add --type debit --amount 20 --date 2026-03-25 --category food
-▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
-⚠️ EXCEEDED: You have used 110% of your Food budget for MARCH 2026!
-   Spent: $110.00 / $100.00. Consider reducing your spending.
-✅ Transaction added successfully!
-   HashID: 366d
-   DEBIT: $20.00 on 2026-03-25
-   Category: food
-   Description: (none)
-▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
-```
-
-
-### Deleting a transaction: `delete`
-
-Removes a transaction from the records permanently using its hash ID.
+Exports all transactions to a CSV file compatible with Excel and Google Sheets.
 
 **Format:**
 ```
-delete <id>
+export [--file FILENAME] [--path DIRECTORY]
 ```
 
-- `id` is the 4-character identifier shown in square brackets when you run `list` (e.g. `a7b2`).
+| Parameter | Description                                    | Default                        |
+|-----------|------------------------------------------------|--------------------------------|
+| `--file`  | Output filename                                | `transactions_YYYY-MM-DD.csv`  |
+| `--path`  | Directory to save the file                     | Current working directory      |
 
-> **Caution:** This action is irreversible. Once deleted, the transaction cannot be recovered.
-
-> **Caution:** `delete` is currently under development. The command is recognised but execution logic is not
-> yet implemented.
-
-**Example:**
+**Examples:**
 ```
-> delete a7b2
+export
+export --file march_backup.csv
+export --file backup.csv --path /Users/me/Documents/
 ```
 
-### Modifying a transaction: `modify`
+**Expected Output:**
+```
+✅ Exported 15 transactions to: ./transactions_2026-04-02.csv
+   File size: 2.3 KB
+   Location: /Users/me/Documents/
+```
 
-Updates specific fields of an existing entry via its hash ID. Only the fields you specify will be changed;
-all other fields remain unchanged.
+**CSV format written:**
+```
+HashID,Type,Category,Amount,Date,Description
+a7b2c3,credit,salary,3000.00,2026-03-01,March salary
+d4e5f6,debit,food,15.50,2026-03-05,"Chicken rice at Clementi"
+```
+
+---
+
+### 4.9 `import` — Import from CSV
+
+Imports transactions from a CSV file. By default, all existing data is **replaced**. Use `--merge` to add to existing transactions instead.
 
 **Format:**
 ```
-modify <id> --amount <new amount>
+import --file FILEPATH [--merge]
 ```
 
-- `id` is the 4-character identifier shown in square brackets when you run `list` (e.g. `a7b2`).
+| Parameter | Required | Description                                   |
+|-----------|----------|-----------------------------------------------|
+| `--file`  | Yes      | Path to the CSV file                          |
+| `--merge` | No       | Add to existing data instead of replacing it  |
 
-**Example:**
+**Examples:**
 ```
-> modify a7b2 --amount 20.00
+import --file transactions_2026-03-15.csv
+import --file backup.csv --merge
 ```
 
-> **Caution:** `modify` is currently under development. The command is recognised but execution logic is not
-> yet implemented.
+**Expected Output (replace mode):**
+```
+📁 Reading file: transactions_2026-03-15.csv
+✅ Validated CSV format
+📊 Importing 25 transactions...
+   ✅ 23 transactions imported successfully
+   ⚠️  2 rows skipped (invalid amount format)
+```
 
-### Viewing a summary: `summarize`
+**Expected Output (merge mode):**
+```
+📁 Merging from: backup.csv
+📊 Current transactions: 15
+➕ Adding 10 new transactions
+✅ Total after merge: 25 transactions
+```
 
-Provides a statistical overview of your finances.
+> **Warning:** Without `--merge`, all existing transactions are permanently deleted before import.
+
+> **Note:** HashIDs are regenerated for imported transactions to avoid collisions.
+
+---
+
+### 4.10 `clear` — Clear All Data
+
+Permanently deletes **all** transactions. This action cannot be undone.
 
 **Format:**
 ```
-summarize [--by GROUPING]
+clear [--force]
 ```
 
-| Flag | Required | Description |
-|------|----------|-------------|
-| `--by` | No | Group by `category`, `month`, or `type` |
+Without `--force`, RLAD will prompt for confirmation:
 
-**Example:**
 ```
-> summarize --by category
+⚠️  WARNING: This will permanently delete ALL transactions!
+   Current count: 47 transactions
+   This action cannot be undone.
+
+   Type 'CONFIRM' to proceed or any other key to cancel:
+> CONFIRM
+
+✅ All transactions have been cleared.
 ```
 
-> **Caution:** `summarize` is currently under development. The command is recognised but execution logic is
-> not yet implemented.
+With `--force`:
+```
+clear --force
+```
 
-### Getting help: `help`
+The confirmation step is skipped and all data is deleted immediately.
 
-Displays available commands and their usage. Use `help` on its own to see all commands, or specify a command
-name to see its detailed manual.
+> **Tip:** Run `export` before `clear` to keep a backup of your data.
+
+---
+
+### 4.11 `help` — Get Help
+
+Displays usage instructions. With no argument, shows all available commands. With a command name, shows detailed usage for that command.
 
 **Format:**
 ```
-help [COMMAND_NAME]
+help [COMMAND]
 ```
 
 **Examples:**
-
-View all available commands:
 ```
-> help
-```
-
-View the manual for a specific command:
-```
-> help add
-> help list
+help
+help add
+help list
+help budget
 ```
 
-### Exiting the app: `exit`
+---
+
+### 4.12 `exit` — Exit RLAD
 
 Exits the application.
 
 ```
-> exit
-Thank you for abusing me!
- See you next time...
+exit
 ```
 
-> **Tip:** Your data is not saved between sessions in this version. Persistent storage is planned for a
-> future release.
+---
 
-## UI Examples
+## 5. Budget Categories
 
-Here is what a typical session looks like:
+Budget allocations use numeric codes (1–12):
 
-```
-               +================================================+
-               |       ██████╗  ██╗       █████╗  ██████╗       |
-               |       ██╔══██╗ ██║      ██╔══██╗ ██╔══██╗      |
-               |       ██████╔╝ ██║      ███████║ ██║  ██║      |
-               |       ██╔══██╗ ██║      ██╔══██║ ██║  ██║      |
-               |       ██║  ██║ ███████╗ ██║  ██║ ██████╔╝      |
-               |       ╚═╝  ╚═╝ ╚══════╝ ╚═╝  ╚═╝ ╚═════╝       |
-               |              Record Losses And Debt            |
-               +================================================+
+| Code | Category                         |
+|------|----------------------------------|
+| 1    | Food                             |
+| 2    | Transport                        |
+| 3    | Utilities                        |
+| 4    | Housing                          |
+| 5    | Health & Insurance               |
+| 6    | Debt & Financial Obligation      |
+| 7    | Child & Financial Dependent Care |
+| 8    | Shopping & Personal Care         |
+| 9    | Gifts & Donations                |
+| 10   | Investments                      |
+| 11   | Emergency Fund                   |
+| 12   | Savings                          |
 
-▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
-Hello and welcome to RLAD!
-Handle your financial life from one spot without the spreadsheet headaches
-Available actions:
-  add       : Record a new transaction
-  modify    : Edit an existing entry
-  delete    : Remove an entry
-  sort      : Set or view the global sort order (amount/date, asc/desc)
-  list      : View your transaction history (with filtering and sorting)
-  summarize : Get a high-level breakdown of your spending
+> **Note:** The `--category` flag in `add` and `list` accepts free-text strings (e.g., `food`, `transport`). Budget categories are a separate, fixed set used only in the `budget` command.
 
-Format:
-	$action --option_0 $argument_0 ... --option_k $argument_k
-Type 'help' for the full list or '$action help' for specific argument details.
-▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
-> list --sort amount
-Empty Wallet — no transactions match your criteria.
-▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
-> exit
-Thank you for abusing me!
- See you next time...
-```
+---
 
-## FAQ
+## 6. Date & Amount Formats
 
-**Q**: How do I find the hash ID of a transaction?
+### Dates
 
-**A**: Use the `list` command. Each transaction is displayed with its 4-character hash ID in square brackets
-at the start, e.g. `[a7b2]`.
+All date fields accept: `yyyy-MM-dd`
 
-**Q**: Can I sort transactions in descending order?
+Examples: `2026-03-15`, `2026-01-01`
 
-**A**: Yes. Use `sort amount desc` or `sort date desc` to set descending order globally, or use
-`list --sort amount desc` for a one-time override.
+### Amounts
 
-**Q**: What happens if I enter an invalid command?
+- Must be a positive number.
+- Up to 2 decimal places (e.g., `15.50`, `3000`, `0.99`).
+- Do not include currency symbols (`$`) in the input.
 
-**A**: RLAD will show an error message and display the list of available commands to guide you.
+---
 
-**Q**: Is my data saved when I close the app?
+## 7. FAQ
 
-**A**: Not in the current version. Data persistence is planned for a future release.
+**Q: What happens if I forget a transaction's HashID?**
+Use `list` to find it. The HashID appears in the leftmost column.
 
-## Known Issues
+**Q: Can I have multiple budgets for the same category in one month?**
+No. Each category can have at most one budget per month. Use `budget edit` to update an existing one.
 
-1. **No persistent storage** -- All transaction data is lost when the app exits. A file-based save/load
-   system is planned.
-2. **Hash ID collisions** -- The 4-character hash IDs have a small chance of collision. Collision detection
-   and regeneration is not yet implemented.
-3. **Commands under development** -- `delete`, `modify`, and `summarize` are recognised by the parser
-   but their execution logic is not yet implemented. They will print placeholder messages.
+**Q: What is "Disposable Income" in the budget view?**
+It is the portion of your recorded income (credits) not allocated to any budget category. A negative value means your allocated budgets exceed your recorded income for that month.
 
-## Command Summary
+**Q: Can I import a CSV I edited in Excel?**
+Yes, as long as the column headers match exactly: `HashID,Type,Category,Amount,Date,Description`. Rows with invalid data are skipped with a warning.
 
-| Command | Format | Status |
-|---------|--------|--------|
-| **add** | `add --type TYPE --amount AMOUNT --date DATE [--category CAT] [--description DESC]` | Working |
-| **list** | `list [--type TYPE] [--category CAT] [--sort FIELD [DIRECTION]]` | Working |
-| **sort** | `sort [FIELD [DIRECTION]]` / `sort reset` | Working |
-| **budget** | `budget set\|view\|edit\|delete --month YYYY-MM [--category CODE] [--amount AMT]` | Working |
-| **delete** | `delete <id>` | Planned |
-| **modify** | `modify <id> --amount <new amount>` | Planned |
-| **summarize** | `summarize [--by category\|month\|type]` | Planned |
-| **help** | `help [COMMAND]` | Working |
-| **exit** | `exit` | Working |
+**Q: Does RLAD save data automatically between sessions?**
+Transaction data is held in memory during the session. Use `export` to persist your data to disk before exiting, and `import` to reload it next time.
+
+**Q: What happens to my budgets when I use `clear`?**
+Budget definitions are preserved. Only transaction data is cleared. Budget tracking (spending amounts) will reset to zero since there are no transactions to count.
+
+---
+
+## 8. Command Summary
+
+| Command    | Format (simplified)                                                        |
+|------------|----------------------------------------------------------------------------|
+| add        | `add --type TYPE --amount AMT --date DATE [--category C] [--description D]`|
+| delete     | `delete --hashID ID`                                                       |
+| modify     | `modify --hashID ID [--type T] [--amount A] [--date D] [--category C] ...` |
+| list       | `list [--type T] [--category C] [--amount A] [--date D] [--sort F [DIR]]`  |
+| sort       | `sort [FIELD [DIR]]` or `sort reset`                                       |
+| summarize  | `summarize [--type T] [--category C] [--date-from D] [--date-to D]`        |
+| budget     | `budget set/view/edit/delete --month M [--category C] [--amount A]`        |
+| export     | `export [--file F] [--path P]`                                             |
+| import     | `import --file F [--merge]`                                                |
+| clear      | `clear [--force]`                                                          |
+| help       | `help [command]`                                                           |
+| exit       | `exit`                                                                     |
