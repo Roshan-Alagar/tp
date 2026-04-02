@@ -157,7 +157,9 @@ public class FilterCommand extends Command {
      */
     private static Predicate<Transaction> buildCategoryPredicate(String categoryValue)
             throws RLADException {
-        if (categoryValue == null || categoryValue.isBlank()) {
+        assert categoryValue != null : "categoryValue should not be null";
+        logger.info("Building category predicate with value: " + categoryValue);
+        if (categoryValue.isBlank()) {
             throw new RLADException("--category requires a value.");
         }
 
@@ -194,6 +196,8 @@ public class FilterCommand extends Command {
      */
     private static Predicate<Transaction> buildDateRangePredicate(Map<String, String> flags)
             throws RLADException {
+        assert flags != null : "flags should not be null";
+        logger.info("Building date range predicate");
         Predicate<Transaction> predicate = t -> true;
         LocalDate from = null;
         LocalDate to = null;
@@ -221,7 +225,9 @@ public class FilterCommand extends Command {
      * Parses flexible date strings including relative keywords and absolute dates.
      */
     private static LocalDate parseFlexibleDate(String dateStr) throws RLADException {
-        if (dateStr == null || dateStr.isBlank()) {
+        assert dateStr != null : "dateStr should not be null";
+        logger.info("Parsing flexible date: " + dateStr);
+        if (dateStr.isBlank()) {
             throw new RLADException("Date value cannot be empty.");
         }
         String trimmed = dateStr.trim().toLowerCase();
