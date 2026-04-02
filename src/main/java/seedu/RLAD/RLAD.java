@@ -16,6 +16,7 @@ public class RLAD {
         this.transactions = new TransactionManager();
         this.parser = new Parser();
         this.budgetManager = new BudgetManager(transactions);
+        this.budgetManager.setUi(this.ui);
         this.transactions.setBudgetManager(budgetManager);
     }
 

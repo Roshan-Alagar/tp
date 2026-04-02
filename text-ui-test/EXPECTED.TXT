@@ -14,6 +14,7 @@ Handle your financial life from one spot without the spreadsheet headaches
 Available actions:
   add       : Record a new transaction
   modify    : Edit an existing entry
+  budget    : Setting budget goals for the month
   delete    : Remove an entry
   sort      : Set or view the global sort order (amount/date, asc/desc)
   list      : View your transaction history (with filtering and sorting)

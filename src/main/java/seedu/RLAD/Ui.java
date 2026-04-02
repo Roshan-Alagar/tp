@@ -50,6 +50,7 @@ public class Ui {
         System.out.println("Available actions:");
         System.out.println("  add       : Record a new transaction");
         System.out.println("  modify    : Edit an existing entry");
+        System.out.println("  budget    : Setting budget goals for the month");
         System.out.println("  delete    : Remove an entry");
         System.out.println("  sort      : Set or view the global sort order (amount/date, asc/desc)");
         System.out.println("  list      : View your transaction history (with filtering and sorting)");

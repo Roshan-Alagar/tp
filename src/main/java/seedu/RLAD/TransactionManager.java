@@ -3,6 +3,7 @@ package seedu.RLAD;
 import seedu.RLAD.budget.BudgetManager;
 
 import java.util.ArrayList;
+import java.time.YearMonth;
 import java.util.HashMap;
 
 /**
@@ -23,24 +24,33 @@ import java.util.HashMap;
  *   │     └─> deleteTransaction(id) : Removes transaction from storage
  *   │
  *   ├─ ListCommand
- *   │     └─> getTransactions() : Retrieves all transactions, applies sorting
+ *   │     └─> getTransactions() : Retrieves all transactions, applies sorting and filtering
  *   │
  *   ├─ FilterCommand
  *   │     └─> getTransactions() : Retrieves all, applies buildPredicate() + sorting
  *   │
- *   ├─ SortCommand
- *   │     └─> setGlobalSort() / clearGlobalSort() : Manages global sort state
- *   │
  *   ├─ ModifyCommand
  *   │     ├─> findTransaction(id) : Locates transaction to modify
- *   │     └─> updateTransaction(id, updated) : Replaces old transaction
+ *   │     └─> updateTransaction(id, updated) : Replaces old transaction with new data
  *   │
- *   └─ SummarizeCommand
- *         └─> getTransactions() : Retrieves all for summaries
+ *   ├─ SummarizeCommand
+ *   │     └─> getTransactions() : Retrieves all transactions for generating summaries
+ *   │
+ *   └─ Budget Integration
+ *         ├─> setBudgetManager(budgetManager) : Sets reference for budget tracking
+ *         ├─> addTransaction(t) : Notifies BudgetManager of new transaction
+ *         ├─> deleteTransaction(id) : Notifies BudgetManager of deleted transaction
+ *         └─> updateTransaction(id, updated) : Notifies BudgetManager of updated transaction
+ *
+ * NOTE: Filtering logic is handled by FilterCommand.buildPredicate(), which is used by
+ * ListCommand and SummarizeCommand to filter transactions before display/summary.
+ *
+ * NOTE: BudgetManager is notified of all transaction changes to maintain accurate
+ * budget tracking and trigger notifications when budget thresholds are crossed.
  */
 
 public class TransactionManager {
-    private ArrayList<Transaction> transactions = new ArrayList<>();
+    private final ArrayList<Transaction> transactions = new ArrayList<>();
     private HashMap<String, Transaction> transMap = new HashMap<String, Transaction>();
     private String globalSortField = "";
     private String globalSortDirection = "asc";
@@ -49,12 +59,10 @@ public class TransactionManager {
     /**
      * Creates a new transaction and adds it to storage.
      * Used by: AddCommand
-     *
      * @param t the Transaction to add
      */
 
     public TransactionManager() {
-        this.transactions = new ArrayList<>();
         this.transMap = new HashMap<String, Transaction>();
     }
 
@@ -73,6 +81,8 @@ public class TransactionManager {
         // Notify budget manager about the new transaction
         if (budgetManager != null) {
             budgetManager.onTransactionAdded(t);
+            // Check threshold after adding
+            budgetManager.checkBudgetThresholds(YearMonth.from(t.getDate()));
         }
     }
 
@@ -87,7 +97,6 @@ public class TransactionManager {
     /**
      * Retrieves all transactions from storage.
      * Used by: ListCommand, SummarizeCommand (with FilterCommand applied afterwards)
-     *
      * @return ArrayList of all transactions
      */
     public ArrayList<Transaction> getTransactions() {
@@ -97,26 +106,31 @@ public class TransactionManager {
     /**
      * Finds a transaction by its ID.
      * Used by: DeleteCommand, ModifyCommand
-     *
      * @param id the transaction ID to search for
      * @return the Transaction if found, null otherwise
      */
     public Transaction findTransaction(String id) {
-        return (transMap.containsKey(id)) ? (Transaction) transMap.get(id) : null;
+        return transMap.containsKey(id) ? transMap.get(id) : null;
     }
 
     /**
      * Deletes a transaction by its ID.
      * Used by: DeleteCommand
-     *
      * @param id the transaction ID to delete
      * @return true if deletion was successful, false if ID not found
      */
     public boolean deleteTransaction(String id) {
         Transaction toDelete = findTransaction(id);
         if (toDelete != null) {
-            transactions.remove(toDelete); //  remove in arrayList
-            transMap.remove(id); // remove in hashMap
+            transactions.remove(toDelete);
+            transMap.remove(id);
+            // Notify budget manager about the deleted transaction
+            if (budgetManager != null) {
+                budgetManager.onTransactionDeleted(toDelete);
+                // Re-check thresholds after deletion
+                budgetManager.checkBudgetThresholds(YearMonth.from(toDelete.getDate()));
+            }
+
             return true;
         }
         return false;
@@ -125,8 +139,7 @@ public class TransactionManager {
     /**
      * Updates an existing transaction with new data.
      * Used by: ModifyCommand
-     *
-     * @param id      the transaction ID to update
+     * @param id the transaction ID to update
      * @param updated the new transaction data
      * @return true if update was successful, false if ID not found
      */
@@ -139,6 +152,13 @@ public class TransactionManager {
             // 2. Update the ArrayList at the exact same position
             int index = transactions.indexOf(old);
             transactions.set(index, updated);
+
+            // Notify budget manager about the updated transaction
+            if (budgetManager != null) {
+                budgetManager.onTransactionUpdated(old, updated);
+                // Check thresholds for the month of the updated transaction
+                budgetManager.checkBudgetThresholds(YearMonth.from(updated.getDate()));
+            }
 
             return true;
         }
