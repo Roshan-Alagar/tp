@@ -70,6 +70,7 @@ I actively reviewed team members' pull requests to ensure code quality, adherenc
 - [PR #45: TransactionManager Enhancements](https://github.com/AY2526S2-CS2113-W13-4/tp/pull/45)
 - [PR #52: Implement Budget Yearly Summary Command](https://github.com/AY2526S2-CS2113-W13-4/tp/pull/52#pullrequestreview-4051302843)
 - [PR #53: Enchanced FilterCommand](https://github.com/AY2526S2-CS2113-W13-4/tp/pull/53)
+- [PR #59: Fix Description Parsing Bug](https://github.com/AY2526S2-CS2113-W13-4/tp/pull/59#pullrequestreview-4054023028)
 
 ### Contributions beyond the project team
 

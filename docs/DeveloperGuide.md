@@ -60,41 +60,20 @@ The output JAR is placed in `build/libs/`.
 
 RLAD follows the **MVC (Model-View-Controller)** pattern combined with the **Command Design Pattern**.
 
-```
-+------------------+
-|      RLAD.java   |  <-- Entry point / Application Controller
-+------------------+
-         |
-         | 1. Read input
-         v
-+------------------+
-|      Ui.java     |  <-- View: handles all user I/O
-+------------------+
-         |
-         | 2. Pass raw input string
-         v
-+------------------+
-|    Parser.java   |  <-- Controller: tokenises input, creates Command objects
-+------------------+
-         |
-         | 3. Return Command object
-         v
-+---------------------+
-|   Command (abstract) |  <-- Command Design Pattern base
-+---------------------+
-         |
-         | 4. execute(TransactionManager, Ui [, BudgetManager])
-         v
-+------------------------+      +---------------------+
-| TransactionManager.java|<---->| BudgetManager.java  |
-|  (Model: Transactions) |      | (Model: Budgets)    |
-+------------------------+      +---------------------+
-         |
-         | 5. (Storage feature)
-         v
-+-------------------------+
-| CsvStorageManager.java  |  <-- Storage layer: CSV read/write
-+-------------------------+
+```mermaid
+flowchart TD
+    User[User Input] --> Ui[Ui.java<br/>View: Handles I/O]
+    Ui --> Parser[Parser.java<br/>Controller: Tokenises input,<br/>creates Command objects]
+    Parser -.->|creates| Command["Command object<br/>(AddCommand, DeleteCommand, etc.)"]
+
+    Command -->|execute| TM[TransactionManager.java<br/>Model: Transactions]
+    Command -->|execute with BudgetManager| BM[BudgetManager.java<br/>Model: Budgets]
+
+    TM -->|notifies on changes| BM
+    TM -->|uses for storage| Storage[CsvStorageManager.java<br/>Storage: CSV read/write]
+
+    TM -->|displays results| Ui
+    BM -->|displays notifications| Ui
 ```
 
 **Main loop in `RLAD.java`:**
@@ -169,160 +148,317 @@ The following ASCII UML class diagrams capture the key relationships.
 
 #### Core Architecture
 
-```
-+----------------+         +----------------+         +-----------+
-|   RLAD         |-------->|      Ui         |         |  Parser   |
-|----------------|         |----------------|         |-----------|
-| -ui: Ui        |         | +readCommand() |         | +parse()  |
-| -transactions  |         | +showResult()  |         | (factory) |
-| -budgetManager |         | +showError()   |         +-----------+
-| +run()         |         | +showLine()    |
-+----------------+         +----------------+
-        |
-        | creates and executes
-        v
-+-------------------+
-|   <<abstract>>    |
-|   Command         |
-|-------------------|
-| #rawArgs: String  |
-| +execute(TM, Ui)  |
-| +hasValidArgs()   |
-+-------------------+
-        ^
-        | extends
-   _____|_______________________________________
-  |         |         |         |         |    |
-AddCmd  DeleteCmd  ListCmd  BudgetCmd ExportCmd ...
+```mermaid
+classDiagram
+    class RLAD {
+        -Ui ui
+        -TransactionManager transactions
+        -BudgetManager budgetManager
+        +run()
+    }
+
+    class Ui {
+        +readCommand() String
+        +showResult(String)
+        +showError(String)
+        +showLine()
+        +askConfirmation(String, String) boolean
+    }
+
+    class Parser {
+        +parse(String) Command
+        +parseCommand(String) String[]
+        -isValidAction(String) boolean
+        -requiresArguments(String) boolean
+    }
+
+    class Command {
+        <<abstract>>
+        #String action
+        #String rawArgs
+        +execute(TM, Ui)*
+        +execute(TM, Ui, BM)
+        +hasValidArgs()* boolean
+    }
+
+    class AddCommand {
+        +execute(TM, Ui)
+        +hasValidArgs() boolean
+        -parseArguments(String) Map
+        -validateRequiredFields(Map)
+        -convertAmount(String) double
+        -convertDate(String) LocalDate
+    }
+
+    class DeleteCommand {
+        +execute(TM, Ui)
+        +hasValidArgs() boolean
+        -parseHashId() String
+    }
+
+    class ListCommand {
+        +execute(TM, Ui)
+        +hasValidArgs() boolean
+    }
+
+    class BudgetCommand {
+        +execute(TM, Ui, BM)
+        +hasValidArgs() boolean
+        -handleSet()
+        -handleView()
+        -handleEdit()
+        -handleDelete()
+    }
+
+    class ExportCommand {
+        +execute(TM, Ui)
+        +hasValidArgs() boolean
+    }
+
+    class ImportCommand {
+        +execute(TM, Ui)
+        +hasValidArgs() boolean
+    }
+
+    class ClearCommand {
+        +execute(TM, Ui)
+        +hasValidArgs() boolean
+    }
+
+    RLAD --> Ui : uses
+    RLAD --> Parser : uses
+    RLAD --> TransactionManager : creates
+    RLAD --> BudgetManager : creates
+
+    Parser ..> Command : creates
+
+    Command <|-- AddCommand
+    Command <|-- DeleteCommand
+    Command <|-- ListCommand
+    Command <|-- BudgetCommand
+    Command <|-- ExportCommand
+    Command <|-- ImportCommand
+    Command <|-- ClearCommand
 ```
 
 #### Transaction Model
 
-```
-+----------------------+          +-------------+
-|  TransactionManager  |          | Transaction |
-|----------------------|  stores  |-------------|
-| -transactions: List  |--------->| -hashId     |
-| -transMap: HashMap   |          | -type       |
-| -budgetManager       |          | -category   |
-|----------------------|          | -amount     |
-| +addTransaction()    |          | -date       |
-| +deleteTransaction() |          | -description|
-| +findTransaction()   |          +-------------+
-| +updateTransaction() |
-| +getTransactions()   |
-| +setGlobalSort()     |
-+----------------------+
-          |
-          | notifies
-          v
-+----------------------+         +------------------+
-|   BudgetManager      |         |  MonthlyBudget   |
-|----------------------| stores  |------------------|
-| -budgets: Map        |-------->| -month: YearMonth|
-|   YearMonth ->       |         | -categoryBudgets |
-|   MonthlyBudget      |         | -totalIncome     |
-|----------------------|         |------------------|
-| +onTransactionAdded()|         | +setBudget()     |
-| +onTransactionDeleted|         | +editBudget()    |
-| +getProgress()       |         | +deleteBudget()  |
-| +checkThresholds()   |         | +getDisposable() |
-+----------------------+         +------------------+
-                                          |
-                                          | keyed by
-                                          v
-                               +------------------+
-                               |  BudgetCategory  |
-                               |  (enum)          |
-                               |------------------|
-                               | FOOD(1)          |
-                               | TRANSPORT(2)     |
-                               | ... 12 total ... |
-                               +------------------+
+```mermaid
+classDiagram
+    class TransactionManager {
+        -ArrayList~Transaction~ transactions
+        -HashMap~String, Transaction~ transMap
+        -String globalSortField
+        -String globalSortDirection
+        -BudgetManager budgetManager
+        +addTransaction(Transaction)
+        +deleteTransaction(String) boolean
+        +findTransaction(String) Transaction
+        +updateTransaction(String, Transaction) boolean
+        +getTransactions() ArrayList~Transaction~
+        +setGlobalSort(String, String)
+        +clearGlobalSort()
+        +clearAllTransactions()
+        -hashCollisionPrevention(Transaction) Transaction
+    }
+
+    class Transaction {
+        -String hashId
+        -String type
+        -String category
+        -double amount
+        -LocalDate date
+        -String description
+        +getHashId() String
+        +getType() String
+        +getCategory() String
+        +getAmount() double
+        +getDate() LocalDate
+        +getDescription() String
+        +setHashId(String)
+        +regenerateHashId()
+        +toString() String
+    }
+
+    class BudgetManager {
+        -Map~YearMonth, MonthlyBudget~ budgets
+        -Map~String, Set~Integer~~ notifiedThresholds
+        -TransactionManager transactionManager
+        -Ui ui
+        +setBudget(YearMonth, int, double)
+        +editBudget(YearMonth, int, double)
+        +deleteBudget(YearMonth, int)
+        +getProgress(YearMonth, BudgetCategory) BudgetProgress
+        +checkBudgetThresholds(YearMonth)
+        +onTransactionAdded(Transaction)
+        +onTransactionDeleted(Transaction)
+        +onTransactionUpdated(Transaction, Transaction)
+        +onAllDataCleared()
+        -updateTotalIncome(YearMonth)
+        -sendNotification(...)
+    }
+
+    class MonthlyBudget {
+        -YearMonth month
+        -Map~BudgetCategory, Double~ categoryBudgets
+        -double totalIncome
+        +setBudget(BudgetCategory, double)
+        +editBudget(BudgetCategory, double)
+        +deleteBudget(BudgetCategory)
+        +getBudgetForCategory(BudgetCategory) double
+        +getTotalAllocatedBudget() double
+        +getDisposableIncome() double
+        +hasBudget(BudgetCategory) boolean
+        +getBudgetedCategoryCount() int
+    }
+
+    class BudgetCategory {
+        <<enumeration>>
+        FOOD
+        TRANSPORT
+        UTILITIES
+        HOUSING
+        HEALTH_INSURANCE
+        DEBT_OBLIGATION
+        CHILD_CARE
+        SHOPPING
+        GIFTS
+        INVESTMENTS
+        EMERGENCY_FUND
+        SAVINGS
+        +getCode() int
+        +getDisplayName() String
+        +fromCode(int) BudgetCategory
+        +fromDisplayName(String) BudgetCategory
+    }
+
+    class BudgetProgress {
+        <<inner>>
+        -BudgetCategory category
+        -double allocated
+        -double spent
+        -double remaining
+        -int percentage
+        +getProgressBar(int) String
+    }
+
+    TransactionManager "1" --> "0..*" Transaction : stores
+    TransactionManager "1" --> "1" BudgetManager : notifies
+    BudgetManager "1" --> "0..*" MonthlyBudget : manages
+    MonthlyBudget "1" --> "1" BudgetCategory : keyed by
+    BudgetManager "1" --> "1" BudgetProgress : creates
 ```
 
 #### Command Hierarchy
 
-```
-                    +-------------------+
-                    |  <<abstract>>     |
-                    |  Command          |
-                    |-------------------|
-                    | #action: String   |
-                    | #rawArgs: String  |
-                    | +execute(TM,Ui)   |
-                    | +execute(TM,Ui,BM)|
-                    | +hasValidArgs()   |
-                    +-------------------+
-                              ^
-       _______________________|_______________________________
-      |          |          |          |          |           |
-+--------+  +--------+  +--------+  +--------+  +--------+  ...
-|AddCmd  |  |DelCmd  |  |ListCmd |  |ModifyCmd|  |BudgetCmd|
-+--------+  +--------+  +--------+  +--------+  +---------+
-                              |
-                    delegates filter logic
-                              |
-                    +-----------------+
-                    |  FilterCommand  |
-                    |-----------------|
-                    | +parseFlags()   |
-                    | +buildPredicate()|
-                    +-----------------+
+```mermaid
+classDiagram
+    class Command {
+        <<abstract>>
+        #String action
+        #String rawArgs
+        +execute(TM, Ui)*
+        +execute(TM, Ui, BM)
+        +hasValidArgs()* boolean
+    }
 
-New (Storage feature):
-+------------+  +------------+  +-------------+
-| ExportCmd  |  | ImportCmd  |  | ClearCmd    |
-+------------+  +------------+  +-------------+
-      |               |
-      | uses          | uses
-      v               v
-+------------------------------+
-|     CsvStorageManager        |
-|------------------------------|
-| +exportToCsv()               |
-| +importFromCsv()             |
-| -parseCsvRow()               |
-| -escapeCsvField()            |
-| <<inner>> ImportResult       |
-+------------------------------+
+    class AddCommand {
+        +execute(TM, Ui)
+        +hasValidArgs() boolean
+    }
+
+    class DeleteCommand {
+        +execute(TM, Ui)
+        +hasValidArgs() boolean
+    }
+
+    class ListCommand {
+        +execute(TM, Ui)
+        +hasValidArgs() boolean
+    }
+
+    class ModifyCommand {
+        +execute(TM, Ui)
+        +hasValidArgs() boolean
+    }
+
+    class BudgetCommand {
+        +execute(TM, Ui, BM)
+        +hasValidArgs() boolean
+    }
+
+    class ExportCommand {
+        +execute(TM, Ui)
+        +hasValidArgs() boolean
+    }
+
+    class ImportCommand {
+        +execute(TM, Ui)
+        +hasValidArgs() boolean
+    }
+
+    class ClearCommand {
+        +execute(TM, Ui)
+        +hasValidArgs() boolean
+    }
+
+    class FilterCommand {
+        <<utility>>
+        +parseFlags(String) Map
+        +buildPredicate(String) Predicate
+    }
+
+    Command <|-- AddCommand
+    Command <|-- DeleteCommand
+    Command <|-- ListCommand
+    Command <|-- ModifyCommand
+    Command <|-- BudgetCommand
+    Command <|-- ExportCommand
+    Command <|-- ImportCommand
+    Command <|-- ClearCommand
+
+    ListCommand ..> FilterCommand : uses
 ```
 
 #### Storage Component
 
-```
-+------------------------------+
-|     CsvStorageManager        |
-|------------------------------|
-| +exportToCsv(transactions,   |
-|    filename, directory)      |
-|   : String (filepath)        |
-|                              |
-| +importFromCsv(filepath,     |
-|    mergeMode)                |
-|   : ImportResult             |
-|                              |
-| -parseCsvRow(columns, rowNum)|
-|   : Transaction              |
-|                              |
-| -escapeCsvField(field)       |
-|   : String                   |
-+------------------------------+
-            |
-            | produces
-            v
-+----------------------------+
-|  <<inner class>>           |
-|  ImportResult              |
-|----------------------------|
-| -successCount: int         |
-| -failureCount: int         |
-| -errorMessages: List<Str>  |
-|----------------------------|
-| +getSuccessCount()         |
-| +getFailureCount()         |
-| +getErrorMessages()        |
-+----------------------------+
+```mermaid
+classDiagram
+    class CsvStorageManager {
+        +exportToCsv(List~Transaction~, String, String) String
+        +importFromCsv(String, boolean) ImportResult
+        -parseCsvRow(String[], int) Transaction
+        -escapeCsvField(String) String
+    }
+
+    class ImportResult {
+        <<inner>>
+        -int successCount
+        -int failureCount
+        -List~String~ errorMessages
+        +getSuccessCount() int
+        +getFailureCount() int
+        +getErrorMessages() List~String~
+    }
+
+    class ExportCommand {
+        +execute(TM, Ui)
+        +hasValidArgs() boolean
+    }
+
+    class ImportCommand {
+        +execute(TM, Ui)
+        +hasValidArgs() boolean
+    }
+
+    class ClearCommand {
+        +execute(TM, Ui)
+        +hasValidArgs() boolean
+    }
+
+    ExportCommand --> CsvStorageManager : uses
+    ImportCommand --> CsvStorageManager : uses
+    CsvStorageManager --> ImportResult : produces
 ```
 
 ---
@@ -335,38 +471,49 @@ New (Storage feature):
 
 **Sequence:**
 
-```
-User Input
-    |
-    v
-Parser.parse("add --type debit --amount 15.50 --date 2026-03-05")
-    |
-    v
-AddCommand(rawArgs) created
-    |
-    v
-AddCommand.hasValidArgs()
-    |  checks: rawArgs contains --type, --amount, --date
-    v
-AddCommand.execute(transactions, ui)
-    |
-    |-- parseArguments(rawArgs)          -> Map<String, String>
-    |-- validateRequiredFields(parsedArgs)
-    |-- convertAmount("15.50")           -> 15.50 (double)
-    |-- convertDate("2026-03-05")        -> LocalDate
-    |-- new Transaction(type, cat, amt, date, desc)
-    |
-    v
-TransactionManager.addTransaction(t)
-    |
-    |-- hashCollisionPrevention(t)       -> ensures unique HashID
-    |-- transactions.add(t)
-    |-- transMap.put(t.getHashId(), t)
-    |-- budgetManager.onTransactionAdded(t)
-    |-- budgetManager.checkBudgetThresholds(month)
-    |
-    v
-ui.showResult("✅ Transaction added successfully! ...")
+```mermaid
+sequenceDiagram
+    participant User
+    participant Parser
+    participant AddCommand
+    participant TM as TransactionManager
+    participant BM as BudgetManager
+    participant Ui
+
+    User->>Parser: add --type debit --amount 15.50 --date 2026-03-05
+    Parser->>AddCommand: new AddCommand(rawArgs)
+    AddCommand->>AddCommand: hasValidArgs()
+
+    User->>AddCommand: execute(transactions, ui)
+
+    activate AddCommand
+    AddCommand->>AddCommand: parseArguments(rawArgs)
+    AddCommand->>AddCommand: validateRequiredFields(parsedArgs)
+    AddCommand->>AddCommand: convertAmount("15.50")
+    AddCommand->>AddCommand: convertDate("2026-03-05")
+    AddCommand->>AddCommand: new Transaction(type, cat, amt, date, desc)
+
+    AddCommand->>TM: addTransaction(t)
+    activate TM
+
+    TM->>TM: hashCollisionPrevention(t)
+    TM->>TM: transactions.add(t)
+    TM->>TM: transMap.put(t.getHashId(), t)
+
+    TM->>BM: onTransactionAdded(t)
+    activate BM
+    BM->>BM: updateTotalIncome(month)
+    BM->>BM: updateCategorySpending(month, t)
+    BM->>BM: checkBudgetThresholds(month)
+    BM-->>TM: return
+    deactivate BM
+
+    TM-->>AddCommand: return
+    deactivate TM
+
+    AddCommand->>Ui: showResult("Transaction added...")
+    Ui-->>User: display success message
+    deactivate AddCommand
 ```
 
 **Design notes:**
@@ -382,8 +529,52 @@ ui.showResult("✅ Transaction added successfully! ...")
 
 **Sequence:**
 
-```
-Taller Roshan
+```mermaid
+sequenceDiagram
+    participant User
+    participant Parser
+    participant DeleteCommand
+    participant TM as TransactionManager
+    participant BM as BudgetManager
+    participant Ui
+    
+    User->>Parser: delete --hashID a7b2c3
+    Parser->>DeleteCommand: new DeleteCommand(rawArgs)
+    DeleteCommand->>DeleteCommand: hasValidArgs()
+    
+    User->>DeleteCommand: execute(transactions, ui)
+    
+    activate DeleteCommand
+    DeleteCommand->>DeleteCommand: parseHashId()
+    
+    DeleteCommand->>TM: findTransaction(id)
+    activate TM
+    TM-->>DeleteCommand: Transaction object
+    deactivate TM
+    
+    alt Transaction not found
+        DeleteCommand->>Ui: showError("Transaction not found")
+        Ui-->>User: display error
+    else Transaction found
+        DeleteCommand->>TM: deleteTransaction(id)
+        activate TM
+        
+        TM->>TM: transactions.remove(toDelete)
+        TM->>TM: transMap.remove(id)
+        
+        TM->>BM: onTransactionDeleted(toDelete)
+        activate BM
+        BM->>BM: checkBudgetThresholds(month)
+        BM-->>TM: return
+        deactivate BM
+        
+        TM-->>DeleteCommand: return true
+        deactivate TM
+        
+        DeleteCommand->>Ui: showResult("Transaction deleted...")
+        Ui-->>User: display success
+    end
+    deactivate DeleteCommand
 ```
 
 ---
@@ -410,36 +601,144 @@ Taller Roshan
 
 **Sequence:**
 
-```
-User -> Parser: "list --type debit --sort amount"
-Parser -> ListCommand: new ListCommand("--type debit --sort amount")
-RLAD -> ListCommand: execute(transactions, ui)
-ListCommand -> FilterCommand: parseFlags(rawArgs)
-FilterCommand --> ListCommand: flags map
-ListCommand -> FilterCommand: buildPredicate(rawArgs)
-FilterCommand --> ListCommand: Predicate<Transaction>
-ListCommand -> TransactionManager: getTransactions()
-ListCommand -> ListCommand: stream().filter(predicate).collect()
-ListCommand -> TransactionSorter: sort(results, "amount", "asc")
-ListCommand -> Ui: showResult(formatted table)
+```mermaid
+sequenceDiagram
+    participant User
+    participant ListCommand
+    participant FilterCommand
+    participant TM as TransactionManager
+    participant Sorter as TransactionSorter
+    participant Ui
+
+    User->>ListCommand: list --type debit --category food --sort amount
+    activate ListCommand
+
+    ListCommand->>FilterCommand: parseFlags(rawArgs)
+    activate FilterCommand
+    FilterCommand-->>ListCommand: flags Map
+    deactivate FilterCommand
+
+    ListCommand->>FilterCommand: buildPredicate(rawArgs)
+    activate FilterCommand
+
+    FilterCommand->>FilterCommand: start with p = t -> true
+
+    alt --type present
+        FilterCommand->>FilterCommand: p = p.and(t -> t.getType().equals(type))
+    end
+
+    alt --category present
+        FilterCommand->>FilterCommand: p = p.and(t -> t.getCategory().equals(category))
+    end
+
+    alt --amount present
+        FilterCommand->>FilterCommand: p = p.and(buildAmountPredicate(amount))
+    end
+
+    alt --date-from or --date-to present
+        FilterCommand->>FilterCommand: p = p.and(buildDateRangePredicate())
+    end
+
+    FilterCommand-->>ListCommand: final Predicate
+    deactivate FilterCommand
+
+    ListCommand->>TM: getTransactions()
+    activate TM
+    TM-->>ListCommand: allTransactions (ArrayList)
+    deactivate TM
+
+    ListCommand->>ListCommand: results = stream.filter(predicate).collect()
+
+    alt results.isEmpty()
+        ListCommand->>Ui: showResult("Empty Wallet — no transactions match")
+        Ui-->>User: display message
+    else results not empty
+
+        alt --sort flag present
+            ListCommand->>Sorter: sort(results, sortBy, sortDirection)
+            activate Sorter
+            Sorter-->>ListCommand: sortedResults
+            deactivate Sorter
+        else global sort set in TransactionManager
+            ListCommand->>Sorter: sort(results, globalField, globalDirection)
+            activate Sorter
+            Sorter-->>ListCommand: sortedResults
+            deactivate Sorter
+        end
+
+        ListCommand->>Ui: showResult(DIVIDER)
+        ListCommand->>Ui: showResult(table header)
+        ListCommand->>Ui: showResult(DIVIDER)
+
+        loop For each transaction in sortedResults
+            ListCommand->>Ui: showResult(formatted transaction row)
+        end
+
+        ListCommand->>Ui: showResult(DIVIDER)
+        ListCommand->>Ui: showResult("Total: X transaction(s) shown")
+
+        Ui-->>User: display formatted table
+    end
+
+    deactivate ListCommand
 ```
 
 **How `FilterCommand.buildPredicate()` works:**
 
 Predicates are composed using `Predicate.and()` — each active flag adds a new AND condition. The starting predicate is `t -> true` (match all), and each flag narrows it:
 
-```
-Predicate<Transaction> p = t -> true;
-if (flags has "type")     p = p.and(t -> t.getType().equalsIgnoreCase(type));
-if (flags has "category") p = p.and(t -> t.getCategory().equalsIgnoreCase(cat));
-if (flags has "amount")   p = p.and(buildAmountPredicate(flags.get("amount")));
-if (flags has "date-from") p = p.and(t -> !t.getDate().isBefore(from));
-...
+```mermaid
+flowchart LR
+    subgraph Input
+        Args["--type debit --category food --amount -gt 50"]
+    end
+
+    subgraph FilterCommand
+        Parse["parseFlags()"] --> Map["Map: type->debit, category->food, amount->-gt 50"]
+
+        Map --> Type["type filter"]
+        Map --> Cat["category filter"]
+        Map --> Amt["amount filter"]
+
+        Type --> And1["AND"]
+        Cat --> And1
+        Amt --> And1
+    end
+
+    subgraph Output
+        And1 --> Predicate["Predicate<Transaction>"]
+        Predicate --> Stream["transactions.stream().filter(predicate)"]
+        Stream --> Results["Filtered List"]
+    end
+
+    subgraph Legend
+        direction LR
+        P["Start: t -> true"] --> T["--type debit"]
+        T --> C["--category food"]
+        C --> A["--amount -gt 50"]
+        A --> R["Final Predicate"]
+    end
 ```
 
 This design means `FilterCommand` can be reused by any command that needs transaction filtering (currently `ListCommand` and `SummarizeCommand`).
 
 **Sort priority:**
+```mermaid
+flowchart TD
+    Start["list command executed"] --> CheckFlag{"--sort flag present?"}
+
+    CheckFlag -->|Yes| FlagSort["Use --sort field and direction"]
+    FlagSort --> Display["Display sorted results"]
+
+    CheckFlag -->|No| CheckGlobal{"Global sort set in TransactionManager?"}
+    CheckGlobal -->|Yes| GlobalSort["Use global sort field and direction"]
+    GlobalSort --> Display
+
+    CheckGlobal -->|No| InsertionOrder["Use insertion order (original ArrayList order)"]
+    InsertionOrder --> Display
+
+    Display --> End["Results shown to user"]
+```
 1. `--sort` flag in the `list` command (highest priority, one-time).
 2. Global sort set via `sort` command (falls back if no `--sort` flag).
 3. Insertion order (default if neither is set).
@@ -452,18 +751,42 @@ This design means `FilterCommand` can be reused by any command that needs transa
 
 `SortCommand` does not sort transactions itself — it writes the desired sort field and direction to `TransactionManager` via `setGlobalSort()`. `ListCommand` reads these stored values on each invocation.
 
-```
-User -> Parser: "sort date desc"
-Parser -> SortCommand: new SortCommand("date desc")
-SortCommand -> SortCommand: parseArgs("date desc") -> field="date", direction="desc"
-RLAD -> SortCommand: execute(transactions, ui)
-SortCommand -> TransactionManager: setGlobalSort("date", "desc")
-SortCommand -> Ui: showResult("Sort order set: date (desc)")
+```mermaid
+sequenceDiagram
+    participant User
+    participant Parser
+    participant SortCommand
+    participant TM as TransactionManager
+    participant Ui
 
---- On next "list" command ---
-ListCommand -> TransactionManager: getGlobalSortField() -> "date"
-ListCommand -> TransactionManager: getGlobalSortDirection() -> "desc"
-ListCommand -> TransactionSorter: sort(results, "date", "desc")
+    User->>Parser: sort date desc
+    Parser->>SortCommand: new SortCommand("date desc")
+
+    User->>SortCommand: execute(transactions, ui)
+    activate SortCommand
+
+    SortCommand->>SortCommand: parseArgs("date desc")
+    Note right of SortCommand: field = "date", direction = "desc"
+
+    alt field is empty (no args)
+        SortCommand->>TM: getGlobalSortField()
+        TM-->>SortCommand: current field
+        SortCommand->>Ui: showResult("Current sort: ...")
+    else field is "reset"
+        SortCommand->>TM: clearGlobalSort()
+        SortCommand->>Ui: showResult("Sort order cleared")
+    else valid field and direction
+        SortCommand->>TM: setGlobalSort("date", "desc")
+        SortCommand->>Ui: showResult("Sort order set: date (desc)")
+    end
+
+    deactivate SortCommand
+
+    Note over User, Ui: On next "list" command
+    User->>TM: (via ListCommand) getGlobalSortField()
+    TM-->>User: "date"
+    User->>TM: (via ListCommand) getGlobalSortDirection()
+    TM-->>User: "desc"
 ```
 
 ---
@@ -488,50 +811,97 @@ BigDecimal is used for all summation to avoid floating-point precision errors.
 
 #### Setting a Budget
 
-```
-budget set --month 2026-03 --category 1 --amount 500.00
-    |
-    v
-BudgetCommand("set --month 2026-03 --category 1 --amount 500.00")
-    |
-    v
-RLAD.run() detects BudgetCommand instance ->
-    cmd.execute(transactions, ui, budgetManager)
-    |
-    v
-BudgetCommand.execute(transactions, ui, budgetManager)
-    |
-    |-- parseArguments(rawArgs) -> Map{ subcommand="set", --month=..., ... }
-    |-- handleSet(budgetManager, args, ui)
-    |       -> parseMonth("2026-03")    -> YearMonth
-    |       -> parseCategoryCode("1")   -> 1
-    |       -> parseAmount("500.00")    -> 500.00
-    |       -> budgetManager.setBudget(month, code, amount)
-    |               -> BudgetCategory.fromCode(1) -> FOOD
-    |               -> MonthlyBudget.setBudget(FOOD, 500.00)
-    |
-    v
-ui.showResult("✅ Budget set successfully ...")
+```mermaid
+sequenceDiagram
+    participant User
+    participant Parser
+    participant BudgetCommand
+    participant BM as BudgetManager
+    participant MonthlyBudget
+    participant Ui
+
+    User->>Parser: budget set --month 2026-03 --category 1 --amount 500
+    Parser->>BudgetCommand: new BudgetCommand(rawArgs)
+
+    User->>BudgetCommand: execute(transactions, ui, budgetManager)
+
+    activate BudgetCommand
+    BudgetCommand->>BudgetCommand: parseArguments(rawArgs)
+    BudgetCommand->>BudgetCommand: handleSet(budgetManager, args, ui)
+
+    BudgetCommand->>BudgetCommand: parseMonth("2026-03")
+    BudgetCommand->>BudgetCommand: parseCategoryCode("1")
+    BudgetCommand->>BudgetCommand: parseAmount("500")
+
+    BudgetCommand->>BM: setBudget(month, categoryCode, amount)
+    activate BM
+
+    BM->>BM: BudgetCategory.fromCode(1)
+    BM->>MonthlyBudget: getOrCreateBudget(month)
+    activate MonthlyBudget
+
+    MonthlyBudget->>MonthlyBudget: setBudget(FOOD, 500.00)
+    MonthlyBudget-->>BM: return
+    deactivate MonthlyBudget
+
+    BM->>BM: updateTotalIncome(month)
+    BM-->>BudgetCommand: return
+    deactivate BM
+
+    BudgetCommand->>Ui: showResult("Budget set successfully...")
+    Ui-->>User: display success
+    deactivate BudgetCommand
 ```
 
 #### Budget Progress Tracking
 
 `BudgetManager` reacts to transaction lifecycle events:
 
-```
-TransactionManager.addTransaction(t)
-    |
-    v
-BudgetManager.onTransactionAdded(t)
-    |
-    |-- YearMonth month = YearMonth.from(t.getDate())
-    |-- Finds MonthlyBudget for month (if exists)
-    |-- If t.getType() == "credit": updates totalIncome for the month
-    |-- If t.getType() == "debit":  records spending against category
-    |
-    v
-BudgetManager.checkBudgetThresholds(month)
-    |-- For each category: if spent/allocated >= threshold -> warn via Ui
+```mermaid
+sequenceDiagram
+    participant User
+    participant AddCommand
+    participant TM as TransactionManager
+    participant BM as BudgetManager
+    participant MonthlyBudget
+    participant Ui
+
+    User->>AddCommand: add --type debit --amount 80 --date 2026-03-15
+    AddCommand->>TM: addTransaction(t)
+
+    activate TM
+    TM->>TM: transactions.add(t)
+    TM->>TM: transMap.put(id, t)
+
+    TM->>BM: onTransactionAdded(t)
+    activate BM
+
+    BM->>BM: YearMonth month = getMonth(t)
+    BM->>MonthlyBudget: find budget for month
+    activate MonthlyBudget
+
+    alt transaction is debit
+        BM->>BM: record spending against category
+        BM->>BM: checkBudgetThresholds(month)
+
+        loop For each budgeted category
+            BM->>BM: calculate percentage = spent/allocated
+            alt percentage >= 80 and not notified
+                BM->>Ui: showResult("WARNING: 80% of Food budget used")
+            else percentage >= 90 and not notified
+                BM->>Ui: showResult("WARNING: 90% of Food budget used")
+            else percentage >= 100 and not notified
+                BM->>Ui: showResult("EXCEEDED: Food budget exceeded")
+            end
+        end
+    end
+
+    BM-->>TM: return
+    deactivate BM
+    TM-->>AddCommand: return
+    deactivate TM
+
+    Ui-->>User: display notification
 ```
 
 #### Viewing Budget Progress
@@ -551,16 +921,44 @@ This feature is implemented across three new command classes and one new storage
 
 #### 4.8.1 Export (`ExportCommand` + `CsvStorageManager.exportToCsv`)
 
-```
-User -> Parser: "export --file backup.csv"
-Parser -> ExportCommand: new ExportCommand("--file backup.csv")
-RLAD -> ExportCommand: execute(transactions, ui)
-ExportCommand -> FilterCommand: parseFlags(rawArgs) -> {file: "backup.csv"}
-ExportCommand -> TransactionManager: getTransactions()
-ExportCommand -> CsvStorageManager: exportToCsv(transactions, "backup.csv")
-CsvStorageManager -> CsvStorageManager: escapeCsvField() for each field
-CsvStorageManager -> File: write CSV rows
-ExportCommand -> Ui: showResult("Exported N transactions to: backup.csv")
+```mermaid
+sequenceDiagram
+    participant User
+    participant Parser
+    participant ExportCommand
+    participant FilterCommand
+    participant TM as TransactionManager
+    participant CSV as CsvStorageManager
+    participant Ui
+
+    User->>Parser: export --file backup.csv
+    Parser->>ExportCommand: new ExportCommand("--file backup.csv")
+
+    User->>ExportCommand: execute(transactions, ui)
+    activate ExportCommand
+
+    ExportCommand->>FilterCommand: parseFlags(rawArgs)
+    FilterCommand-->>ExportCommand: {file: "backup.csv"}
+
+    ExportCommand->>TM: getTransactions()
+    TM-->>ExportCommand: ArrayList of transactions
+
+    alt transactions empty
+        ExportCommand->>Ui: showResult("No transactions to export.")
+    else transactions exist
+        ExportCommand->>CSV: exportToCsv(transactions, "backup.csv")
+        activate CSV
+        CSV->>CSV: write header row
+        loop For each transaction
+            CSV->>CSV: escapeCsvField() for each field
+            CSV->>CSV: write CSV row
+        end
+        deactivate CSV
+        ExportCommand->>Ui: showResult("Exported N transactions to: backup.csv")
+    end
+
+    Ui-->>User: display result
+    deactivate ExportCommand
 ```
 
 **CSV escaping rules:**
@@ -569,53 +967,101 @@ ExportCommand -> Ui: showResult("Exported N transactions to: backup.csv")
 
 #### 4.8.2 Import (`ImportCommand` + `CsvStorageManager.importFromCsv`)
 
-```
-User -> Parser: "import --file backup.csv"
-Parser -> ImportCommand: new ImportCommand("--file backup.csv")
-RLAD -> ImportCommand: execute(transactions, ui)
-ImportCommand -> FilterCommand: parseFlags(rawArgs) -> {file: "backup.csv"}
-ImportCommand -> Ui: askConfirmation("WARNING: Replace mode will delete all N existing transactions.")
-Ui --> ImportCommand: true (user typed CONFIRM)
-ImportCommand -> CsvStorageManager: importFromCsv("backup.csv")
-CsvStorageManager -> CsvStorageManager: validate headers, parseCsvRow() x N
-CsvStorageManager --> ImportCommand: CsvImportResult(transactions, errors)
-ImportCommand -> TransactionManager: clearAllTransactions()
-ImportCommand -> TransactionManager: addTransaction(t) [for each imported transaction]
-ImportCommand -> Ui: showResult("Import complete: N succeeded, N failed.")
-```
+```mermaid
+sequenceDiagram
+    participant User
+    participant ImportCommand
+    participant CSV as CsvStorageManager
+    participant TM as TransactionManager
+    participant BM as BudgetManager
+    participant Ui
 
-**Sequence diagram for import (replace mode):**
+    User->>ImportCommand: import --file backup.csv
+    ImportCommand->>ImportCommand: hasValidArgs()
 
-```
-ImportCommand          CsvStorageManager       TransactionManager      BudgetManager
-     |                        |                        |                     |
-     |--importFromCsv()------>|                        |                     |
-     |                        |--validate headers      |                     |
-     |                        |--parseCsvRow() x N     |                     |
-     |<--ImportResult---------|                        |                     |
-     |                        |                        |                     |
-     |--clearAllTransactions()-|---------------------->|                     |
-     |                        |                        |--clear()            |
-     |                        |                        |--notify------------>|
-     |                        |                        |    onAllDataCleared |
-     |                        |                        |                     |
-     |--addTransaction(t) x N-|---------------------->|                     |
-     |                        |                        |--onTransactionAdded |-->BudgetManager
-     |                        |                        |                     |
-     |<--done                 |                        |                     |
+    User->>ImportCommand: execute(transactions, ui)
+
+    activate ImportCommand
+    ImportCommand->>CSV: importFromCsv(filepath, mergeMode=false)
+    activate CSV
+
+    CSV->>CSV: validate headers
+    loop For each row in CSV
+        CSV->>CSV: parseCsvRow(columns, rowNum)
+        alt row valid
+            CSV->>CSV: add to valid transactions list
+        else row invalid
+            CSV->>CSV: log error message
+        end
+    end
+
+    CSV-->>ImportCommand: ImportResult(success, failure, errors)
+    deactivate CSV
+
+    alt replace mode
+        ImportCommand->>TM: clearAllTransactions()
+        activate TM
+        TM->>TM: transactions.clear()
+        TM->>TM: transMap.clear()
+        TM->>BM: onAllDataCleared()
+        activate BM
+        BM->>BM: notifiedThresholds.clear()
+        BM-->>TM: return
+        deactivate BM
+        TM-->>ImportCommand: return
+        deactivate TM
+
+        loop For each valid transaction
+            ImportCommand->>TM: addTransaction(t)
+            TM->>BM: onTransactionAdded(t)
+        end
+    end
+
+    ImportCommand->>Ui: showResult("Import summary...")
+    Ui-->>User: display results
+    deactivate ImportCommand
 ```
 
 #### 4.8.3 Clear (`ClearCommand`)
 
-```
-User -> Parser: "clear"
-Parser -> ClearCommand: new ClearCommand("")
-RLAD -> ClearCommand: execute(transactions, ui)
-ClearCommand -> TransactionManager: getTransactionCount() -> N
-ClearCommand -> Ui: askConfirmation("WARNING: This will permanently delete all N transactions.")
-Ui --> ClearCommand: true (user typed CONFIRM)
-ClearCommand -> TransactionManager: clearAllTransactions()
-ClearCommand -> Ui: showResult("Cleared N transactions.")
+```mermaid
+sequenceDiagram
+    participant User
+    participant Parser
+    participant ClearCommand
+    participant TM as TransactionManager
+    participant BM as BudgetManager
+    participant Ui
+
+    User->>Parser: clear
+    Parser->>ClearCommand: new ClearCommand("")
+
+    User->>ClearCommand: execute(transactions, ui)
+    activate ClearCommand
+
+    ClearCommand->>TM: getTransactionCount()
+    TM-->>ClearCommand: N
+
+    alt N == 0
+        ClearCommand->>Ui: showResult("No transactions to clear.")
+    else N > 0 and no --force flag
+        ClearCommand->>Ui: askConfirmation("WARNING: ...")
+        Ui->>User: "Type CONFIRM to proceed: "
+        User-->>Ui: "CONFIRM"
+        Ui-->>ClearCommand: true
+
+        ClearCommand->>TM: clearAllTransactions()
+        activate TM
+        TM->>TM: transactions.clear()
+        TM->>TM: transMap.clear()
+        TM->>BM: onAllDataCleared()
+        deactivate TM
+
+        ClearCommand->>Ui: showResult("Cleared N transactions.")
+    end
+
+    Ui-->>User: display result
+    deactivate ClearCommand
 ```
 
 #### Parser Changes Required
