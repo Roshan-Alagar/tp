@@ -17,11 +17,11 @@
     - 4.6 [Summarize Transactions](#46-summarize-transactions)
     - 4.7 [Budget Management](#47-budget-management)
     - 4.8 [Storage Management (CSV Export/Import & Clear)](#48-storage-management-csv-exportimport--clear)
-5. [Product Scope](#5-product-scope)
-6. [User Stories](#6-user-stories)
-7. [Non-Functional Requirements](#7-non-functional-requirements)
-8. [Glossary](#8-glossary)
-9. [Instructions for Manual Testing](#9-instructions-for-manual-testing)
+5. [Appendix A: Product Scope](#appendix-a-product-scope)
+6. [Appendix B: User Stories](#appendix-b-user-stories)
+7. [Appendix C: Non-Functional Requirements](#appendix-c-non-functional-requirements)
+8. [Appendix D: Glossary](#appendix-d-glossary)
+9. [Appendix E: Instructions for Manual Testing](#appendix-e-instructions-for-manual-testing)
 
 ---
 
@@ -1064,77 +1064,17 @@ sequenceDiagram
     deactivate ClearCommand
 ```
 
-#### Parser Changes Required
+#### Design Considerations
 
-`Parser.java` must be updated to recognise the three new commands:
+**Parser integration:** `export`, `import`, and `clear` are registered in `Parser.isValidAction()` and routed via the `parse()` switch. `import` requires arguments (`requiresArguments` returns true), while `export` and `clear` do not.
 
-```java
-private static boolean isValidAction(String action) {
-    return action.matches("add|delete|modify|list|sort|summarize|help|exit|budget|export|import|clear");
-}
+**Shared clearing logic:** Both `ClearCommand` and `ImportCommand` (replace mode) call `TransactionManager.clearAllTransactions()`, which clears both the ArrayList and HashMap, then notifies `BudgetManager.onAllDataCleared()` to reset notification tracking.
 
-private static boolean requiresArguments(String action) {
-    return action.matches("add|delete|modify|budget|import");
-}
-
-// In parse():
-case "export": return new ExportCommand(arguments);
-case "import": return new ImportCommand(arguments);
-case "clear":  return new ClearCommand(arguments);
-```
-
-#### TransactionManager Changes Required
-
-```java
-/**
- * Clears all transactions from storage.
- * Used by: ClearCommand, ImportCommand (replace mode)
- */
-public void clearAllTransactions() {
-    transactions.clear();
-    transMap.clear();
-    if (budgetManager != null) {
-        budgetManager.onAllDataCleared();
-    }
-}
-```
-
-#### BudgetManager Changes Required
-
-```java
-/**
- * Handles clearing of all transaction data.
- * Resets notification tracking and recalculates income/spending.
- */
-public void onAllDataCleared() {
-    notifiedThresholds.clear();
-    for (YearMonth month : budgets.keySet()) {
-        updateTotalIncome(month);
-        checkBudgetThresholds(month);
-    }
-}
-```
-
-#### Ui Changes Required
-
-```java
-/**
- * Prompts the user for confirmation before a destructive action.
- * @param prompt     Warning message to display
- * @param expected   The string the user must type to confirm (e.g., "CONFIRM")
- * @return true if the user typed the expected string (case-insensitive)
- */
-public boolean askConfirmation(String prompt, String expected) {
-    System.out.println(prompt);
-    System.out.print("> ");
-    String input = userScanner.nextLine();
-    return input.trim().equalsIgnoreCase(expected);
-}
-```
+**Confirmation flow:** Destructive operations (`clear`, `import` in replace mode) use `Ui.askConfirmation(String)` to prompt the user to type `CONFIRM` before proceeding. The `clear --force` flag bypasses this prompt.
 
 ---
 
-## 5. Product Scope
+## Appendix A: Product Scope
 
 ### Target User Profile
 
@@ -1146,7 +1086,7 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
 
 ---
 
-## 6. User Stories
+## Appendix B: User Stories
 
 | Version | As a ...      | I want to ...                                              | So that I can ...                                 |
 |---------|---------------|------------------------------------------------------------|---------------------------------------------------|
@@ -1168,7 +1108,7 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
 
 ---
 
-## 7. Non-Functional Requirements
+## Appendix C: Non-Functional Requirements
 
 - **Performance:** All operations on up to 1,000 transactions must complete in under 1 second on a standard laptop (macOS/Windows/Linux, JDK 17).
 - **Reliability:** HashID collision prevention must guarantee uniqueness across the session.
@@ -1179,7 +1119,7 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
 
 ---
 
-## 8. Glossary
+## Appendix D: Glossary
 
 | Term              | Definition                                                                                          |
 |-------------------|-----------------------------------------------------------------------------------------------------|
@@ -1196,11 +1136,11 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
 
 ---
 
-## 9. Instructions for Manual Testing
+## Appendix E: Instructions for Manual Testing
 
 > These tests verify core functionality. Run them in sequence on a fresh launch.
 
-### 9.1 Add Transactions
+### E.1 Add Transactions
 
 1. Add a credit:
    ```
@@ -1226,7 +1166,7 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
    ```
    Expected: error message — Invalid `--type`.
 
-### 9.2 List and Filter
+### E.2 List and Filter
 
 5. List all:
    ```
@@ -1258,7 +1198,7 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
    ```
    Expected: salary first, then chicken rice, then $5.00.
 
-### 9.3 Sort (Global)
+### E.3 Sort (Global)
 
 10. Set global sort:
     ```
@@ -1277,7 +1217,7 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
     sort reset
     ```
 
-### 9.4 Summarize
+### E.4 Summarize
 
 13. Summarize all:
     ```
@@ -1285,7 +1225,7 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
     ```
     Expected: Total Credit $3000, Total Debit $20.50, Net $2979.50.
 
-### 9.5 Modify
+### E.5 Modify
 
 14. Note the HashID of the chicken rice transaction from step 2. Modify its amount:
     ```
@@ -1293,7 +1233,7 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
     ```
     Expected: success. Verify with `list`.
 
-### 9.6 Delete
+### E.6 Delete
 
 15. Note the HashID of the $5.00 transaction. Delete it:
     ```
@@ -1307,7 +1247,7 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
     ```
     Expected: error — Transaction not found.
 
-### 9.7 Budget
+### E.7 Budget
 
 17. Set a food budget for March:
     ```
@@ -1333,7 +1273,7 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
     ```
     Expected: success.
 
-### 9.8 Export
+### E.8 Export
 
 21. Export all transactions:
     ```
@@ -1347,7 +1287,7 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
     ```
     Expected: file `test_backup.csv` created.
 
-### 9.9 Import
+### E.9 Import
 
 23. Import with replace mode:
     ```
@@ -1368,7 +1308,7 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
     ```
     Expected: error — file not found.
 
-### 9.10 Clear
+### E.10 Clear
 
 26. Clear with confirmation:
     ```
@@ -1390,7 +1330,7 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
     ```
     Expected: all transactions deleted immediately, no prompt.
 
-### 9.11 Exit
+### E.11 Exit
 
 29. Exit:
     ```
