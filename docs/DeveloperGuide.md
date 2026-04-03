@@ -411,7 +411,17 @@ Taller Roshan
 **Sequence:**
 
 ```
-Tall Roshan
+User -> Parser: "list --type debit --sort amount"
+Parser -> ListCommand: new ListCommand("--type debit --sort amount")
+RLAD -> ListCommand: execute(transactions, ui)
+ListCommand -> FilterCommand: parseFlags(rawArgs)
+FilterCommand --> ListCommand: flags map
+ListCommand -> FilterCommand: buildPredicate(rawArgs)
+FilterCommand --> ListCommand: Predicate<Transaction>
+ListCommand -> TransactionManager: getTransactions()
+ListCommand -> ListCommand: stream().filter(predicate).collect()
+ListCommand -> TransactionSorter: sort(results, "amount", "asc")
+ListCommand -> Ui: showResult(formatted table)
 ```
 
 **How `FilterCommand.buildPredicate()` works:**
@@ -443,7 +453,17 @@ This design means `FilterCommand` can be reused by any command that needs transa
 `SortCommand` does not sort transactions itself — it writes the desired sort field and direction to `TransactionManager` via `setGlobalSort()`. `ListCommand` reads these stored values on each invocation.
 
 ```
-Le Kuan
+User -> Parser: "sort date desc"
+Parser -> SortCommand: new SortCommand("date desc")
+SortCommand -> SortCommand: parseArgs("date desc") -> field="date", direction="desc"
+RLAD -> SortCommand: execute(transactions, ui)
+SortCommand -> TransactionManager: setGlobalSort("date", "desc")
+SortCommand -> Ui: showResult("Sort order set: date (desc)")
+
+--- On next "list" command ---
+ListCommand -> TransactionManager: getGlobalSortField() -> "date"
+ListCommand -> TransactionManager: getGlobalSortDirection() -> "desc"
+ListCommand -> TransactionSorter: sort(results, "date", "desc")
 ```
 
 ---
@@ -532,7 +552,15 @@ This feature is implemented across three new command classes and one new storage
 #### 4.8.1 Export (`ExportCommand` + `CsvStorageManager.exportToCsv`)
 
 ```
-Le Kuan
+User -> Parser: "export --file backup.csv"
+Parser -> ExportCommand: new ExportCommand("--file backup.csv")
+RLAD -> ExportCommand: execute(transactions, ui)
+ExportCommand -> FilterCommand: parseFlags(rawArgs) -> {file: "backup.csv"}
+ExportCommand -> TransactionManager: getTransactions()
+ExportCommand -> CsvStorageManager: exportToCsv(transactions, "backup.csv")
+CsvStorageManager -> CsvStorageManager: escapeCsvField() for each field
+CsvStorageManager -> File: write CSV rows
+ExportCommand -> Ui: showResult("Exported N transactions to: backup.csv")
 ```
 
 **CSV escaping rules:**
@@ -542,7 +570,18 @@ Le Kuan
 #### 4.8.2 Import (`ImportCommand` + `CsvStorageManager.importFromCsv`)
 
 ```
-Le Kuan
+User -> Parser: "import --file backup.csv"
+Parser -> ImportCommand: new ImportCommand("--file backup.csv")
+RLAD -> ImportCommand: execute(transactions, ui)
+ImportCommand -> FilterCommand: parseFlags(rawArgs) -> {file: "backup.csv"}
+ImportCommand -> Ui: askConfirmation("WARNING: Replace mode will delete all N existing transactions.")
+Ui --> ImportCommand: true (user typed CONFIRM)
+ImportCommand -> CsvStorageManager: importFromCsv("backup.csv")
+CsvStorageManager -> CsvStorageManager: validate headers, parseCsvRow() x N
+CsvStorageManager --> ImportCommand: CsvImportResult(transactions, errors)
+ImportCommand -> TransactionManager: clearAllTransactions()
+ImportCommand -> TransactionManager: addTransaction(t) [for each imported transaction]
+ImportCommand -> Ui: showResult("Import complete: N succeeded, N failed.")
 ```
 
 **Sequence diagram for import (replace mode):**
@@ -569,7 +608,14 @@ ImportCommand          CsvStorageManager       TransactionManager      BudgetMan
 #### 4.8.3 Clear (`ClearCommand`)
 
 ```
-Le Kuan
+User -> Parser: "clear"
+Parser -> ClearCommand: new ClearCommand("")
+RLAD -> ClearCommand: execute(transactions, ui)
+ClearCommand -> TransactionManager: getTransactionCount() -> N
+ClearCommand -> Ui: askConfirmation("WARNING: This will permanently delete all N transactions.")
+Ui --> ClearCommand: true (user typed CONFIRM)
+ClearCommand -> TransactionManager: clearAllTransactions()
+ClearCommand -> Ui: showResult("Cleared N transactions.")
 ```
 
 #### Parser Changes Required

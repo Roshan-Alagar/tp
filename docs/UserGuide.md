@@ -193,7 +193,7 @@ list [--type TYPE] [--category CATEGORY] [--amount [OPERATOR] VALUE]
 | Parameter     | Description                                                           |
 |---------------|-----------------------------------------------------------------------|
 | `--type`      | `credit` or `debit`                                                   |
-| `--category`  | Exact category match (case-insensitive)                               |
+| `--category`  | Partial match (case-insensitive), comma-separated for multiple        |
 | `--amount`    | Exact match, or with operator: `-gt`, `-gte`, `-eq`, `-lt`, `-leq`   |
 | `--date`      | Exact date match (`yyyy-MM-dd`)                                       |
 | `--date-from` | Show transactions on or after this date                               |
@@ -401,9 +401,7 @@ export --file backup.csv --path /Users/me/Documents/
 
 **Expected Output:**
 ```
-✅ Exported 15 transactions to: ./transactions_2026-04-02.csv
-   File size: 2.3 KB
-   Location: /Users/me/Documents/
+Exported 15 transactions to: ./transactions_2026-04-02.csv
 ```
 
 **CSV format written:**
@@ -435,21 +433,9 @@ import --file transactions_2026-03-15.csv
 import --file backup.csv --merge
 ```
 
-**Expected Output (replace mode):**
+**Expected Output:**
 ```
-📁 Reading file: transactions_2026-03-15.csv
-✅ Validated CSV format
-📊 Importing 25 transactions...
-   ✅ 23 transactions imported successfully
-   ⚠️  2 rows skipped (invalid amount format)
-```
-
-**Expected Output (merge mode):**
-```
-📁 Merging from: backup.csv
-📊 Current transactions: 15
-➕ Adding 10 new transactions
-✅ Total after merge: 25 transactions
+Import complete: 23 succeeded, 2 failed.
 ```
 
 > **Warning:** Without `--merge`, all existing transactions are permanently deleted before import.
@@ -470,22 +456,17 @@ clear [--force]
 Without `--force`, RLAD will prompt for confirmation:
 
 ```
-⚠️  WARNING: This will permanently delete ALL transactions!
-   Current count: 47 transactions
-   This action cannot be undone.
-
-   Type 'CONFIRM' to proceed or any other key to cancel:
-> CONFIRM
-
-✅ All transactions have been cleared.
+WARNING: This will permanently delete all 47 transactions.
+This action cannot be undone.
+Type CONFIRM to proceed: CONFIRM
+Cleared 47 transactions.
 ```
 
-With `--force`:
+With `--force`, the confirmation step is skipped:
 ```
 clear --force
+Cleared 47 transactions.
 ```
-
-The confirmation step is skipped and all data is deleted immediately.
 
 > **Tip:** Run `export` before `clear` to keep a backup of your data.
 
