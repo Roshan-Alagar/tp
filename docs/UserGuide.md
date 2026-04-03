@@ -18,6 +18,8 @@
     - 4.10 [clear — Clear All Data](#410-clear--clear-all-data)
     - 4.11 [help — Get Help](#411-help--get-help)
     - 4.12 [exit — Exit RLAD](#412-exit--exit-rlad)
+    - 4.13 [Advanced Filtering — Tips & Tricks](#413-advanced-filtering--tips--tricks)
+    - 4.14 [Troubleshooting — Common Mistakes](#414-troubleshooting--common-mistakes)
 5. [Budget Categories](#5-budget-categories)
 6. [Date & Amount Formats](#6-date--amount-formats)
 7. [FAQ](#7-faq)
@@ -46,22 +48,11 @@ RLAD is best suited for NUS students or young professionals who are comfortable 
 
 **Prerequisites:** Java 17 or above must be installed.
 
-1. Download the latest `RLAD.jar` from the releases page.
-2. Open a terminal and navigate to the directory containing `RLAD.jar`.
-3. Run the application:
-
-```
-java -jar RLAD.jar
-```
-
-4. The welcome banner and a list of available commands will appear.
-5. Type a command and press Enter. Example:
-
-```
-add --type credit --amount 3000.00 --date 2026-03-01 --category salary --description "March salary"
-```
-
-6. Type `exit` to quit.
+1. Open a terminal and navigate to the directory containing your `RLAD.jar`.
+2. Run the application: `java -jar RLAD.jar`
+3. The welcome banner will appear. Try your first command:
+   `add --type credit --amount 3000.00 --date 2026-03-01 --category salary --description "March salary"`
+4. Type `exit` to quit.
 
 ---
 
@@ -80,24 +71,11 @@ add --type credit --amount 3000.00 --date 2026-03-01 --category salary --descrip
 | import     | Import transactions from a CSV file (replace or merge)   |
 | clear      | Permanently delete all transactions                      |
 | help       | Print usage instructions                                 |
+|------------|----------------------------------------------------------|
 
 ---
 
 ## 4. Command Reference
-
-### Command Format
-
-All commands follow this structure:
-
-```
-<action> --option_1 value_1 --option_2 value_2 ...
-```
-
-- Items in `[square brackets]` are **optional**.
-- Items without brackets are **required**.
-- Descriptions containing spaces should be wrapped in `"double quotes"`.
-
----
 
 ### 4.1 `add` — Record a Transaction
 
@@ -110,13 +88,14 @@ add --type TYPE --amount AMOUNT --date DATE [--category CATEGORY] [--description
 
 **Parameters:**
 
-| Parameter       | Required | Description                                 |
-|-----------------|----------|---------------------------------------------|
-| `--type`        | Yes      | `credit` (income) or `debit` (expense)      |
-| `--amount`      | Yes      | Positive number, up to 2 decimal places     |
-| `--date`        | Yes      | Date in `yyyy-MM-dd` format                 |
-| `--category`    | No       | Free-text label (e.g., `food`, `transport`) |
-| `--description` | No       | Short description; use quotes for spaces    |
+| Parameter       | Required | Description                                  |
+|-----------------|----------|----------------------------------------------|
+| `--type`        | Yes      | `credit` (income) or `debit` (expense)       |
+| `--amount`      | Yes      | Positive number, up to 2 decimal places      |
+| `--date`        | Yes      | Date in `yyyy-MM-dd` format                  |
+| `--category`    | No       | Free-text label (e.g., `food`, `transport`)  |
+| `--description` | No       | Short description; use quotes for spaces     |
+|-----------------|----------| -------------------------------------------- |
 
 **Examples:**
 ```
@@ -132,6 +111,7 @@ add --type debit --amount 1.50 --date 2026-03-06
    DEBIT: $15.50 on 2026-03-05
    Category: food
    Description: "Chicken rice at Clementi"
+   ....
 ```
 
 > **Note:** Each transaction is assigned a unique 6-character **HashID** upon creation. Keep a note of it if you plan to delete or modify the transaction later.
@@ -152,6 +132,7 @@ delete --hashID HASHID
 | Parameter  | Required | Description                    |
 |------------|----------|--------------------------------|
 | `--hashID` | Yes      | The 6-character transaction ID |
+|------------|----------|--------------------------------|
 
 **Example:**
 ```
@@ -188,6 +169,7 @@ modify --hashID HASHID [--type TYPE] [--amount AMOUNT] [--date DATE] [--category
 | `--date`        | No       | New date in `yyyy-MM-dd`                 |
 | `--category`    | No       | New category label                       |
 | `--description` | No       | New description                          |
+|-----------------|----------|------------------------------------------|
 
 **Example:**
 ```
@@ -217,6 +199,7 @@ list [--type TYPE] [--category CATEGORY] [--amount [OPERATOR] VALUE]
 | `--date-from` | Show transactions on or after this date                               |
 | `--date-to`   | Show transactions on or before this date                              |
 | `--sort`      | `date` or `amount`, optionally followed by `asc` or `desc`           |
+|---------------|-----------------------------------------------------------------------|
 
 **Examples:**
 ```
@@ -248,6 +231,7 @@ list --type debit --sort amount desc
 | `-eq`    | Equal to              |
 | `-lt`    | Less than             |
 | `-leq`   | Less than or equal    |
+|----------|-----------------------|
 
 ---
 
@@ -268,6 +252,7 @@ sort
 | `sort amount`      | Sort by amount ascending (default direction)   |
 | `sort date desc`   | Sort by date descending                        |
 | `sort reset`       | Clears global sort; reverts to insertion order |
+|--------------------|------------------------------------------------|
 
 **Examples:**
 ```
@@ -356,6 +341,8 @@ Category                  |     Budget |      Spent |  Remaining | Progress
 ---------------------------+------------+------------+------------+----------------------
 Disposable Income          |  $1500.00  |  $2880.00  | -$1380.00  | ████████████████████ 192%
 TOTAL                      |  $2000.00  |  $3000.00  | -$1000.00  | ████████████████████ 150%
+---------------------------+------------+------------+------------+----------------------
+
 ```
 
 #### 4.7.3 Edit a Budget
@@ -403,6 +390,7 @@ export [--file FILENAME] [--path DIRECTORY]
 |-----------|------------------------------------------------|--------------------------------|
 | `--file`  | Output filename                                | `transactions_YYYY-MM-DD.csv`  |
 | `--path`  | Directory to save the file                     | Current working directory      |
+|-----------|------------------------------------------------|--------------------------------|
 
 **Examples:**
 ```
@@ -530,11 +518,28 @@ Exits the application.
 exit
 ```
 
+### 4.13 Advanced Filtering: Tips & Tricks
+
+RLAD’s filtering engine supports complex queries using logical **AND** and **OR** operations.
+
+* **Logical AND:** Providing multiple flags (e.g., `--type debit --amount -gt 50`) only shows transactions meeting **all** criteria.
+* **Logical OR:** For the `--category` flag, use commas for multiple matches: `list --category "food,transport"`.
+* **Relative Dates:** Instead of full dates, use: `today`, `yesterday`, `this-week`, `last-month`, `this-month`.
+
+### 4.14 Troubleshooting: Common "Bad" Commands
+
+| Bad Command | Why it Fails | The Fix |
+|:---|:---|:---|
+| `add --amount 50` | Missing required flags. | Add `--type` and `--date`. |
+| `add --type pizza --amount 10` | Invalid value. | Type must be `credit` or `debit`. |
+| `list --category salary food` | Multiple values without commas. | Use `list --category "salary,food"`. |
+| `delete a7b2c3` | Missing flag name. | Use `delete --hashID a7b2c3`. |
+
 ---
 
 ## 5. Budget Categories
 
-Budget allocations use numeric codes (1–12):
+Use these numeric codes for the `budget` command:
 
 | Code | Category                         |
 |------|----------------------------------|
@@ -550,6 +555,7 @@ Budget allocations use numeric codes (1–12):
 | 10   | Investments                      |
 | 11   | Emergency Fund                   |
 | 12   | Savings                          |
+|------|----------------------------------|
 
 > **Note:** The `--category` flag in `add` and `list` accepts free-text strings (e.g., `food`, `transport`). Budget categories are a separate, fixed set used only in the `budget` command.
 
@@ -574,22 +580,28 @@ Examples: `2026-03-15`, `2026-01-01`
 ## 7. FAQ
 
 **Q: What happens if I forget a transaction's HashID?**
-Use `list` to find it. The HashID appears in the leftmost column.
+> Use `list` to find it. The HashID appears in the leftmost column.
 
 **Q: Can I have multiple budgets for the same category in one month?**
-No. Each category can have at most one budget per month. Use `budget edit` to update an existing one.
+> No. Each category can have at most one budget per month. Use `budget edit` to update an existing one.
 
 **Q: What is "Disposable Income" in the budget view?**
-It is the portion of your recorded income (credits) not allocated to any budget category. A negative value means your allocated budgets exceed your recorded income for that month.
+> It is the portion of your recorded income (credits) not allocated to any budget category. A negative value means your allocated budgets exceed your recorded income for that month.
 
 **Q: Can I import a CSV I edited in Excel?**
-Yes, as long as the column headers match exactly: `HashID,Type,Category,Amount,Date,Description`. Rows with invalid data are skipped with a warning.
+> Yes, as long as the column headers match exactly: `HashID,Type,Category,Amount,Date,Description`. Rows with invalid data are skipped with a warning.
 
 **Q: Does RLAD save data automatically between sessions?**
-Transaction data is held in memory during the session. Use `export` to persist your data to disk before exiting, and `import` to reload it next time.
+> No. Data is held in memory during the session. **Always run `export` before exiting** to save your work to a CSV file.
 
 **Q: What happens to my budgets when I use `clear`?**
-Budget definitions are preserved. Only transaction data is cleared. Budget tracking (spending amounts) will reset to zero since there are no transactions to count.
+> Budget definitions are preserved. Only transaction data is cleared. Budget tracking (spending amounts) will reset to zero since there are no transactions to count.
+
+**Q: Why can't I use two or more dashes "--" in my description?**
+> It confuses the parser into thinking a new flag has started. The devs were too lazy to fix it—please don't break the code. Use a single dash `-` instead!
+
+**Q: I typed `list --category none` but it didn't show my salary.**
+> `none` and `(none)` are magic keywords that look for transactions with **no category**. Use `list --category salary` to find your paycheck.
 
 ---
 
@@ -609,3 +621,4 @@ Budget definitions are preserved. Only transaction data is cleared. Budget track
 | clear      | `clear [--force]`                                                          |
 | help       | `help [command]`                                                           |
 | exit       | `exit`                                                                     |
+|------------|----------------------------------------------------------------------------|

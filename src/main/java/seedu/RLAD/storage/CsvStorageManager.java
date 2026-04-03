@@ -146,7 +146,7 @@ public class CsvStorageManager {
         }
 
         String category = columns[2].trim();
-        if (category.isEmpty()) {
+        if (category.isBlank()) {
             category = null;
         }
 
@@ -168,7 +168,7 @@ public class CsvStorageManager {
         }
 
         String description = columns[5].trim();
-        if (description.isEmpty()) {
+        if (description.isBlank()) {
             description = null;
         }
 
@@ -222,14 +222,14 @@ public class CsvStorageManager {
                 if (c == '"') {
                     inQuotes = true;
                 } else if (c == ',') {
-                    fields.add(current.toString());
+                    fields.add(current.toString().trim());
                     current = new StringBuilder();
                 } else {
                     current.append(c);
                 }
             }
         }
-        fields.add(current.toString());
+        fields.add(current.toString().trim());
 
         return fields.toArray(new String[0]);
     }

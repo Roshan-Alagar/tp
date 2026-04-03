@@ -43,7 +43,7 @@ public class FilterCommand extends Command {
         }
 
         // Split on every "--" boundary (keep the delimiter via lookahead)
-        String[] parts = rawArgs.trim().split("(?=--[\\w-])");
+        String[] parts = rawArgs.trim().split("(?=\\s+--[a-zA-Z])");
         for (String part : parts) {
             part = part.trim();
             if (part.isEmpty()) {
@@ -188,6 +188,10 @@ public class FilterCommand extends Command {
 
         // Default: partial match (case-insensitive contains)
         String lowerCategory = categoryValue.trim().toLowerCase();
+        if (lowerCategory.equals("(none)") || lowerCategory.equals("none")) {
+            return t -> t.getCategory() == null || t.getCategory().isBlank();
+        }
+
         return t -> t.getCategory().toLowerCase().contains(lowerCategory);
     }
 

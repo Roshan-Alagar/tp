@@ -19,7 +19,7 @@ public class Transaction {
         this.category = category;
         this.amount = amount;
         this.date = date;
-        this.description = description;
+        this.description = (description == null) ? "" : description;
     }
 
     public String getHashId() {

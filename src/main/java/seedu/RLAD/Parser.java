@@ -24,6 +24,17 @@ public class Parser {
     // TODO: better input sanitization for null or empty commands
     public static String[] parseCommand(String command) throws RLADException {
         String commandToParse = command.trim();
+
+        // silently prevents the overflow
+        if (commandToParse.isEmpty() ||
+                commandToParse.startsWith("▀") ||
+                commandToParse.startsWith("Type 'help'") ||
+                commandToParse.startsWith("Hello and welcome")) {
+
+            // Return a special internal action that the switch handles as "do nothing"
+            return new String[]{"noop", ""};
+        }
+
         if (commandToParse.isEmpty()) {
             throw new RLADException("Empty commands are invalid");
         }
@@ -61,6 +72,17 @@ public class Parser {
 
         // The Parser acts as a "Factory"
         switch (action) {
+        case "noop": // ignore trash that overflows into the scanner
+            return new Command("") {
+                @Override
+                public void execute(TransactionManager t, Ui u) {
+                    
+                }
+                @Override
+                public boolean hasValidArgs() {
+                    return true;
+                }
+            };
         case "add":
             return new AddCommand(arguments);
         case "delete":
