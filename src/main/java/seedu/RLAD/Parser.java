@@ -62,7 +62,7 @@ public class Parser {
     }
 
     private static boolean requiresArguments(String action) {
-        return action.matches("add|delete|modify|budget|import");
+        return action.matches("add|delete|modify|budget");
     }
 
     public static Command parse(String input) throws RLADException {

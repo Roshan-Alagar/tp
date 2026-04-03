@@ -30,7 +30,8 @@ public class ImportCommand extends Command {
 
         String filePath = flags.get("file");
         if (filePath == null || filePath.isBlank()) {
-            throw new RLADException("--file is required for import. Usage: import --file FILENAME");
+            throw new RLADException("--file is required for import. "
+                    + "Usage: import --file FILENAME [--merge]");
         }
 
         boolean mergeMode = flags.containsKey("merge");
@@ -74,6 +75,6 @@ public class ImportCommand extends Command {
 
     @Override
     public boolean hasValidArgs() {
-        return rawArgs != null && rawArgs.contains("--file");
+        return true;
     }
 }

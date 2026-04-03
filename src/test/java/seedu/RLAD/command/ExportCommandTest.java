@@ -84,4 +84,20 @@ class ExportCommandTest {
         assertEquals(true, new ExportCommand("").hasValidArgs());
         assertEquals(true, new ExportCommand("--file test.csv").hasValidArgs());
     }
+
+    @Test
+    void execute_emptyFileFlag_throwsException() {
+        tm.addTransaction(new Transaction("credit", "food", 50.00,
+                LocalDate.of(2026, 3, 15), "Test"));
+        ExportCommand cmd = new ExportCommand("--file");
+        assertThrows(RLADException.class, () -> cmd.execute(tm, ui));
+    }
+
+    @Test
+    void execute_emptyPathFlag_throwsException() {
+        tm.addTransaction(new Transaction("credit", "food", 50.00,
+                LocalDate.of(2026, 3, 15), "Test"));
+        ExportCommand cmd = new ExportCommand("--file out.csv --path");
+        assertThrows(RLADException.class, () -> cmd.execute(tm, ui));
+    }
 }
