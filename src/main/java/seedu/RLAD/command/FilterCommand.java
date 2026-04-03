@@ -167,9 +167,12 @@ public class FilterCommand extends Command {
         try {
             int code = Integer.parseInt(categoryValue.trim());
             String categoryName = BudgetCategory.fromCode(code).getDisplayName();
-            return t -> t.getCategory().equalsIgnoreCase(categoryName);
+            return t -> t.getCategory() != null && t.getCategory().equalsIgnoreCase(categoryName);
         } catch (NumberFormatException ignored) {
             // Not a number, continue to other checks
+        } catch (RLADException e) {
+            throw new RLADException("Invalid category code: " + categoryValue.trim()
+                    + ". Use 1-12 or a category name. Type 'help' to see category list.");
         }
 
         // Check if it's multiple categories (comma-separated)
@@ -181,7 +184,8 @@ public class FilterCommand extends Command {
                 if (trimmed.isEmpty()) {
                     continue;
                 }
-                combined = combined.or(t -> t.getCategory().toLowerCase().contains(trimmed));
+                combined = combined.or(t -> t.getCategory() != null
+                        && t.getCategory().toLowerCase().contains(trimmed));
             }
             return combined;
         }
@@ -192,7 +196,7 @@ public class FilterCommand extends Command {
             return t -> t.getCategory() == null || t.getCategory().isBlank();
         }
 
-        return t -> t.getCategory().toLowerCase().contains(lowerCategory);
+        return t -> t.getCategory() != null && t.getCategory().toLowerCase().contains(lowerCategory);
     }
 
     /**
