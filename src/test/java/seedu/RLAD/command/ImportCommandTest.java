@@ -16,6 +16,7 @@ import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class ImportCommandTest {
 
@@ -123,13 +124,25 @@ class ImportCommandTest {
     }
 
     @Test
-    void hasValidArgs_withFile_returnsTrue() {
+    void hasValidArgs_alwaysTrue() {
         assertEquals(true, new ImportCommand("--file test.csv").hasValidArgs());
+        assertEquals(true, new ImportCommand("--merge").hasValidArgs());
+        assertEquals(true, new ImportCommand("").hasValidArgs());
     }
 
     @Test
-    void hasValidArgs_withoutFile_returnsFalse() {
-        assertEquals(false, new ImportCommand("--merge").hasValidArgs());
-        assertEquals(false, new ImportCommand("").hasValidArgs());
+    void execute_missingFileFlag_throwsException() {
+        Ui ui = createUiWithInput("");
+        ImportCommand cmd = new ImportCommand("--merge");
+        RLADException ex = assertThrows(RLADException.class, () -> cmd.execute(tm, ui));
+        assertTrue(ex.getMessage().contains("--file is required"));
+    }
+
+    @Test
+    void execute_emptyFileFlag_throwsException() {
+        Ui ui = createUiWithInput("");
+        ImportCommand cmd = new ImportCommand("--file");
+        RLADException ex = assertThrows(RLADException.class, () -> cmd.execute(tm, ui));
+        assertTrue(ex.getMessage().contains("--file is required"));
     }
 }

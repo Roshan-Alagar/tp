@@ -213,6 +213,15 @@ class FilterCommandTest {
     }
 
     @Test
+    public void buildPredicate_invalidCalendarDate_throwsException() {
+        // Feb 30 does not exist — should reject, not silently clamp
+        assertThrows(RLADException.class, () -> FilterCommand.buildPredicate("--date 2024-02-30"));
+        assertThrows(RLADException.class, () -> FilterCommand.buildPredicate("--date 2024.02.30"));
+        // Jun 31 does not exist
+        assertThrows(RLADException.class, () -> FilterCommand.buildPredicate("--date 2024.06.31"));
+    }
+
+    @Test
     public void buildPredicate_missingValue_throwsException() {
         assertThrows(RLADException.class, () -> FilterCommand.buildPredicate("--type"));
     }
