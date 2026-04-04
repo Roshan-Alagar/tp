@@ -34,7 +34,16 @@ public class ExportCommand extends Command {
 
         String filename = flags.getOrDefault("file",
                 "transactions_" + LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE) + ".csv");
+        if (filename.isBlank()) {
+            throw new RLADException("--file requires a filename. "
+                    + "Example: export --file transactions.csv");
+        }
+
         String directory = flags.getOrDefault("path", ".");
+        if (directory.isBlank()) {
+            throw new RLADException("--path requires a directory. "
+                    + "Example: export --path ./data");
+        }
 
         Path dirPath = Paths.get(directory);
         if (!Files.isDirectory(dirPath)) {

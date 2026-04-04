@@ -12,6 +12,7 @@ import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.format.ResolverStyle;
 import java.util.ArrayList;
 
 /**
@@ -21,7 +22,8 @@ public class CsvStorageManager {
 
     private static final String CSV_HEADER = "HashID,Type,Category,Amount,Date,Description";
     private static final int EXPECTED_COLUMN_COUNT = 6;
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter
+            .ofPattern("uuuu-MM-dd").withResolverStyle(ResolverStyle.STRICT);
 
     /**
      * Exports transactions to a CSV file.
