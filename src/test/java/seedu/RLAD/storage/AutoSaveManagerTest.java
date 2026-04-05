@@ -36,7 +36,7 @@ class AutoSaveManagerTest {
     }
 
     @Test
-    void save_and_load_roundTrip() {
+    void saveAndLoad_roundTrip() {
         ArrayList<Transaction> transactions = new ArrayList<>();
         transactions.add(new Transaction("credit", "salary", 3000.00,
                 LocalDate.of(2026, 3, 1), "March salary"));
@@ -80,7 +80,7 @@ class AutoSaveManagerTest {
     }
 
     @Test
-    void save_and_load_nullCategory() {
+    void saveAndLoad_nullCategory() {
         ArrayList<Transaction> transactions = new ArrayList<>();
         transactions.add(new Transaction("debit", null, 5.00,
                 LocalDate.of(2026, 3, 6), ""));
@@ -95,7 +95,7 @@ class AutoSaveManagerTest {
     }
 
     @Test
-    void save_and_load_descriptionWithPipe() {
+    void saveAndLoad_descriptionWithPipe() {
         ArrayList<Transaction> transactions = new ArrayList<>();
         transactions.add(new Transaction("debit", "food", 10.00,
                 LocalDate.of(2026, 3, 7), "lunch|dinner"));
