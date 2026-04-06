@@ -3,6 +3,7 @@ package seedu.RLAD.command;
 import seedu.RLAD.TransactionManager;
 import seedu.RLAD.TransactionSorter;
 import seedu.RLAD.Ui;
+import seedu.RLAD.exception.RLADException;
 import java.util.logging.Logger;
 
 /**
@@ -39,7 +40,7 @@ public class SortCommand extends Command {
     }
 
     @Override
-    public void execute(TransactionManager transactions, Ui ui) {
+    public void execute(TransactionManager transactions, Ui ui) throws RLADException {
         assert transactions != null : "TransactionManager should not be null";
         logger.info("Executing SortCommand with field: " + field + ", direction: " + direction);
         if (field.isEmpty()) {
@@ -59,24 +60,21 @@ public class SortCommand extends Command {
             return;
         }
 
+        if (!TransactionSorter.isValidSortField(field)) {
+            throw new RLADException("Unknown sort field: '" + field
+                    + "'. Use 'amount' or 'date'. Example: sort amount desc");
+        }
+        if (!TransactionSorter.isValidDirection(direction)) {
+            throw new RLADException("Unknown sort direction: '" + direction
+                    + "'. Use 'asc' or 'desc'. Example: sort date desc");
+        }
+
         transactions.setGlobalSort(field, direction);
         ui.showResult("Sort order set: " + field + " (" + direction + ")");
     }
 
     @Override
     public boolean hasValidArgs() {
-        if (field.isEmpty()) {
-            return true;
-        }
-        if (field.equals("reset")) {
-            return true;
-        }
-        if (!TransactionSorter.isValidSortField(field)) {
-            return false;
-        }
-        if (!TransactionSorter.isValidDirection(direction)) {
-            return false;
-        }
         return true;
     }
 }

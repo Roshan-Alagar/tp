@@ -1,13 +1,17 @@
 package seedu.RLAD.command;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.ResolverStyle;
+import java.time.temporal.TemporalAdjusters;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Predicate;
 import seedu.RLAD.Transaction;
 import seedu.RLAD.TransactionManager;
 import seedu.RLAD.Ui;
+import seedu.RLAD.budget.BudgetCategory;
 import seedu.RLAD.exception.RLADException;
 import java.util.logging.Logger;
 
@@ -29,6 +33,8 @@ import java.util.logging.Logger;
 public class FilterCommand extends Command {
 
     private static final Logger logger = Logger.getLogger(FilterCommand.class.getName());
+    private static final DateTimeFormatter DOT_DATE_FORMAT = DateTimeFormatter
+            .ofPattern("uuuu.MM.dd").withResolverStyle(ResolverStyle.STRICT);
     public FilterCommand(String rawArgs) {
         super(rawArgs);
     }
@@ -40,7 +46,7 @@ public class FilterCommand extends Command {
         }
 
         // Split on every "--" boundary (keep the delimiter via lookahead)
-        String[] parts = rawArgs.trim().split("(?=--[\\w-])");
+        String[] parts = rawArgs.trim().split("(?=\\s+--[a-zA-Z])");
         for (String part : parts) {
             part = part.trim();
             if (part.isEmpty()) {
@@ -68,11 +74,12 @@ public class FilterCommand extends Command {
     private static LocalDate parseDate(String dateStr) throws RLADException {
         try {
             if (dateStr.contains(".")) {
-                return LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("yyyy.MM.dd"));
+                return LocalDate.parse(dateStr, DOT_DATE_FORMAT);
             }
             return LocalDate.parse(dateStr); // ISO format yyyy-MM-dd
         } catch (Exception e) {
-            throw new RLADException("Invalid date '" + dateStr + "'. Use yyyy-MM-dd or yyyy.MM.dd");
+            throw new RLADException("Invalid date '" + dateStr
+                    + "'. Use a valid date in yyyy-MM-dd or yyyy.MM.dd format.");
         }
     }
 
@@ -132,8 +139,7 @@ public class FilterCommand extends Command {
         }
 
         if (flags.containsKey("category")) {
-            String category = flags.get("category").toLowerCase();
-            predicate = predicate.and(t -> t.getCategory().equalsIgnoreCase(category));
+            predicate = predicate.and(buildCategoryPredicate(flags.get("category")));
         }
 
         if (flags.containsKey("amount")) {
@@ -145,17 +151,118 @@ public class FilterCommand extends Command {
             predicate = predicate.and(t -> t.getDate().equals(date));
         }
 
+        predicate = predicate.and(buildDateRangePredicate(flags));
+
+        return predicate;
+    }
+
+    /**
+     * Builds a category predicate with partial matching, multiple categories, and code support.
+     */
+    private static Predicate<Transaction> buildCategoryPredicate(String categoryValue)
+            throws RLADException {
+        assert categoryValue != null : "categoryValue should not be null";
+        logger.info("Building category predicate with value: " + categoryValue);
+        if (categoryValue.isBlank()) {
+            throw new RLADException("--category requires a value.");
+        }
+
+        // Check if it's a category code (integer 1-12)
+        try {
+            int code = Integer.parseInt(categoryValue.trim());
+            String categoryName = BudgetCategory.fromCode(code).getDisplayName();
+            return t -> t.getCategory() != null && t.getCategory().equalsIgnoreCase(categoryName);
+        } catch (NumberFormatException ignored) {
+            // Not a number, continue to other checks
+        } catch (RLADException e) {
+            throw new RLADException("Invalid category code: " + categoryValue.trim()
+                    + ". Use 1-12 or a category name. Type 'help' to see category list.");
+        }
+
+        // Check if it's multiple categories (comma-separated)
+        if (categoryValue.contains(",")) {
+            String[] categories = categoryValue.split(",");
+            Predicate<Transaction> combined = t -> false;
+            for (String cat : categories) {
+                String trimmed = cat.trim().toLowerCase();
+                if (trimmed.isEmpty()) {
+                    continue;
+                }
+                combined = combined.or(t -> t.getCategory() != null
+                        && t.getCategory().toLowerCase().contains(trimmed));
+            }
+            return combined;
+        }
+
+        // Default: partial match (case-insensitive contains)
+        String lowerCategory = categoryValue.trim().toLowerCase();
+        if (lowerCategory.equals("(none)") || lowerCategory.equals("none")) {
+            return t -> t.getCategory() == null || t.getCategory().isBlank();
+        }
+
+        return t -> t.getCategory() != null && t.getCategory().toLowerCase().contains(lowerCategory);
+    }
+
+    /**
+     * Builds a date range predicate with support for relative dates and range validation.
+     */
+    private static Predicate<Transaction> buildDateRangePredicate(Map<String, String> flags)
+            throws RLADException {
+        assert flags != null : "flags should not be null";
+        logger.info("Building date range predicate");
+        Predicate<Transaction> predicate = t -> true;
+        LocalDate from = null;
+        LocalDate to = null;
+
         if (flags.containsKey("date-from")) {
-            LocalDate from = parseDate(flags.get("date-from"));
-            predicate = predicate.and(t -> !t.getDate().isBefore(from));
+            from = parseFlexibleDate(flags.get("date-from"));
+            LocalDate finalFrom = from;
+            predicate = predicate.and(t -> !t.getDate().isBefore(finalFrom));
         }
 
         if (flags.containsKey("date-to")) {
-            LocalDate to = parseDate(flags.get("date-to"));
-            predicate = predicate.and(t -> !t.getDate().isAfter(to));
+            to = parseFlexibleDate(flags.get("date-to"));
+            LocalDate finalTo = to;
+            predicate = predicate.and(t -> !t.getDate().isAfter(finalTo));
+        }
+
+        if (from != null && to != null && from.isAfter(to)) {
+            throw new RLADException("--date-from (" + from + ") cannot be after --date-to (" + to + ").");
         }
 
         return predicate;
+    }
+
+    /**
+     * Parses flexible date strings including relative keywords and absolute dates.
+     */
+    private static LocalDate parseFlexibleDate(String dateStr) throws RLADException {
+        assert dateStr != null : "dateStr should not be null";
+        logger.info("Parsing flexible date: " + dateStr);
+        if (dateStr.isBlank()) {
+            throw new RLADException("Date value cannot be empty.");
+        }
+        String trimmed = dateStr.trim().toLowerCase();
+        LocalDate today = LocalDate.now();
+
+        switch (trimmed) {
+        case "today":
+            return today;
+        case "yesterday":
+            return today.minusDays(1);
+        case "tomorrow":
+            return today.plusDays(1);
+        case "this-week":
+            return today.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        case "this-month":
+            return today.withDayOfMonth(1);
+        case "last-month":
+            return today.minusMonths(1).withDayOfMonth(1);
+        case "last-year":
+            return today.minusYears(1).withDayOfYear(1);
+        default:
+            return parseDate(trimmed);
+        }
     }
 
     @Override

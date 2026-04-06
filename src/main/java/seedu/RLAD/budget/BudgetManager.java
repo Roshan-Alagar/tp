@@ -318,6 +318,15 @@ public class BudgetManager {
     }
 
     /**
+     * Resets all notification tracking when all transaction data is cleared.
+     * Budget allocations are preserved; only the notified-thresholds map is cleared
+     * because spending has been reset to zero.
+     */
+    public void onAllDataCleared() {
+        notifiedThresholds.clear();
+    }
+
+    /**
      * Checks all budgets for a given month and sends notifications if thresholds are crossed.
      * Call this method after transactions are added, deleted, or modified.
      *

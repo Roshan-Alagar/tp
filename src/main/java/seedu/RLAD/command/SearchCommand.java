@@ -28,7 +28,7 @@ public class SearchCommand extends Command {
         if (t.getDescription().toLowerCase().contains(lower)) {
             return true;
         }
-        if (t.getCategory().toLowerCase().contains(lower)) {
+        if (t.getCategory() != null && t.getCategory().toLowerCase().contains(lower)) {
             return true;
         }
         if (t.getHashId().toLowerCase().contains(lower)) {

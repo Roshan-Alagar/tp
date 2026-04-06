@@ -36,8 +36,9 @@ public class SummarizeCommand extends Command {
 
         for (Transaction t : filtered) {
             BigDecimal amount = BigDecimal.valueOf(t.getAmount()).setScale(2, RoundingMode.HALF_UP);
-            String category = (t.getCategory() != null && !t.getCategory().isEmpty())
-                    ? t.getCategory() : "(uncategorized)";
+            String category = (t.getCategory() == null || t.getCategory().isBlank())
+                    ? "(none)"
+                    : t.getCategory();
 
             if ("credit".equals(t.getType())) {
                 totalCredit = totalCredit.add(amount);
