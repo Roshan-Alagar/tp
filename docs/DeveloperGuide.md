@@ -726,7 +726,7 @@ flowchart LR
     end
 
     subgraph Output
-        And1 --> Predicate["Predicate<Transaction>"]
+        And1 --> Predicate["Predicate&lt;Transaction&gt;"]
         Predicate --> Stream["transactions.stream().filter(predicate)"]
         Stream --> Results["Filtered List"]
     end
@@ -1107,6 +1107,74 @@ sequenceDiagram
 **Shared clearing logic:** Both `ClearCommand` and `ImportCommand` (replace mode) call `TransactionManager.clearAllTransactions()`, which clears both the ArrayList and HashMap, then notifies `BudgetManager.onAllDataCleared()` to reset notification tracking.
 
 **Confirmation flow:** Destructive operations (`clear`, `import` in replace mode) use `Ui.askConfirmation(String)` to prompt the user to type `CONFIRM` before proceeding. The `clear --force` flag bypasses this prompt.
+
+---
+
+### 4.9 Autosave (Crash Recovery)
+
+**Classes involved:** `AutoSaveManager`, `TransactionManager`, `RLAD`
+
+RLAD automatically persists transaction data to a local file (`data/rlad.txt`) after every mutation (add, delete, modify, clear, import). On startup, `RLAD.java` calls `TransactionManager.loadFromAutoSave()` to restore the previous session's data.
+
+This is separate from the CSV export/import feature — autosave is internal and automatic, while export/import is user-initiated and designed for data portability.
+
+#### Save/Load Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant RLAD
+    participant TM as TransactionManager
+    participant ASM as AutoSaveManager
+    participant File as data/rlad.txt
+
+    Note over RLAD, File: On startup
+    RLAD->>TM: loadFromAutoSave()
+    activate TM
+    TM->>ASM: load()
+    activate ASM
+    ASM->>File: read lines
+    File-->>ASM: pipe-delimited rows
+    ASM->>ASM: parseLine() for each row
+    ASM-->>TM: ArrayList of Transactions
+    deactivate ASM
+    TM->>TM: add each to transactions + transMap
+    deactivate TM
+
+    Note over User, File: During session
+    User->>TM: addTransaction(t)
+    activate TM
+    TM->>TM: update transactions + transMap
+    TM->>ASM: save(transactions)
+    activate ASM
+    ASM->>File: overwrite with all transactions
+    deactivate ASM
+    deactivate TM
+```
+
+#### File Format
+
+Each transaction is stored as one line, fields separated by `|`:
+
+```
+hashId|type|category|amount|date|description
+```
+
+Example:
+```
+a7b2c3|debit|food|15.5|2026-03-05|Chicken rice at Clementi
+d4e5f6|credit|salary|3000.0|2026-03-01|March salary
+```
+
+The description field is last, so pipes within descriptions are preserved (the parser limits the split to 6 fields).
+
+#### Design Considerations
+
+**Why not reuse CsvStorageManager?** CSV export/import is user-facing and designed for data portability (Excel, Sheets). Autosave is internal and optimised for speed and simplicity. Keeping them separate avoids coupling internal persistence with the user-facing export format.
+
+**Why overwrite the entire file?** The transaction list is small enough that a full rewrite on every change is fast and avoids the complexity of incremental updates or journaling. This also guarantees the file is always in a consistent state.
+
+**Graceful degradation:** If the autosave file is missing or corrupted, RLAD starts with an empty transaction list. Malformed lines are skipped with a log warning rather than crashing.
 
 ---
 

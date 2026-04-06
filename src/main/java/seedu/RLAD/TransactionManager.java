@@ -1,6 +1,7 @@
 package seedu.RLAD;
 
 import seedu.RLAD.budget.BudgetManager;
+import seedu.RLAD.storage.AutoSaveManager;
 
 import java.util.ArrayList;
 import java.time.YearMonth;
@@ -55,6 +56,7 @@ public class TransactionManager {
     private String globalSortField = "";
     private String globalSortDirection = "asc";
     private BudgetManager budgetManager;
+    private AutoSaveManager autoSaveManager;
 
     /**
      * Creates a new transaction and adds it to storage.
@@ -64,6 +66,7 @@ public class TransactionManager {
 
     public TransactionManager() {
         this.transMap = new HashMap<String, Transaction>();
+        this.autoSaveManager = new AutoSaveManager();
     }
 
     public void setBudgetManager(BudgetManager budgetManager) {
@@ -84,6 +87,7 @@ public class TransactionManager {
             // Check threshold after adding
             budgetManager.checkBudgetThresholds(YearMonth.from(t.getDate()));
         }
+        autoSaveManager.save(transactions);
     }
 
     /**
@@ -130,7 +134,7 @@ public class TransactionManager {
                 // Re-check thresholds after deletion
                 budgetManager.checkBudgetThresholds(YearMonth.from(toDelete.getDate()));
             }
-
+            autoSaveManager.save(transactions);
             return true;
         }
         return false;
@@ -159,7 +163,7 @@ public class TransactionManager {
                 // Check thresholds for the month of the updated transaction
                 budgetManager.checkBudgetThresholds(YearMonth.from(updated.getDate()));
             }
-
+            autoSaveManager.save(transactions);
             return true;
         }
         return false;
@@ -200,6 +204,20 @@ public class TransactionManager {
         transMap.clear();
         if (budgetManager != null) {
             budgetManager.onAllDataCleared();
+        }
+        autoSaveManager.save(transactions);
+    }
+
+    /**
+     * Loads transactions from the autosave file on startup.
+     * Skips malformed entries gracefully.
+     */
+    public void loadFromAutoSave() {
+        ArrayList<Transaction> loaded = autoSaveManager.load();
+        for (Transaction t : loaded) {
+            t = hashCollisionPrevention(t);
+            transactions.add(t);
+            transMap.put(t.getHashId(), t);
         }
     }
 

@@ -546,7 +546,7 @@ RLAD’s filtering engine supports complex queries using logical **AND** and **O
 
 * **Logical AND:** Providing multiple flags (e.g., `--type debit --amount -gt 50`) only shows transactions meeting **all** criteria.
 * **Logical OR:** For the `--category` flag, use commas for multiple matches: `list --category "food,transport"`.
-* **Relative Dates:** Instead of full dates, use: `today`, `yesterday`, `this-week`, `last-month`, `this-month`.
+* **Relative Dates:** For `--date-from` and `--date-to` only, use keywords instead of full dates: `today`, `yesterday`, `tomorrow`, `this-week`, `this-month`, `last-month`, `last-year`. Note: the `--date` flag requires an exact date in `yyyy-MM-dd` format and does not accept relative keywords.
 
 ### 4.14 Troubleshooting: Common "Bad" Commands
 
@@ -614,7 +614,7 @@ Examples: `2026-03-15`, `2026-01-01`
 > Yes, as long as the column headers match exactly: `HashID,Type,Category,Amount,Date,Description`. Rows with invalid data are skipped with a warning.
 
 **Q: Does RLAD save data automatically between sessions?**
-> No. Data is held in memory during the session. **Always run `export` before exiting** to save your work to a CSV file.
+> Yes. RLAD automatically saves your transactions to a local file (`data/rlad.txt`) after every change. Your data is restored automatically when you relaunch RLAD. You can also use `export` to create a CSV backup for use in Excel or Google Sheets.
 
 **Q: What happens to my budgets when I use `clear`?**
 > Budget definitions are preserved. Only transaction data is cleared. Budget tracking (spending amounts) will reset to zero since there are no transactions to count.
