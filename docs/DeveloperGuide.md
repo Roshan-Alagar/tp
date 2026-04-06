@@ -586,7 +586,27 @@ sequenceDiagram
 **Sequence:**
 
 ```
-Taller Roshan
+Parser.parse("modify a7b2c3 --amount 20.00")
+    |
+    v
+ModifyCommand(action, rawArgs) created
+    |
+    v
+ModifyCommand.execute(transactions, ui)
+    |
+    |-- Parse rawArgs to extract ID and any update fields
+    |-- transactions.findTransaction(id)
+    |       -> Transaction old (or error if not found)
+    |-- Construct updated Transaction with merged fields
+    |       (unchanged fields copied from old)
+    |-- transactions.updateTransaction(id, updated)
+    |       -> transMap.put(id, updated)
+    |       -> transactions.set(indexOf(old), updated)
+    |       -> budgetManager.onTransactionUpdated(old, updated)
+    |       -> budgetManager.checkBudgetThresholds(month)
+    |
+    v
+ui.showResult("Transaction updated successfully!")
 ```
 
 **Design notes:**
@@ -798,10 +818,26 @@ sequenceDiagram
 `SummarizeCommand` reuses `FilterCommand.buildPredicate()` identically to `ListCommand`, then aggregates filtered results:
 
 ```
-Taller Roshan
+summarize --date-from 2026-01-01 --date-to 2026-03-31
+    |
+    v
+SummarizeCommand(rawArgs)
+    |
+    |-- FilterCommand.buildPredicate(rawArgs) -> Predicate
+    |-- transactions.getTransactions().stream().filter(p).collect(toList())
+    |
+    |-- For each transaction:
+    |       if credit: totalCredit += amount
+    |       if debit:  totalDebit  += amount
+    |       categoryTotals.merge(category, amount, BigDecimal::add)
+    |
+    |-- net = totalCredit - totalDebit
+    |
+    v
+ui.showResult(formatted summary)
 ```
 
-BigDecimal is used for all summation to avoid floating-point precision errors.
+`BigDecimal` is used for all summation to avoid floating-point precision errors (e.g. `0.10 + 0.20 = 0.30` not `0.30000000000000004`). Category totals are grouped using `Map.merge()` with `BigDecimal::add`.
 
 ---
 

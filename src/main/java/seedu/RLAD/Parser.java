@@ -6,6 +6,7 @@ import seedu.RLAD.command.DeleteCommand;
 import seedu.RLAD.command.HelpCommand;
 import seedu.RLAD.command.ListCommand;
 import seedu.RLAD.command.ModifyCommand;
+import seedu.RLAD.command.SearchCommand;
 import seedu.RLAD.command.SortCommand;
 import seedu.RLAD.command.SummarizeCommand;
 import seedu.RLAD.command.ExportCommand;
@@ -58,11 +59,12 @@ public class Parser {
     }
 
     private static boolean isValidAction(String action) {
-        return action.matches("add|delete|modify|list|sort|summarize|help|exit|budget|export|import|clear");
+        return action.matches(
+                "add|delete|modify|list|sort|summarize|help|exit|budget|search|find|export|import|clear|noop");
     }
 
     private static boolean requiresArguments(String action) {
-        return action.matches("add|delete|modify|budget");
+        return action.matches("add|delete|modify|budget|search|find");
     }
 
     public static Command parse(String input) throws RLADException {
@@ -99,6 +101,9 @@ public class Parser {
             return new ModifyCommand(action, arguments);
         case "budget":
             return new BudgetCommand(arguments);
+        case "search":
+        case "find":
+            return new SearchCommand(arguments);
         case "export":
             return new ExportCommand(arguments);
         case "import":
