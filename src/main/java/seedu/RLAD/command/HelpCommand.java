@@ -10,16 +10,45 @@ public class HelpCommand extends Command {
 
     @Override
     public void execute(TransactionManager transactions, Ui ui) {
-        // TODO: If rawArgs is empty, call ui.printPossibleOptions().
-        // TODO: If rawArgs matches a command name (e.g., "add"),
-        // call the corresponding manual method in Ui (e.g., ui.printAddManual()).
-        ui.showResult("HelpCommand logic will be implemented here.");
+        if (rawArgs == null || rawArgs.trim().isEmpty()) {
+            ui.printPossibleOptions();
+            return;
+        }
+        String command = rawArgs.trim().toLowerCase();
+        switch (command) {
+        case "add":
+            ui.printAddManual();
+            break;
+        case "modify":
+            ui.printModifyManual();
+            break;
+        case "delete":
+            ui.printDeleteManual();
+            break;
+        case "list":
+            ui.printListManual();
+            break;
+        case "summarize":
+            ui.printSummaryManual();
+            break;
+        case "export":
+            ui.printExportManual();
+            break;
+        case "import":
+            ui.printImportManual();
+            break;
+        case "clear":
+            ui.printClearManual();
+            break;
+        default:
+            ui.showResult("Unknown command: " + command
+                    + ". Type 'help' to see available commands.");
+            break;
+        }
     }
 
     @Override
     public boolean hasValidArgs() {
-        // TODO: Validate that rawArgs is either empty or matches a valid action
-        // string (add, delete, list, etc.) to prevent "help unknown_command" errors.
         return true;
     }
 }
