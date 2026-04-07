@@ -23,7 +23,7 @@ public class AddCommand extends Command {
      * @param rawArgs The raw input string (e.g., "--type debit --amount 15.50 --date 2026-02-18")
      * @return A Map with flag names as keys and their values as strings
      */
-    private Map<String, String> parseArguments(String rawArgs) {
+    public static Map<String, String> parseArguments(String rawArgs) {
         Map<String, String> argsMap = new HashMap<>();
 
         // Check if the string is empty, if it's empty then the empty map is returned, nothing to parse
@@ -190,6 +190,12 @@ public class AddCommand extends Command {
 
         // TODO: Provide success feedback to the user via ui.showResult().
         // Step 7: Show success message with the hashId
+
+        // This ensures that "   " or "" are treated as (none)
+        String categoryDisplay = (category == null || category.trim().isEmpty()) ? "(none)" : category;
+        String descriptionDisplay = (description == null || description.trim().isEmpty()) ?
+                "(none)" : "\"" + description + "\"";
+
         String successMessage = String.format(
                 "✅ Transaction added successfully!\n   HashID: %s\n   " +
                     "%s: $%.2f on %s\n   Category: %s\n   Description: %s",
@@ -197,8 +203,8 @@ public class AddCommand extends Command {
                 type.toUpperCase(),
                 amount,
                 date,
-                category != null ? category : "(none)",
-                description != null ? "\"" + description + "\"" : "(none)"
+                categoryDisplay,
+                descriptionDisplay
         );
         ui.showResult(successMessage);
     }

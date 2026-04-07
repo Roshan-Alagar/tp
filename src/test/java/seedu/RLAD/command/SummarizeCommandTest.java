@@ -79,7 +79,7 @@ class SummarizeCommandTest {
         new SummarizeCommand("").execute(manager, ui);
         String result = output.get(0);
 
-        assertTrue(result.contains("(uncategorized)"), "Null category should appear as (uncategorized)");
+        assertTrue(result.contains("(none)"), "Null category should appear as (none)");
     }
 
     @Test

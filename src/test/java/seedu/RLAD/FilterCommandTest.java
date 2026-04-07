@@ -4,7 +4,9 @@ import org.junit.jupiter.api.Test;
 import seedu.RLAD.command.FilterCommand;
 import seedu.RLAD.exception.RLADException;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.function.Predicate;
 
@@ -211,6 +213,15 @@ class FilterCommandTest {
     }
 
     @Test
+    public void buildPredicate_invalidCalendarDate_throwsException() {
+        // Feb 30 does not exist — should reject, not silently clamp
+        assertThrows(RLADException.class, () -> FilterCommand.buildPredicate("--date 2024-02-30"));
+        assertThrows(RLADException.class, () -> FilterCommand.buildPredicate("--date 2024.02.30"));
+        // Jun 31 does not exist
+        assertThrows(RLADException.class, () -> FilterCommand.buildPredicate("--date 2024.06.31"));
+    }
+
+    @Test
     public void buildPredicate_missingValue_throwsException() {
         assertThrows(RLADException.class, () -> FilterCommand.buildPredicate("--type"));
     }
@@ -220,5 +231,200 @@ class FilterCommandTest {
         // parseFlags silently ignores unknown flags — should still return all transactions
         ArrayList<Transaction> results = applyFilter("--unknown value");
         assertEquals(5, results.size());
+    }
+
+    // --- Enhanced category filter tests ---
+
+    private ArrayList<Transaction> createCategoryTestTransactions() {
+        ArrayList<Transaction> transactions = new ArrayList<>();
+        transactions.add(new Transaction("debit", "Food", 10.00,
+                LocalDate.of(2024, 3, 1), "Lunch"));
+        transactions.add(new Transaction("debit", "fast food", 8.00,
+                LocalDate.of(2024, 3, 2), "McDonalds"));
+        transactions.add(new Transaction("debit", "food delivery", 15.00,
+                LocalDate.of(2024, 3, 3), "GrabFood"));
+        transactions.add(new Transaction("debit", "Transport", 5.00,
+                LocalDate.of(2024, 3, 4), "Bus"));
+        transactions.add(new Transaction("credit", "Savings", 100.00,
+                LocalDate.of(2024, 3, 5), "Monthly savings"));
+        return transactions;
+    }
+
+    private ArrayList<Transaction> applyCategoryFilter(String rawArgs) {
+        ArrayList<Transaction> transactions = createCategoryTestTransactions();
+        Predicate<Transaction> predicate = FilterCommand.buildPredicate(rawArgs);
+        ArrayList<Transaction> results = new ArrayList<>();
+        for (Transaction t : transactions) {
+            if (predicate.test(t)) {
+                results.add(t);
+            }
+        }
+        return results;
+    }
+
+    @Test
+    public void buildPredicate_categoryPartialMatch_matchesSubstring() {
+        ArrayList<Transaction> results = applyCategoryFilter("--category food");
+        assertEquals(3, results.size());
+    }
+
+    @Test
+    public void buildPredicate_categoryPartialMatchCaseInsensitive_matches() {
+        ArrayList<Transaction> results = applyCategoryFilter("--category FOOD");
+        assertEquals(3, results.size());
+    }
+
+    @Test
+    public void buildPredicate_categoryMultiple_matchesEither() {
+        ArrayList<Transaction> results = applyCategoryFilter("--category food,transport");
+        assertEquals(4, results.size());
+    }
+
+    @Test
+    public void buildPredicate_categoryMultipleWithSpaces_matchesEither() {
+        ArrayList<Transaction> results = applyCategoryFilter("--category food, transport");
+        assertEquals(4, results.size());
+    }
+
+    @Test
+    public void buildPredicate_categoryCode1_matchesFood() {
+        ArrayList<Transaction> results = applyCategoryFilter("--category 1");
+        assertEquals(1, results.size());
+        assertEquals("Food", results.get(0).getCategory());
+    }
+
+    @Test
+    public void buildPredicate_categoryCode12_matchesSavings() {
+        ArrayList<Transaction> results = applyCategoryFilter("--category 12");
+        assertEquals(1, results.size());
+        assertEquals("Savings", results.get(0).getCategory());
+    }
+
+    @Test
+    public void buildPredicate_categoryInvalidCode_throwsException() {
+        assertThrows(RLADException.class, () -> FilterCommand.buildPredicate("--category 99"));
+    }
+
+    @Test
+    public void buildPredicate_categoryEmpty_throwsException() {
+        assertThrows(RLADException.class, () -> FilterCommand.buildPredicate("--category"));
+    }
+
+    // --- Enhanced date filter tests ---
+
+    private ArrayList<Transaction> createDateTestTransactions() {
+        LocalDate today = LocalDate.now();
+        ArrayList<Transaction> transactions = new ArrayList<>();
+        transactions.add(new Transaction("debit", "food", 10.00, today, "Today"));
+        transactions.add(new Transaction("debit", "food", 10.00,
+                today.minusDays(1), "Yesterday"));
+        transactions.add(new Transaction("debit", "food", 10.00,
+                today.minusDays(7), "Last week"));
+        transactions.add(new Transaction("debit", "food", 10.00,
+                today.minusMonths(2), "Two months ago"));
+        return transactions;
+    }
+
+    private ArrayList<Transaction> applyDateFilter(String rawArgs) {
+        ArrayList<Transaction> transactions = createDateTestTransactions();
+        Predicate<Transaction> predicate = FilterCommand.buildPredicate(rawArgs);
+        ArrayList<Transaction> results = new ArrayList<>();
+        for (Transaction t : transactions) {
+            if (predicate.test(t)) {
+                results.add(t);
+            }
+        }
+        return results;
+    }
+
+    @Test
+    public void buildPredicate_dateFromToday_matchesTodayOnly() {
+        ArrayList<Transaction> results = applyDateFilter("--date-from today --date-to today");
+        assertEquals(1, results.size());
+        assertEquals(LocalDate.now(), results.get(0).getDate());
+    }
+
+    @Test
+    public void buildPredicate_dateFromYesterday_matchesTwoDays() {
+        ArrayList<Transaction> results = applyDateFilter("--date-from yesterday");
+        assertEquals(2, results.size());
+    }
+
+    @Test
+    public void buildPredicate_dateFromThisWeek_filtersCorrectly() {
+        LocalDate mondayThisWeek = LocalDate.now()
+                .with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        ArrayList<Transaction> results = applyDateFilter("--date-from this-week");
+        for (Transaction t : results) {
+            assertFalse(t.getDate().isBefore(mondayThisWeek));
+        }
+    }
+
+    @Test
+    public void buildPredicate_dateFromThisMonth_filtersCorrectly() {
+        LocalDate firstOfMonth = LocalDate.now().withDayOfMonth(1);
+        ArrayList<Transaction> results = applyDateFilter("--date-from this-month");
+        for (Transaction t : results) {
+            assertFalse(t.getDate().isBefore(firstOfMonth));
+        }
+    }
+
+    @Test
+    public void buildPredicate_dateFromLastMonth_filtersCorrectly() {
+        LocalDate firstOfLastMonth = LocalDate.now().minusMonths(1).withDayOfMonth(1);
+        ArrayList<Transaction> results = applyDateFilter("--date-from last-month");
+        for (Transaction t : results) {
+            assertFalse(t.getDate().isBefore(firstOfLastMonth));
+        }
+    }
+
+    @Test
+    public void buildPredicate_dateRangeInvalid_throwsException() {
+        assertThrows(RLADException.class,
+                () -> FilterCommand.buildPredicate("--date-from 2024-12-31 --date-to 2024-01-01"));
+    }
+
+    @Test
+    public void buildPredicate_dateFromTomorrow_matchesNone() {
+        ArrayList<Transaction> results = applyDateFilter("--date-from tomorrow");
+        assertEquals(0, results.size());
+    }
+
+    @Test
+    public void buildPredicate_combinedCategoryAndDate_filtersCorrectly() {
+        ArrayList<Transaction> results = applyDateFilter("--category food --date-from yesterday");
+        assertEquals(2, results.size());
+    }
+
+    @Test
+    public void buildPredicate_dateFromLastYear_filtersCorrectly() {
+        ArrayList<Transaction> results = applyDateFilter("--date-from last-year");
+        assertEquals(4, results.size());
+    }
+
+    @Test
+    public void buildPredicate_dateToRelativeKeyword_filtersCorrectly() {
+        ArrayList<Transaction> results = applyDateFilter("--date-to yesterday");
+        for (Transaction t : results) {
+            assertFalse(t.getDate().isAfter(LocalDate.now().minusDays(1)));
+        }
+    }
+
+    @Test
+    public void buildPredicate_dateFromInvalidString_throwsException() {
+        assertThrows(RLADException.class,
+                () -> FilterCommand.buildPredicate("--date-from garbage"));
+    }
+
+    @Test
+    public void buildPredicate_categoryMultipleWithEmptyEntries_matchesValidOnes() {
+        ArrayList<Transaction> results = applyCategoryFilter("--category food,,transport");
+        assertEquals(4, results.size());
+    }
+
+    @Test
+    public void buildPredicate_categoryNoMatch_returnsEmpty() {
+        ArrayList<Transaction> results = applyCategoryFilter("--category nonexistent");
+        assertEquals(0, results.size());
     }
 }

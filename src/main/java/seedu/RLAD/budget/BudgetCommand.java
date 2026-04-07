@@ -20,7 +20,7 @@ public class BudgetCommand extends Command {
     private static final int PROGRESS_BAR_LENGTH = 20;
 
     private enum SubCommand {
-        SET, VIEW, EDIT, DELETE
+        SET, VIEW, EDIT, DELETE, YEARLY
     }
 
     public BudgetCommand(String rawArgs) {
@@ -60,6 +60,10 @@ public class BudgetCommand extends Command {
         case DELETE:
             handleDelete(budgetManager, parsedArgs, ui);
             break;
+        case YEARLY:
+            handleYearly(budgetManager, parsedArgs, ui);
+            break;
+
         default:
             throw new RLADException("Unknown budget subcommand: " + subCommandStr);
         }
@@ -340,8 +344,33 @@ public class BudgetCommand extends Command {
         return argsMap;
     }
 
+    private void handleYearly(BudgetManager budgetManager, Map<String, String> args, Ui ui)
+            throws RLADException {
+        int year;
+        if (args.containsKey("--year")) {
+            year = parseYear(args.get("--year"));
+        } else {
+            year = java.time.LocalDate.now().getYear();
+        }
+        String summary = budgetManager.getYearlySummary(year);
+        ui.showResult(summary);
+    }
+
+    private int parseYear(String yearStr) throws RLADException {
+        try {
+            int year = Integer.parseInt(yearStr.trim());
+            if (year < 2000 || year > 2100) {
+                throw new RLADException("Year must be between 2000 and 2100");
+            }
+            return year;
+        } catch (NumberFormatException e) {
+            throw new RLADException("Invalid year format. Use YYYY (e.g., 2026)");
+        }
+    }
+
     @Override
     public boolean hasValidArgs() {
+
         return rawArgs != null && !rawArgs.trim().isEmpty();
     }
 }

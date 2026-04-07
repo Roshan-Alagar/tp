@@ -17,11 +17,11 @@
     - 4.6 [Summarize Transactions](#46-summarize-transactions)
     - 4.7 [Budget Management](#47-budget-management)
     - 4.8 [Storage Management (CSV Export/Import & Clear)](#48-storage-management-csv-exportimport--clear)
-5. [Product Scope](#5-product-scope)
-6. [User Stories](#6-user-stories)
-7. [Non-Functional Requirements](#7-non-functional-requirements)
-8. [Glossary](#8-glossary)
-9. [Instructions for Manual Testing](#9-instructions-for-manual-testing)
+5. [Appendix A: Product Scope](#appendix-a-product-scope)
+6. [Appendix B: User Stories](#appendix-b-user-stories)
+7. [Appendix C: Non-Functional Requirements](#appendix-c-non-functional-requirements)
+8. [Appendix D: Glossary](#appendix-d-glossary)
+9. [Appendix E: Instructions for Manual Testing](#appendix-e-instructions-for-manual-testing)
 
 ---
 
@@ -586,7 +586,27 @@ sequenceDiagram
 **Sequence:**
 
 ```
-Taller Roshan
+Parser.parse("modify a7b2c3 --amount 20.00")
+    |
+    v
+ModifyCommand(action, rawArgs) created
+    |
+    v
+ModifyCommand.execute(transactions, ui)
+    |
+    |-- Parse rawArgs to extract ID and any update fields
+    |-- transactions.findTransaction(id)
+    |       -> Transaction old (or error if not found)
+    |-- Construct updated Transaction with merged fields
+    |       (unchanged fields copied from old)
+    |-- transactions.updateTransaction(id, updated)
+    |       -> transMap.put(id, updated)
+    |       -> transactions.set(indexOf(old), updated)
+    |       -> budgetManager.onTransactionUpdated(old, updated)
+    |       -> budgetManager.checkBudgetThresholds(month)
+    |
+    v
+ui.showResult("Transaction updated successfully!")
 ```
 
 **Design notes:**
@@ -706,7 +726,7 @@ flowchart LR
     end
 
     subgraph Output
-        And1 --> Predicate["Predicate<Transaction>"]
+        And1 --> Predicate["Predicate&lt;Transaction&gt;"]
         Predicate --> Stream["transactions.stream().filter(predicate)"]
         Stream --> Results["Filtered List"]
     end
@@ -751,8 +771,42 @@ flowchart TD
 
 `SortCommand` does not sort transactions itself — it writes the desired sort field and direction to `TransactionManager` via `setGlobalSort()`. `ListCommand` reads these stored values on each invocation.
 
-```
-Le Kuan
+```mermaid
+sequenceDiagram
+    participant User
+    participant Parser
+    participant SortCommand
+    participant TM as TransactionManager
+    participant Ui
+
+    User->>Parser: sort date desc
+    Parser->>SortCommand: new SortCommand("date desc")
+
+    User->>SortCommand: execute(transactions, ui)
+    activate SortCommand
+
+    SortCommand->>SortCommand: parseArgs("date desc")
+    Note right of SortCommand: field = "date", direction = "desc"
+
+    alt field is empty (no args)
+        SortCommand->>TM: getGlobalSortField()
+        TM-->>SortCommand: current field
+        SortCommand->>Ui: showResult("Current sort: ...")
+    else field is "reset"
+        SortCommand->>TM: clearGlobalSort()
+        SortCommand->>Ui: showResult("Sort order cleared")
+    else valid field and direction
+        SortCommand->>TM: setGlobalSort("date", "desc")
+        SortCommand->>Ui: showResult("Sort order set: date (desc)")
+    end
+
+    deactivate SortCommand
+
+    Note over User, Ui: On next "list" command
+    User->>TM: (via ListCommand) getGlobalSortField()
+    TM-->>User: "date"
+    User->>TM: (via ListCommand) getGlobalSortDirection()
+    TM-->>User: "desc"
 ```
 
 ---
@@ -764,10 +818,26 @@ Le Kuan
 `SummarizeCommand` reuses `FilterCommand.buildPredicate()` identically to `ListCommand`, then aggregates filtered results:
 
 ```
-Taller Roshan
+summarize --date-from 2026-01-01 --date-to 2026-03-31
+    |
+    v
+SummarizeCommand(rawArgs)
+    |
+    |-- FilterCommand.buildPredicate(rawArgs) -> Predicate
+    |-- transactions.getTransactions().stream().filter(p).collect(toList())
+    |
+    |-- For each transaction:
+    |       if credit: totalCredit += amount
+    |       if debit:  totalDebit  += amount
+    |       categoryTotals.merge(category, amount, BigDecimal::add)
+    |
+    |-- net = totalCredit - totalDebit
+    |
+    v
+ui.showResult(formatted summary)
 ```
 
-BigDecimal is used for all summation to avoid floating-point precision errors.
+`BigDecimal` is used for all summation to avoid floating-point precision errors (e.g. `0.10 + 0.20 = 0.30` not `0.30000000000000004`). Category totals are grouped using `Map.merge()` with `BigDecimal::add`.
 
 ---
 
@@ -887,8 +957,44 @@ This feature is implemented across three new command classes and one new storage
 
 #### 4.8.1 Export (`ExportCommand` + `CsvStorageManager.exportToCsv`)
 
-```
-Le Kuan
+```mermaid
+sequenceDiagram
+    participant User
+    participant Parser
+    participant ExportCommand
+    participant FilterCommand
+    participant TM as TransactionManager
+    participant CSV as CsvStorageManager
+    participant Ui
+
+    User->>Parser: export --file backup.csv
+    Parser->>ExportCommand: new ExportCommand("--file backup.csv")
+
+    User->>ExportCommand: execute(transactions, ui)
+    activate ExportCommand
+
+    ExportCommand->>FilterCommand: parseFlags(rawArgs)
+    FilterCommand-->>ExportCommand: {file: "backup.csv"}
+
+    ExportCommand->>TM: getTransactions()
+    TM-->>ExportCommand: ArrayList of transactions
+
+    alt transactions empty
+        ExportCommand->>Ui: showResult("No transactions to export.")
+    else transactions exist
+        ExportCommand->>CSV: exportToCsv(transactions, "backup.csv")
+        activate CSV
+        CSV->>CSV: write header row
+        loop For each transaction
+            CSV->>CSV: escapeCsvField() for each field
+            CSV->>CSV: write CSV row
+        end
+        deactivate CSV
+        ExportCommand->>Ui: showResult("Exported N transactions to: backup.csv")
+    end
+
+    Ui-->>User: display result
+    deactivate ExportCommand
 ```
 
 **CSV escaping rules:**
@@ -896,12 +1002,6 @@ Le Kuan
 - Any existing double-quote characters within the field are doubled (`"` becomes `""`).
 
 #### 4.8.2 Import (`ImportCommand` + `CsvStorageManager.importFromCsv`)
-
-```
-Le Kuan
-```
-
-**Sequence diagram for import (replace mode):**
 
 ```mermaid
 sequenceDiagram
@@ -960,81 +1060,125 @@ sequenceDiagram
 
 #### 4.8.3 Clear (`ClearCommand`)
 
-```
-Le Kuan
-```
+```mermaid
+sequenceDiagram
+    participant User
+    participant Parser
+    participant ClearCommand
+    participant TM as TransactionManager
+    participant BM as BudgetManager
+    participant Ui
 
-#### Parser Changes Required
+    User->>Parser: clear
+    Parser->>ClearCommand: new ClearCommand("")
 
-`Parser.java` must be updated to recognise the three new commands:
+    User->>ClearCommand: execute(transactions, ui)
+    activate ClearCommand
 
-```java
-private static boolean isValidAction(String action) {
-    return action.matches("add|delete|modify|list|sort|summarize|help|exit|budget|export|import|clear");
-}
+    ClearCommand->>TM: getTransactionCount()
+    TM-->>ClearCommand: N
 
-private static boolean requiresArguments(String action) {
-    return action.matches("add|delete|modify|budget|import");
-}
+    alt N == 0
+        ClearCommand->>Ui: showResult("No transactions to clear.")
+    else N > 0 and no --force flag
+        ClearCommand->>Ui: askConfirmation("WARNING: ...")
+        Ui->>User: "Type CONFIRM to proceed: "
+        User-->>Ui: "CONFIRM"
+        Ui-->>ClearCommand: true
 
-// In parse():
-case "export": return new ExportCommand(arguments);
-case "import": return new ImportCommand(arguments);
-case "clear":  return new ClearCommand(arguments);
-```
+        ClearCommand->>TM: clearAllTransactions()
+        activate TM
+        TM->>TM: transactions.clear()
+        TM->>TM: transMap.clear()
+        TM->>BM: onAllDataCleared()
+        deactivate TM
 
-#### TransactionManager Changes Required
+        ClearCommand->>Ui: showResult("Cleared N transactions.")
+    end
 
-```java
-/**
- * Clears all transactions from storage.
- * Used by: ClearCommand, ImportCommand (replace mode)
- */
-public void clearAllTransactions() {
-    transactions.clear();
-    transMap.clear();
-    if (budgetManager != null) {
-        budgetManager.onAllDataCleared();
-    }
-}
-```
-
-#### BudgetManager Changes Required
-
-```java
-/**
- * Handles clearing of all transaction data.
- * Resets notification tracking and recalculates income/spending.
- */
-public void onAllDataCleared() {
-    notifiedThresholds.clear();
-    for (YearMonth month : budgets.keySet()) {
-        updateTotalIncome(month);
-        checkBudgetThresholds(month);
-    }
-}
+    Ui-->>User: display result
+    deactivate ClearCommand
 ```
 
-#### Ui Changes Required
+#### Design Considerations
 
-```java
-/**
- * Prompts the user for confirmation before a destructive action.
- * @param prompt     Warning message to display
- * @param expected   The string the user must type to confirm (e.g., "CONFIRM")
- * @return true if the user typed the expected string (case-insensitive)
- */
-public boolean askConfirmation(String prompt, String expected) {
-    System.out.println(prompt);
-    System.out.print("> ");
-    String input = userScanner.nextLine();
-    return input.trim().equalsIgnoreCase(expected);
-}
-```
+**Parser integration:** `export`, `import`, and `clear` are registered in `Parser.isValidAction()` and routed via the `parse()` switch. `import` requires arguments (`requiresArguments` returns true), while `export` and `clear` do not.
+
+**Shared clearing logic:** Both `ClearCommand` and `ImportCommand` (replace mode) call `TransactionManager.clearAllTransactions()`, which clears both the ArrayList and HashMap, then notifies `BudgetManager.onAllDataCleared()` to reset notification tracking.
+
+**Confirmation flow:** Destructive operations (`clear`, `import` in replace mode) use `Ui.askConfirmation(String)` to prompt the user to type `CONFIRM` before proceeding. The `clear --force` flag bypasses this prompt.
 
 ---
 
-## 5. Product Scope
+### 4.9 Autosave (Crash Recovery)
+
+**Classes involved:** `AutoSaveManager`, `TransactionManager`, `RLAD`
+
+RLAD automatically persists transaction data to a local file (`data/rlad.txt`) after every mutation (add, delete, modify, clear, import). On startup, `RLAD.java` calls `TransactionManager.loadFromAutoSave()` to restore the previous session's data.
+
+This is separate from the CSV export/import feature — autosave is internal and automatic, while export/import is user-initiated and designed for data portability.
+
+#### Save/Load Flow
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant RLAD
+    participant TM as TransactionManager
+    participant ASM as AutoSaveManager
+    participant File as data/rlad.txt
+
+    Note over RLAD, File: On startup
+    RLAD->>TM: loadFromAutoSave()
+    activate TM
+    TM->>ASM: load()
+    activate ASM
+    ASM->>File: read lines
+    File-->>ASM: pipe-delimited rows
+    ASM->>ASM: parseLine() for each row
+    ASM-->>TM: ArrayList of Transactions
+    deactivate ASM
+    TM->>TM: add each to transactions + transMap
+    deactivate TM
+
+    Note over User, File: During session
+    User->>TM: addTransaction(t)
+    activate TM
+    TM->>TM: update transactions + transMap
+    TM->>ASM: save(transactions)
+    activate ASM
+    ASM->>File: overwrite with all transactions
+    deactivate ASM
+    deactivate TM
+```
+
+#### File Format
+
+Each transaction is stored as one line, fields separated by `|`:
+
+```
+hashId|type|category|amount|date|description
+```
+
+Example:
+```
+a7b2c3|debit|food|15.5|2026-03-05|Chicken rice at Clementi
+d4e5f6|credit|salary|3000.0|2026-03-01|March salary
+```
+
+The description field is last, so pipes within descriptions are preserved (the parser limits the split to 6 fields).
+
+#### Design Considerations
+
+**Why not reuse CsvStorageManager?** CSV export/import is user-facing and designed for data portability (Excel, Sheets). Autosave is internal and optimised for speed and simplicity. Keeping them separate avoids coupling internal persistence with the user-facing export format.
+
+**Why overwrite the entire file?** The transaction list is small enough that a full rewrite on every change is fast and avoids the complexity of incremental updates or journaling. This also guarantees the file is always in a consistent state.
+
+**Graceful degradation:** If the autosave file is missing or corrupted, RLAD starts with an empty transaction list. Malformed lines are skipped with a log warning rather than crashing.
+
+---
+
+## Appendix A: Product Scope
 
 ### Target User Profile
 
@@ -1046,7 +1190,7 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
 
 ---
 
-## 6. User Stories
+## Appendix B: User Stories
 
 | Version | As a ...      | I want to ...                                              | So that I can ...                                 |
 |---------|---------------|------------------------------------------------------------|---------------------------------------------------|
@@ -1068,7 +1212,7 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
 
 ---
 
-## 7. Non-Functional Requirements
+## Appendix C: Non-Functional Requirements
 
 - **Performance:** All operations on up to 1,000 transactions must complete in under 1 second on a standard laptop (macOS/Windows/Linux, JDK 17).
 - **Reliability:** HashID collision prevention must guarantee uniqueness across the session.
@@ -1079,7 +1223,7 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
 
 ---
 
-## 8. Glossary
+## Appendix D: Glossary
 
 | Term              | Definition                                                                                          |
 |-------------------|-----------------------------------------------------------------------------------------------------|
@@ -1096,11 +1240,11 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
 
 ---
 
-## 9. Instructions for Manual Testing
+## Appendix E: Instructions for Manual Testing
 
 > These tests verify core functionality. Run them in sequence on a fresh launch.
 
-### 9.1 Add Transactions
+### E.1 Add Transactions
 
 1. Add a credit:
    ```
@@ -1126,7 +1270,7 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
    ```
    Expected: error message — Invalid `--type`.
 
-### 9.2 List and Filter
+### E.2 List and Filter
 
 5. List all:
    ```
@@ -1158,7 +1302,7 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
    ```
    Expected: salary first, then chicken rice, then $5.00.
 
-### 9.3 Sort (Global)
+### E.3 Sort (Global)
 
 10. Set global sort:
     ```
@@ -1177,7 +1321,7 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
     sort reset
     ```
 
-### 9.4 Summarize
+### E.4 Summarize
 
 13. Summarize all:
     ```
@@ -1185,7 +1329,7 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
     ```
     Expected: Total Credit $3000, Total Debit $20.50, Net $2979.50.
 
-### 9.5 Modify
+### E.5 Modify
 
 14. Note the HashID of the chicken rice transaction from step 2. Modify its amount:
     ```
@@ -1193,7 +1337,7 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
     ```
     Expected: success. Verify with `list`.
 
-### 9.6 Delete
+### E.6 Delete
 
 15. Note the HashID of the $5.00 transaction. Delete it:
     ```
@@ -1207,7 +1351,7 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
     ```
     Expected: error — Transaction not found.
 
-### 9.7 Budget
+### E.7 Budget
 
 17. Set a food budget for March:
     ```
@@ -1233,7 +1377,7 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
     ```
     Expected: success.
 
-### 9.8 Export
+### E.8 Export
 
 21. Export all transactions:
     ```
@@ -1247,7 +1391,7 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
     ```
     Expected: file `test_backup.csv` created.
 
-### 9.9 Import
+### E.9 Import
 
 23. Import with replace mode:
     ```
@@ -1268,7 +1412,7 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
     ```
     Expected: error — file not found.
 
-### 9.10 Clear
+### E.10 Clear
 
 26. Clear with confirmation:
     ```
@@ -1290,7 +1434,7 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
     ```
     Expected: all transactions deleted immediately, no prompt.
 
-### 9.11 Exit
+### E.11 Exit
 
 29. Exit:
     ```

@@ -4,6 +4,9 @@ import seedu.RLAD.command.Command;
 import seedu.RLAD.exception.RLADException;
 import seedu.RLAD.budget.BudgetManager;
 import seedu.RLAD.budget.BudgetCommand;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 
 public class RLAD {
     private final Ui ui;
@@ -18,6 +21,12 @@ public class RLAD {
         this.budgetManager = new BudgetManager(transactions);
         this.budgetManager.setUi(this.ui);
         this.transactions.setBudgetManager(budgetManager);
+        this.transactions.loadFromAutoSave();
+
+        // daddy logger takes care of all the loggers from here
+        Logger packageLogger = Logger.getLogger("seedu.RLAD");
+        // hides the logs from the user unless something crashes
+        packageLogger.setLevel(Level.WARNING);
     }
 
     public void run() {
@@ -25,6 +34,9 @@ public class RLAD {
         boolean isExit = false;
 
         while (!isExit) {
+            System.out.flush();
+            System.err.flush();
+
             try {
                 String input = ui.readCommand();
 
@@ -65,10 +77,8 @@ public class RLAD {
 
             } catch (RLADException e) {
                 ui.showError(e.getMessage());
-                ui.printPossibleOptions();
             } catch (Exception e) {
                 ui.showError("An unexpected error occurred: " + e.getMessage());
-                ui.printPossibleOptions();
             }
 
             if (!isExit) {

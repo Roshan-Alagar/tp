@@ -42,7 +42,7 @@ public class ListCommand extends Command {
 
     @Override
     public void execute(TransactionManager transactions, Ui ui) throws RLADException {
-        logger.info("Executing ListCommand with args: " + rawArgs);
+        logger.fine("Executing ListCommand with args: " + rawArgs);
         // 1. Parse flags from rawArgs
         Map<String, String> flags = FilterCommand.parseFlags(this.rawArgs);
 
@@ -50,15 +50,22 @@ public class ListCommand extends Command {
         String sortBy = null;
         String sortDirection = "asc";
         if (flags.containsKey("sort")) {
-            String[] sortParts = flags.get("sort").toLowerCase().trim().split("\\s+");
+            String sortValue = flags.get("sort").trim();
+            if (sortValue.isEmpty()) {
+                throw new RLADException("--sort requires a value. "
+                        + "Use: --sort date [asc|desc] or --sort amount [asc|desc]");
+            }
+            String[] sortParts = sortValue.toLowerCase().split("\\s+");
             sortBy = sortParts[0];
             if (!sortBy.equals("date") && !sortBy.equals("amount")) {
-                throw new RLADException("--sort must be 'date' or 'amount', got: '" + sortBy + "'");
+                throw new RLADException("--sort must be 'date' or 'amount', got: '" + sortBy
+                        + "'. Example: list --sort amount desc");
             }
             if (sortParts.length > 1) {
                 sortDirection = sortParts[1];
                 if (!sortDirection.equals("asc") && !sortDirection.equals("desc")) {
-                    throw new RLADException("Sort direction must be 'asc' or 'desc', got: '" + sortDirection + "'");
+                    throw new RLADException("Sort direction must be 'asc' or 'desc', got: '"
+                            + sortDirection + "'. Example: list --sort date desc");
                 }
             }
         }
@@ -101,8 +108,8 @@ public class ListCommand extends Command {
                     t.getType().toUpperCase(),
                     t.getDate().toString(),
                     String.format("$%.2f", t.getAmount()),
-                    t.getCategory().isEmpty() ? "(none)" : t.getCategory(),
-                    t.getDescription().isEmpty() ? "(none)" : t.getDescription()));
+                    (t.getCategory() == null || t.getCategory().isEmpty()) ? "(none)" : t.getCategory(),
+                    (t.getDescription() == null || t.getDescription().isEmpty()) ? "(none)" : t.getDescription()));
         }
         ui.showResult(DIVIDER);
         ui.showResult("  Total: " + results.size() + " transaction(s) shown.");
