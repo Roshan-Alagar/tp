@@ -40,6 +40,21 @@ public class HelpCommand extends Command {
         case "clear":
             ui.printClearManual();
             break;
+        case "sort":
+            ui.printSortManual();
+            break;
+        case "budget":
+            ui.printBudgetManual();
+            break;
+        case "filter":
+            ui.printFilterManual();
+            break;
+        case "search":
+            ui.printSearchManual();
+            break;
+        case "help":
+            ui.printHelpManual();
+            break;
         default:
             ui.showResult("Unknown command: " + command
                     + ". Type 'help' to see available commands.");

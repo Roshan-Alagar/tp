@@ -57,7 +57,11 @@ public class Ui {
         System.out.println("  summarize : Get a high-level breakdown of your spending");
         System.out.println("  export    : Export transactions to a CSV file");
         System.out.println("  import    : Import transactions from a CSV file");
+        System.out.println("  filter    : Display transactions matching filter criteria");
+        System.out.println("  search    : Search transactions by keyword");
         System.out.println("  clear     : Delete all transactions permanently");
+        System.out.println("  help      : Show usage instructions (try 'help <command>')");
+        System.out.println("  exit      : Exit the application");
         System.out.println("\nFormat:");
         System.out.println("\t$action --option_0 $argument_0 ... --option_k $argument_k");
     }
@@ -142,6 +146,66 @@ public class Ui {
         System.out.println("Example:");
         System.out.println("  clear");
         System.out.println("  clear --force");
+    }
+
+    public void printSortManual() {
+        System.out.println("Command: sort");
+        System.out.println("Description: Set or view the global sort order for transactions.");
+        System.out.println("Parameters: FIELD [DIRECTION]");
+        System.out.println("  FIELD: amount or date");
+        System.out.println("  DIRECTION: asc or desc (default: asc)");
+        System.out.println("  Use 'sort reset' to clear global sort.");
+        System.out.println("  Use 'sort' with no arguments to view current sort.");
+        System.out.println("Example:");
+        System.out.println("  sort amount desc");
+        System.out.println("  sort date");
+        System.out.println("  sort reset");
+    }
+
+    public void printBudgetManual() {
+        System.out.println("Command: budget");
+        System.out.println("Description: Manage monthly budget allocations by category.");
+        System.out.println("Sub-commands: set, view, edit, delete");
+        System.out.println("Parameters: --month YYYY-MM --category CODE --amount AMOUNT");
+        System.out.println("  Category codes: 1=Food, 2=Transport, 3=Utilities, 4=Housing,");
+        System.out.println("    5=Health/Insurance, 6=Debt, 7=Childcare, 8=Shopping,");
+        System.out.println("    9=Gifts, 10=Investments, 11=Emergency, 12=Savings");
+        System.out.println("Example:");
+        System.out.println("  budget set --month 2026-03 --category 1 --amount 500.00");
+        System.out.println("  budget view --month 2026-03");
+        System.out.println("  budget edit --month 2026-03 --category 1 --amount 600.00");
+        System.out.println("  budget delete --month 2026-03 --category 1");
+    }
+
+    public void printFilterManual() {
+        System.out.println("Command: filter");
+        System.out.println("Description: Display transactions matching filter criteria.");
+        System.out.println("Options: --type, --category, --amount, --date, --date-from, --date-to, --sort");
+        System.out.println("  --amount supports operators: -gt, -gte, -eq, -lt, -leq");
+        System.out.println("  --date supports: today, yesterday, this-week, this-month, last-month, last-year");
+        System.out.println("Example:");
+        System.out.println("  filter --type debit --category food");
+        System.out.println("  filter --amount -gt 50 --date-from 2026-01-01 --date-to 2026-06-30");
+    }
+
+    public void printSearchManual() {
+        System.out.println("Command: search");
+        System.out.println("Description: Search transactions by keyword.");
+        System.out.println("Searches description, category, HashID, and amount.");
+        System.out.println("Example:");
+        System.out.println("  search chicken");
+        System.out.println("  search a7b2");
+    }
+
+    public void printHelpManual() {
+        System.out.println("Command: help");
+        System.out.println("Description: Show usage instructions for commands.");
+        System.out.println("Format: help [COMMAND]");
+        System.out.println("  With no argument, lists all available commands.");
+        System.out.println("  With a command name, shows detailed usage for that command.");
+        System.out.println("Example:");
+        System.out.println("  help");
+        System.out.println("  help add");
     }
 
     public void printCommandOutput(Command command) {
