@@ -42,7 +42,7 @@ public class Ui {
         System.out.println("Hello and welcome to RLAD!");
         System.out.println("Handle your financial life from one spot without the spreadsheet headaches");
         printPossibleOptions();
-        System.out.println("Type 'help' for the full list or '$action help' for specific argument details.");
+        System.out.println("Type 'help' for the full list or 'help <command>' for specific argument details.");
         showLine();
     }
 

@@ -58,7 +58,7 @@ filter transactions, and get quick summaries of where your money is going -- all
 
    Format:
    	$action --option_0 $argument_0 ... --option_k $argument_k
-   Type 'help' for the full list or '$action help' for specific argument details.
+   Type 'help' for the full list or 'help <command>' for specific argument details.
    ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
    ```
 6. Type a command at the `>` prompt and press Enter. Refer to [Commands](#commands) below for details on each command.
@@ -387,7 +387,7 @@ Available actions:
 
 Format:
 	$action --option_0 $argument_0 ... --option_k $argument_k
-Type 'help' for the full list or '$action help' for specific argument details.
+Type 'help' for the full list or 'help <command>' for specific argument details.
 ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
 > list --sort amount
 Empty Wallet — no transactions match your criteria.
