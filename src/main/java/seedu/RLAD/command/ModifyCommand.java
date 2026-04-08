@@ -7,7 +7,6 @@ import seedu.RLAD.Ui;
 import seedu.RLAD.exception.RLADException;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -80,7 +79,9 @@ public class ModifyCommand extends Command {
     private double parseAmount(String amountStr) throws RLADException {
         try {
             double value = Double.parseDouble(amountStr);
-            if (value <= 0) throw new RLADException("Amount must be > 0");
+            if (value <= 0) {
+                throw new RLADException("Amount must be > 0");
+            }
             return value;
         } catch (NumberFormatException e) {
             throw new RLADException("Invalid amount");
