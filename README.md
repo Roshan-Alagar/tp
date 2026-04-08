@@ -86,6 +86,12 @@ The project follows the **MVC pattern** with the **Command Design Pattern**:
 | **ModifyCommand** | `findTransaction(id)`, `updateTransaction(id, t)` |
 | **ListCommand** | `getTransactions()` + `FilterCommand.buildPredicate()` |
 | **SummarizeCommand** | `getTransactions()` + `FilterCommand.buildPredicate()` |
+| SearchCommand  | getTransactions() + keyword matching |
+| SortCommand    | setGlobalSort() |
+| BudgetCommand  | BudgetManager methods |
+| ExportCommand  | CsvStorageManager.exportToCsv() |
+| ImportCommand  | CsvStorageManager.importFromCsv(), addTransaction() |
+| ClearCommand   | clearAllTransactions() |
 
 ## Filtering (FilterCommand)
 
@@ -117,12 +123,18 @@ List<Transaction> filtered = transactions.getTransactions().stream()
 ## Usage
 
 ```
-add --type <credit/debit> --amount <amount> --category <category>
+add --type <credit/debit> --amount <amount> --date <yyyy-MM-dd> --category <category> --description "<text>"
+delete --hashID <id>
+modify <id> --amount <amount> --category <category> --date <date> --type <type> --description "<text>"
 list
-list --type <credit/debit>
-list --category <category>
-delete <id>
-modify <id> --amount <new amount>
+list --type <credit/debit> --category <category> --sort <date/amount>
+search --keyword <term>
 summarize
+summarize --type <debit> --date-from <date> --date-to <date>
+budget set --month <yyyy-MM> --category <code> --amount <amount>
+export --file <filename> --path <directory>
+import --file <filename> --merge
+clear
 help
+exit
 ```

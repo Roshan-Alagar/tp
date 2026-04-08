@@ -79,6 +79,9 @@ public class ModifyCommand extends Command {
     private double parseAmount(String amountStr) throws RLADException {
         try {
             double value = Double.parseDouble(amountStr);
+            if (Double.isNaN(value) || Double.isInfinite(value)) {
+                throw new RLADException("Invalid amount");
+            }
             if (value <= 0) {
                 throw new RLADException("Amount must be > 0");
             }

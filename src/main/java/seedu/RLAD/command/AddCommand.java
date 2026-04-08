@@ -120,6 +120,10 @@ public class AddCommand extends Command {
             throw new RLADException("Invalid amount: '" + amountStr + "'. Please enter a number (e.g., 15.50)");
         }
 
+        if (Double.isNaN(amount) || Double.isInfinite(amount)) {
+            throw new RLADException("Invalid amount: '" + amountStr + "'. Please enter a number (e.g., 15.50)");
+        }
+
         if (amount <= 0) {
             throw new RLADException("Amount must be greater than 0. Got: " + amount);
         }
