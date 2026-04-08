@@ -127,6 +127,7 @@ public class ListCommand extends Command {
     private List<Transaction> applyFilters(List<Transaction> transactions, String filterStr)
             throws RLADException {
 
+        // Split by spaces but preserve filter:value pairs
         String[] parts = filterStr.split("\\s+");
         List<Transaction> result = new ArrayList<>(transactions);
 
@@ -134,65 +135,51 @@ public class ListCommand extends Command {
         for (int i = 0; i < parts.length; i++) {
             String filter = parts[i].toLowerCase();
 
-            // Handle each filter type
-            switch (filter) {
-            case "type:":
-                if (i + 1 >= parts.length) {
-                    throw new RLADException("Missing value for 'type:' filter");
-                }
-                String type = parts[++i];
-                result = filterByType(result, type);
-                break;
+            // Check if this part contains a colon (it's a filter)
+            if (filter.contains(":")) {
+                String[] filterParts = filter.split(":", 2);
+                String filterType = filterParts[0];
+                String filterValue = filterParts[1];
 
-            case "cat:":
-            case "category:":
-                if (i + 1 >= parts.length) {
-                    throw new RLADException("Missing value for 'category:' filter");
-                }
-                String category = parts[++i];
-                result = filterByCategory(result, category);
-                break;
+                switch (filterType) {
+                case "type":
+                    result = filterByType(result, filterValue);
+                    break;
 
-            case "from:":
-                if (i + 1 >= parts.length) {
-                    throw new RLADException("Missing date for 'from:' filter");
-                }
-                LocalDate fromDate = parseDate(parts[++i]);
-                result = filterByDateFrom(result, fromDate);
-                break;
+                case "cat":
+                case "category":
+                    result = filterByCategory(result, filterValue);
+                    break;
 
-            case "to:":
-                if (i + 1 >= parts.length) {
-                    throw new RLADException("Missing date for 'to:' filter");
-                }
-                LocalDate toDate = parseDate(parts[++i]);
-                result = filterByDateTo(result, toDate);
-                break;
+                case "from":
+                    LocalDate fromDate = parseDate(filterValue);
+                    result = filterByDateFrom(result, fromDate);
+                    break;
 
-            case "min:":
-                if (i + 1 >= parts.length) {
-                    throw new RLADException("Missing amount for 'min:' filter");
-                }
-                double minAmount = parseAmount(parts[++i]);
-                result = filterByMinAmount(result, minAmount);
-                break;
+                case "to":
+                    LocalDate toDate = parseDate(filterValue);
+                    result = filterByDateTo(result, toDate);
+                    break;
 
-            case "max:":
-                if (i + 1 >= parts.length) {
-                    throw new RLADException("Missing amount for 'max:' filter");
-                }
-                double maxAmount = parseAmount(parts[++i]);
-                result = filterByMaxAmount(result, maxAmount);
-                break;
+                case "min":
+                    double minAmount = parseAmount(filterValue);
+                    result = filterByMinAmount(result, minAmount);
+                    break;
 
-            default:
-                // Skip unknown filters (they might be values from previous filters)
-                if (!filter.contains(":")) {
-                    continue;
+                case "max":
+                    double maxAmount = parseAmount(filterValue);
+                    result = filterByMaxAmount(result, maxAmount);
+                    break;
+
+                default:
+                    throw new RLADException("Unknown filter: '" + filterType +
+                            "'. Available: type, cat, from, to, min, max");
                 }
-                throw new RLADException("Unknown filter: '" + filter +
-                        "'. Available: type:, cat:, from:, to:, min:, max:");
+            } else if (filter.startsWith("--sort")) {
+                // Handle sort - this is handled elsewhere, skip in filters
+                i++; // Skip the next part which is the sort field
             }
+            // Ignore other non-filter tokens
         }
 
         return result;

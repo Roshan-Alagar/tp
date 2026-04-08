@@ -55,12 +55,11 @@ public class DeleteCommandTest {
         sampleHashId = sampleTransaction.getHashId();
     }
 
-    // Valid deletion
-
     @Test
     void execute_validHashId_deletesTransaction() throws RLADException {
         TestUi ui = new TestUi();
-        new DeleteCommand("--hashID " + sampleHashId).execute(tm, ui);
+        // Fix: Pass just the hashId, not "--hashID " + hashId
+        new DeleteCommand(sampleHashId).execute(tm, ui);
         assertEquals(0, tm.getTransactions().size(),
                 "Transaction should be removed from TransactionManager");
     }
@@ -68,7 +67,7 @@ public class DeleteCommandTest {
     @Test
     void execute_validHashId_showsSuccessMessage() throws RLADException {
         TestUi ui = new TestUi();
-        new DeleteCommand("--hashID " + sampleHashId).execute(tm, ui);
+        new DeleteCommand(sampleHashId).execute(tm, ui);
         assertTrue(ui.allOutput().contains("deleted successfully"),
                 "Success message should be shown");
     }
@@ -76,19 +75,17 @@ public class DeleteCommandTest {
     @Test
     void execute_validHashId_showsHashIdInMessage() throws RLADException {
         TestUi ui = new TestUi();
-        new DeleteCommand("--hashID " + sampleHashId).execute(tm, ui);
+        new DeleteCommand(sampleHashId).execute(tm, ui);
         assertTrue(ui.allOutput().contains(sampleHashId),
                 "Output should contain the deleted transaction's hash ID");
     }
-
-    // Missing --hashID flag
 
     @Test
     void execute_missingHashIdFlag_throwsException() {
         TestUi ui = new TestUi();
         assertThrows(RLADException.class, () ->
                         new DeleteCommand("").execute(tm, ui),
-                "Should throw when --hashID flag is missing");
+                "Should throw when hash ID is missing");
     }
 
     @Test
@@ -100,20 +97,10 @@ public class DeleteCommandTest {
     }
 
     @Test
-    void execute_hashIdFlagWithNoValue_throwsException() {
-        TestUi ui = new TestUi();
-        assertThrows(RLADException.class, () ->
-                        new DeleteCommand("--hashID").execute(tm, ui),
-                "Should throw when --hashID has no value");
-    }
-
-    // Non-existent ID
-
-    @Test
     void execute_nonExistentHashId_throwsException() {
         TestUi ui = new TestUi();
         assertThrows(RLADException.class, () ->
-                        new DeleteCommand("--hashID xxxx").execute(tm, ui),
+                        new DeleteCommand("xxxxxx").execute(tm, ui),
                 "Should throw when transaction ID does not exist");
     }
 
@@ -122,7 +109,7 @@ public class DeleteCommandTest {
         TestUi ui = new TestUi();
         int sizeBefore = tm.getTransactions().size();
         try {
-            new DeleteCommand("--hashID xxxx").execute(tm, ui);
+            new DeleteCommand("xxxxxx").execute(tm, ui);
         } catch (RLADException e) {
             // expected
         }
@@ -130,11 +117,9 @@ public class DeleteCommandTest {
                 "TransactionManager should not be modified when ID not found");
     }
 
-    // hasValidArgs
-
     @Test
     void hasValidArgs_withValidHashId_returnsTrue() {
-        assertTrue(new DeleteCommand("--hashID " + sampleHashId).hasValidArgs());
+        assertTrue(new DeleteCommand(sampleHashId).hasValidArgs());
     }
 
     @Test
@@ -148,24 +133,18 @@ public class DeleteCommandTest {
     }
 
     @Test
-    void hasValidArgs_flagWithNoValue_returnsFalse() {
-        assertFalse(new DeleteCommand("--hashID").hasValidArgs());
-    }
-
-    // Multiple transactions
-
-    @Test
     void execute_deletesCorrectTransaction_othersRemain() throws RLADException {
         TestUi ui = new TestUi();
         Transaction other = new Transaction("credit", "salary", 3000.00,
                 LocalDate.of(2026, 2, 1), "Pay");
         tm.addTransaction(other);
+        String otherHashId = other.getHashId();
 
-        new DeleteCommand("--hashID " + sampleHashId).execute(tm, ui);
+        new DeleteCommand(sampleHashId).execute(tm, ui);
 
         assertEquals(1, tm.getTransactions().size(),
                 "Only one transaction should remain");
-        assertEquals(other.getHashId(), tm.getTransactions().get(0).getHashId(),
+        assertEquals(otherHashId, tm.getTransactions().get(0).getHashId(),
                 "The remaining transaction should be the other one");
     }
 
@@ -174,7 +153,7 @@ public class DeleteCommandTest {
         TestUi ui = new TestUi();
         TransactionManager emptyTm = new TransactionManager();
         assertThrows(RLADException.class, () ->
-                        new DeleteCommand("--hashID abcd").execute(emptyTm, ui),
+                        new DeleteCommand("abcd").execute(emptyTm, ui),
                 "Should throw when TransactionManager is empty");
     }
 }

@@ -48,6 +48,11 @@ public class ModifyCommand extends Command {
             }
         }
 
+        // After parsing updates, check if there are any
+        if (updates.isEmpty()) {
+            throw new RLADException("No fields to update. Usage: modify <hashID> field=value [field=value ...]");
+        }
+
         // Apply updates
         String type = updates.getOrDefault("type", existing.getType());
         String category = updates.getOrDefault("category", existing.getCategory());
