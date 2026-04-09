@@ -5,9 +5,12 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.ResolverStyle;
 import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import seedu.RLAD.Transaction;
 import seedu.RLAD.TransactionManager;
 import seedu.RLAD.Ui;
@@ -262,6 +265,94 @@ public class FilterCommand extends Command {
             return today.minusYears(1).withDayOfYear(1);
         default:
             return parseDate(trimmed);
+        }
+    }
+
+    /**
+     * Applies colon-style filters to a transaction list.
+     * Supported filters: type:, cat:/category:, from:, to:, min:, max:
+     *
+     * @param transactions the full list to filter
+     * @param filterStr    space-separated key:value pairs (e.g. "type:debit cat:food min:10")
+     * @return filtered list
+     * @throws RLADException if any filter value is invalid
+     */
+    public static List<Transaction> applyColonFilters(List<Transaction> transactions, String filterStr)
+            throws RLADException {
+        String[] parts = filterStr.split("\\s+");
+        List<Transaction> result = new ArrayList<>(transactions);
+
+        for (String part : parts) {
+            String token = part.toLowerCase();
+            if (!token.contains(":")) {
+                continue;
+            }
+            String[] kv = token.split(":", 2);
+            String key = kv[0];
+            String value = kv[1];
+
+            switch (key) {
+            case "type":
+                result = result.stream()
+                        .filter(t -> t.getType().equalsIgnoreCase(value))
+                        .collect(Collectors.toList());
+                break;
+            case "cat":
+            case "category":
+                result = result.stream()
+                        .filter(t -> t.getCategory() != null
+                                && t.getCategory().toLowerCase().contains(value))
+                        .collect(Collectors.toList());
+                break;
+            case "from":
+                LocalDate fromDate = parseColonDate(value);
+                result = result.stream()
+                        .filter(t -> !t.getDate().isBefore(fromDate))
+                        .collect(Collectors.toList());
+                break;
+            case "to":
+                LocalDate toDate = parseColonDate(value);
+                result = result.stream()
+                        .filter(t -> !t.getDate().isAfter(toDate))
+                        .collect(Collectors.toList());
+                break;
+            case "min":
+                double minAmt = parseColonAmount(value);
+                result = result.stream()
+                        .filter(t -> t.getAmount() >= minAmt)
+                        .collect(Collectors.toList());
+                break;
+            case "max":
+                double maxAmt = parseColonAmount(value);
+                result = result.stream()
+                        .filter(t -> t.getAmount() <= maxAmt)
+                        .collect(Collectors.toList());
+                break;
+            default:
+                throw new RLADException("Unknown filter: '" + key
+                        + "'. Available: type, cat, from, to, min, max");
+            }
+        }
+        return result;
+    }
+
+    private static LocalDate parseColonDate(String dateStr) throws RLADException {
+        try {
+            return LocalDate.parse(dateStr, DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        } catch (Exception e) {
+            throw new RLADException("Invalid date: '" + dateStr + "'. Use YYYY-MM-DD");
+        }
+    }
+
+    private static double parseColonAmount(String amountStr) throws RLADException {
+        try {
+            double amount = Double.parseDouble(amountStr);
+            if (amount < 0) {
+                throw new RLADException("Amount cannot be negative: " + amountStr);
+            }
+            return amount;
+        } catch (NumberFormatException e) {
+            throw new RLADException("Invalid amount: '" + amountStr + "'");
         }
     }
 

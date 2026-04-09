@@ -41,21 +41,21 @@ class ModifyCommandTest {
 
     @Test
     void execute_modifySingleAmount_updatesCorrectly() throws Exception {
-        new ModifyCommand("modify", existingId + " amount=100.00").execute(manager, ui);
+        new ModifyCommand(existingId + " amount=100.00").execute(manager, ui);
         Transaction updated = manager.findTransaction(existingId);
         assertEquals(100.00, updated.getAmount());
     }
 
     @Test
     void execute_modifySingleCategory_updatesCorrectly() throws Exception {
-        new ModifyCommand("modify", existingId + " category=transport").execute(manager, ui);
+        new ModifyCommand(existingId + " category=transport").execute(manager, ui);
         Transaction updated = manager.findTransaction(existingId);
         assertEquals("transport", updated.getCategory());
     }
 
     @Test
     void execute_modifyMultipleFields_updatesAll() throws Exception {
-        new ModifyCommand("modify", existingId + " amount=25.00 category=dining").execute(manager, ui);
+        new ModifyCommand(existingId + " amount=25.00 category=dining").execute(manager, ui);
         Transaction updated = manager.findTransaction(existingId);
         assertEquals(25.00, updated.getAmount());
         assertEquals("dining", updated.getCategory());
@@ -63,14 +63,14 @@ class ModifyCommandTest {
 
     @Test
     void execute_modifyType_updatesCorrectly() throws Exception {
-        new ModifyCommand("modify", existingId + " type=credit").execute(manager, ui);
+        new ModifyCommand(existingId + " type=credit").execute(manager, ui);
         Transaction updated = manager.findTransaction(existingId);
         assertEquals("credit", updated.getType());
     }
 
     @Test
     void execute_modifyDate_updatesCorrectly() throws Exception {
-        new ModifyCommand("modify", existingId + " date=2026-03-15").execute(manager, ui);
+        new ModifyCommand(existingId + " date=2026-03-15").execute(manager, ui);
         Transaction updated = manager.findTransaction(existingId);
         assertEquals(LocalDate.parse("2026-03-15"), updated.getDate());
     }
@@ -78,13 +78,13 @@ class ModifyCommandTest {
     @Test
     void execute_invalidId_throwsException() {
         assertThrows(RLADException.class, () ->
-                new ModifyCommand("modify", "zzzz amount=10.00").execute(manager, ui));
+                new ModifyCommand("zzzz amount=10.00").execute(manager, ui));
     }
 
     @Test
     void execute_noFields_throwsException() {
         RLADException exception = assertThrows(RLADException.class, () ->
-                new ModifyCommand("modify", existingId).execute(manager, ui));
+                new ModifyCommand(existingId).execute(manager, ui));
 
         // Verify the exception message is appropriate
         assertTrue(exception.getMessage().contains("No fields to update") ||
@@ -95,18 +95,18 @@ class ModifyCommandTest {
     @Test
     void execute_invalidType_throwsException() {
         assertThrows(RLADException.class, () ->
-                new ModifyCommand("modify", existingId + " type=cash").execute(manager, ui));
+                new ModifyCommand(existingId + " type=cash").execute(manager, ui));
     }
 
     @Test
     void execute_invalidAmount_throwsException() {
         assertThrows(RLADException.class, () ->
-                new ModifyCommand("modify", existingId + " amount=abc").execute(manager, ui));
+                new ModifyCommand(existingId + " amount=abc").execute(manager, ui));
     }
 
     @Test
     void execute_showsBeforeAfterComparison() throws Exception {
-        new ModifyCommand("modify", existingId + " amount=99.00").execute(manager, ui);
+        new ModifyCommand(existingId + " amount=99.00").execute(manager, ui);
         // Check for update confirmation message
         boolean hasUpdateMessage = output.stream().anyMatch(s ->
                 s.contains("updated") || s.contains("Transaction") || s.contains("✅"));
@@ -115,7 +115,7 @@ class ModifyCommandTest {
 
     @Test
     void execute_preservesHashId() throws Exception {
-        new ModifyCommand("modify", existingId + " amount=75.00").execute(manager, ui);
+        new ModifyCommand(existingId + " amount=75.00").execute(manager, ui);
         Transaction updated = manager.findTransaction(existingId);
         assertEquals(existingId, updated.getHashId());
     }

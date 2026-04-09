@@ -7,13 +7,19 @@ import seedu.RLAD.Ui;
 import seedu.RLAD.exception.RLADException;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.ResolverStyle;
 import java.util.HashMap;
 import java.util.Map;
 
 public class ModifyCommand extends Command {
 
-    public ModifyCommand(String action, String rawArgs) {
-        super(action, rawArgs);
+    private static final double MAX_AMOUNT = 10_000_000.00;
+    private static final DateTimeFormatter DATE_FORMATTER =
+            DateTimeFormatter.ofPattern("uuuu-MM-dd").withResolverStyle(ResolverStyle.STRICT);
+
+    public ModifyCommand(String rawArgs) {
+        super(rawArgs);
     }
 
     @Override
@@ -85,6 +91,9 @@ public class ModifyCommand extends Command {
             if (value <= 0) {
                 throw new RLADException("Amount must be > 0");
             }
+            if (value > MAX_AMOUNT) {
+                throw new RLADException(String.format("Amount cannot exceed $%,.2f", MAX_AMOUNT));
+            }
             return value;
         } catch (NumberFormatException e) {
             throw new RLADException("Invalid amount");
@@ -93,7 +102,7 @@ public class ModifyCommand extends Command {
 
     private LocalDate parseDate(String dateStr) throws RLADException {
         try {
-            return LocalDate.parse(dateStr.trim());
+            return LocalDate.parse(dateStr.trim(), DATE_FORMATTER);
         } catch (Exception e) {
             throw new RLADException("Invalid date. Use YYYY-MM-DD");
         }
@@ -102,8 +111,10 @@ public class ModifyCommand extends Command {
     private String formatTransaction(Transaction t) {
         return String.format("%s | $%.2f | %s | %s | %s",
                 t.getType().toUpperCase(), t.getAmount(), t.getDate(),
-                t.getCategory().isEmpty() ? "(none)" : t.getCategory(),
-                t.getDescription().isEmpty() ? "(none)" : t.getDescription());
+                (t.getCategory() == null || t.getCategory().isEmpty())
+                        ? "(none)" : t.getCategory(),
+                (t.getDescription() == null || t.getDescription().isEmpty())
+                        ? "(none)" : t.getDescription());
     }
 
     @Override

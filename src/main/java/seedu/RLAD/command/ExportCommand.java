@@ -32,14 +32,14 @@ public class ExportCommand extends Command {
     public void execute(TransactionManager transactions, Ui ui) throws RLADException {
         Map<String, String> flags = FilterCommand.parseFlags(rawArgs);
 
-        String filename = flags.getOrDefault("file",
-                "transactions_" + LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE) + ".csv");
+        String filename = stripQuotes(flags.getOrDefault("file",
+                "transactions_" + LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE) + ".csv"));
         if (filename.isBlank()) {
             throw new RLADException("--file requires a filename. "
                     + "Example: export --file transactions.csv");
         }
 
-        String directory = flags.getOrDefault("path", ".");
+        String directory = stripQuotes(flags.getOrDefault("path", "."));
         if (directory.isBlank()) {
             throw new RLADException("--path requires a directory. "
                     + "Example: export --path ./data");
@@ -60,6 +60,13 @@ public class ExportCommand extends Command {
         CsvStorageManager.exportToCsv(txns, fullPath);
 
         ui.showResult("Exported " + txns.size() + " transactions to: " + fullPath);
+    }
+
+    private static String stripQuotes(String value) {
+        if (value.length() >= 2 && value.startsWith("\"") && value.endsWith("\"")) {
+            return value.substring(1, value.length() - 1);
+        }
+        return value;
     }
 
     @Override

@@ -1,0 +1,180 @@
+
+help
+help add
+help delete
+help modify
+help list
+help sort
+help search
+help summarize
+help budget
+help export
+help import
+help clear
+help exit
+help nonexistent
+help help
+
+list
+summarize
+sort
+
+add credit 100 2026-03-01 food lunch
+add debit 50.50 2026-03-15 transport "Bus fare"
+add credit 3000 2026-01-01 salary "Monthly salary"
+add debit 25 2026-02-14 food "Valentine dinner"
+add credit 1 2026-06-01
+add debit 0.01 2026-06-02 food
+
+add
+add credit
+add credit 100
+add debit abc 2026-03-01
+add credit -1 2026-03-01
+add credit 0 2026-03-01
+add credit 10000001 2026-03-01
+add credit 10000000 2026-03-01
+add credit 10000000.01 2026-03-01
+add credit 0.001 2026-03-01
+add credit 100 invalid-date
+add credit 100 2026-02-30
+add credit 100 2026-13-01
+add credit 100 0000-00-00
+add credit 100 2025-02-29
+add credit 100 2024-02-29 food "valid leap year"
+add invalid 100 2026-03-01
+add CREDIT 100 2026-03-01
+add Credit 100 2026-03-01
+add credit 100 2026-03-01 food "unterminated quote
+add credit 100 2026-03-01 food ""
+add credit 100 2026-03-01 food "normal description"
+add credit 100 2026-03-01 food "desc with \"nested\" quotes"
+add credit 100 2026-03-01 food "a b c d e f g h i j k l m n o"
+add credit 100 2026-03-01 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+add credit 100 2026-03-01 food aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+add credit NaN 2026-03-01
+add credit Infinity 2026-03-01
+add credit -Infinity 2026-03-01
+add credit 1e20 2026-03-01
+add credit 1e-20 2026-03-01
+add credit 9999999.99 2026-03-01 food "max valid"
+add credit    100    2026-03-01    food    "extra spaces"
+
+list
+list type:credit
+list type:debit
+list type:invalid
+list type:
+list cat:food
+list cat:
+list cat:nonexistent
+list min:50
+list max:100
+list min:0
+list max:0
+list min:-100
+list max:-100
+list min:abc
+list max:abc
+list from:2026-01-01
+list to:2026-12-31
+list from:2026-01-01 to:2026-12-31
+list from:2026-12-31 to:2026-01-01
+list from:invalid
+list to:invalid
+list foo:bar
+list min:99999999999
+list type:credit cat:food min:1 max:5000 from:2026-01-01 to:2026-12-31
+
+sort
+sort amount
+sort date
+sort amount asc
+sort amount desc
+sort date asc
+sort date desc
+sort invalid
+sort amount invalid
+sort amount asc extra
+sort reset
+sort
+
+search --keyword lunch
+search --keyword LUNCH
+search --keyword nonexistent
+search --keyword 100
+search --keyword food
+search --keyword
+search
+search --keyword "multi word"
+search --keyword $pecial!@#chars
+search --keyword aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+
+summarize
+summarize --type credit
+summarize --type debit
+summarize --type invalid
+summarize --category food
+summarize --date-from 2026-01-01 --date-to 2026-12-31
+summarize --category nonexistent
+
+budget
+budget foo
+budget set
+budget set 2026-03
+budget set 2026-03 1
+budget set 2026-03 1 500
+budget set 2026-03 0 500
+budget set 2026-03 13 500
+budget set 2026-03 -1 500
+budget set 2026-03 1 -100
+budget set 2026-03 1 0
+budget set 2026-03 1 10000001
+budget set invalid 1 500
+budget set 2026-13 1 500
+budget view
+budget view 2026-03
+budget view invalid
+budget delete 2026-03 1
+budget yearly
+budget yearly 2026
+budget yearly 1999
+budget yearly 2101
+budget yearly abc
+
+modify
+modify nonexistent
+modify nonexistent amount=100
+list
+delete nonexistent
+
+add credit 1 2026-07-01 test "to-be-modified"
+list
+modify
+
+add credit 500 2026-08-01 test "to-be-deleted"
+list
+delete nonexistent
+
+export
+export --file test.csv --path /nonexistent/path
+export --file "" --path .
+export --file stress-export.csv --path .
+
+add credit 100 2026-03-01 null
+add credit 100 2026-03-01 undefined
+add credit 100 2026-03-01 NaN
+add credit 100 2026-03-01 food "null"
+add credit 100 2026-03-01 food "undefined"
+add credit 100 2026-03-01 food "DROP TABLE transactions;"
+add credit 100 2026-03-01 food "'; DROP TABLE transactions; --"
+add credit 100 2026-03-01 food "<script>alert('xss')</script>"
+
+noop
+
+
+list
+
+clear --force
+list
+exit

@@ -147,8 +147,9 @@ public class ListCommandTest {
     @Test
     void filterAndSort_combined() throws RLADException {
         TestUi ui = new TestUi();
-        // This test just verifies that combining filter and sort doesn't crash
-        new ListCommand("type:debit --sort amount").execute(tm, ui);
+        // Set global sort, then filter — verifies they work together
+        tm.setGlobalSort("amount", "asc");
+        new ListCommand("type:debit").execute(tm, ui);
         assertTrue(true, "Command executed without exception");
     }
 
@@ -162,19 +163,11 @@ public class ListCommandTest {
     }
 
     @Test
-    void sortByAmount_resultsAscending() throws RLADException {
+    void sortByGlobalSort_resultsAscending() throws RLADException {
         TestUi ui = new TestUi();
-        new ListCommand("--sort amount").execute(tm, ui);
-        // Just verify that sorting doesn't crash
+        tm.setGlobalSort("amount", "asc");
+        new ListCommand("").execute(tm, ui);
         assertTrue(true, "Sort by amount executed successfully");
-    }
-
-    @Test
-    void sortByInvalid_throwsException() {
-        TestUi ui = new TestUi();
-        // Just verify that invalid sort doesn't crash the application
-        new ListCommand("--sort invalidfield").execute(tm, ui);
-        assertTrue(true, "Invalid sort handled gracefully");
     }
 
     @Test
@@ -210,8 +203,9 @@ public class ListCommandTest {
         System.out.println("Output:\n" + ui.allOutput());
 
         ui.clear();
-        System.out.println("\n5. Testing --sort amount filter:");
-        new ListCommand("--sort amount").execute(tm, ui);
+        System.out.println("\n5. Testing global sort by amount:");
+        tm.setGlobalSort("amount", "asc");
+        new ListCommand("").execute(tm, ui);
         System.out.println("Output:\n" + ui.allOutput());
     }
 }

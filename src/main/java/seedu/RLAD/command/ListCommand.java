@@ -6,12 +6,8 @@ import seedu.RLAD.TransactionSorter;
 import seedu.RLAD.Ui;
 import seedu.RLAD.exception.RLADException;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Command to list transactions with optional filtering.
@@ -43,9 +39,6 @@ public class ListCommand extends Command {
 
     /** Separator line for table formatting (75 dashes) */
     private static final String DIVIDER = "-".repeat(75);
-
-    /** Formatter for date parsing */
-    private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     /**
      * Constructs a ListCommand with optional filter arguments.
@@ -79,7 +72,7 @@ public class ListCommand extends Command {
         // Apply filters if provided
         List<Transaction> filtered = allTransactions;
         if (hasFilters()) {
-            filtered = applyFilters(allTransactions, rawArgs.trim());
+            filtered = FilterCommand.applyColonFilters(allTransactions, rawArgs.trim());
         }
 
         // Handle empty result case
@@ -110,193 +103,6 @@ public class ListCommand extends Command {
      */
     private boolean hasFilters() {
         return rawArgs != null && !rawArgs.trim().isEmpty();
-    }
-
-    /**
-     * Applies filters to the transaction list based on filter string.
-     *
-     * <p>Filter syntax: key:value pairs separated by spaces
-     * <br>Example: "type:debit cat:food min:10"
-     *
-     * @param transactions The original transaction list
-     * @param filterStr The filter string
-     * @return Filtered list of transactions
-     * @throws RLADException If filter syntax is invalid
-     */
-    private List<Transaction> applyFilters(List<Transaction> transactions, String filterStr)
-            throws RLADException {
-
-        // Split by spaces but preserve filter:value pairs
-        String[] parts = filterStr.split("\\s+");
-        List<Transaction> result = new ArrayList<>(transactions);
-
-        // Process each filter in sequence
-        for (int i = 0; i < parts.length; i++) {
-            String filter = parts[i].toLowerCase();
-
-            // Check if this part contains a colon (it's a filter)
-            if (filter.contains(":")) {
-                String[] filterParts = filter.split(":", 2);
-                String filterType = filterParts[0];
-                String filterValue = filterParts[1];
-
-                switch (filterType) {
-                case "type":
-                    result = filterByType(result, filterValue);
-                    break;
-
-                case "cat":
-                case "category":
-                    result = filterByCategory(result, filterValue);
-                    break;
-
-                case "from":
-                    LocalDate fromDate = parseDate(filterValue);
-                    result = filterByDateFrom(result, fromDate);
-                    break;
-
-                case "to":
-                    LocalDate toDate = parseDate(filterValue);
-                    result = filterByDateTo(result, toDate);
-                    break;
-
-                case "min":
-                    double minAmount = parseAmount(filterValue);
-                    result = filterByMinAmount(result, minAmount);
-                    break;
-
-                case "max":
-                    double maxAmount = parseAmount(filterValue);
-                    result = filterByMaxAmount(result, maxAmount);
-                    break;
-
-                default:
-                    throw new RLADException("Unknown filter: '" + filterType +
-                            "'. Available: type, cat, from, to, min, max");
-                }
-            } else if (filter.startsWith("--sort")) {
-                // Handle sort - this is handled elsewhere, skip in filters
-                i++; // Skip the next part which is the sort field
-            }
-            // Ignore other non-filter tokens
-        }
-
-        return result;
-    }
-
-    /**
-     * Filters transactions by type (credit/debit).
-     *
-     * @param transactions The list to filter
-     * @param type The type to filter by ("credit" or "debit")
-     * @return Filtered list
-     */
-    private List<Transaction> filterByType(List<Transaction> transactions, String type) {
-        String normalizedType = type.toLowerCase();
-        return transactions.stream()
-                .filter(t -> t.getType().equalsIgnoreCase(normalizedType))
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Filters transactions by category (case-insensitive partial match).
-     *
-     * @param transactions The list to filter
-     * @param category The category substring to match
-     * @return Filtered list
-     */
-    private List<Transaction> filterByCategory(List<Transaction> transactions, String category) {
-        String lowerCategory = category.toLowerCase();
-        return transactions.stream()
-                .filter(t -> t.getCategory() != null &&
-                        t.getCategory().toLowerCase().contains(lowerCategory))
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Filters transactions on or after a specific date.
-     *
-     * @param transactions The list to filter
-     * @param fromDate The start date (inclusive)
-     * @return Filtered list
-     */
-    private List<Transaction> filterByDateFrom(List<Transaction> transactions, LocalDate fromDate) {
-        return transactions.stream()
-                .filter(t -> !t.getDate().isBefore(fromDate))
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Filters transactions on or before a specific date.
-     *
-     * @param transactions The list to filter
-     * @param toDate The end date (inclusive)
-     * @return Filtered list
-     */
-    private List<Transaction> filterByDateTo(List<Transaction> transactions, LocalDate toDate) {
-        return transactions.stream()
-                .filter(t -> !t.getDate().isAfter(toDate))
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Filters transactions with amount greater than or equal to minimum.
-     *
-     * @param transactions The list to filter
-     * @param minAmount The minimum amount (inclusive)
-     * @return Filtered list
-     */
-    private List<Transaction> filterByMinAmount(List<Transaction> transactions, double minAmount) {
-        return transactions.stream()
-                .filter(t -> t.getAmount() >= minAmount)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Filters transactions with amount less than or equal to maximum.
-     *
-     * @param transactions The list to filter
-     * @param maxAmount The maximum amount (inclusive)
-     * @return Filtered list
-     */
-    private List<Transaction> filterByMaxAmount(List<Transaction> transactions, double maxAmount) {
-        return transactions.stream()
-                .filter(t -> t.getAmount() <= maxAmount)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Parses a date string with validation.
-     *
-     * @param dateStr The date string in YYYY-MM-DD format
-     * @return Parsed LocalDate
-     * @throws RLADException If date format is invalid
-     */
-    private LocalDate parseDate(String dateStr) throws RLADException {
-        try {
-            return LocalDate.parse(dateStr, DATE_FORMATTER);
-        } catch (DateTimeParseException e) {
-            throw new RLADException("Invalid date: '" + dateStr + "'. Use YYYY-MM-DD");
-        }
-    }
-
-    /**
-     * Parses an amount string with validation.
-     *
-     * @param amountStr The amount string
-     * @return Parsed double
-     * @throws RLADException If amount format is invalid
-     */
-    private double parseAmount(String amountStr) throws RLADException {
-        try {
-            double amount = Double.parseDouble(amountStr);
-            if (amount < 0) {
-                throw new RLADException("Amount cannot be negative: " + amountStr);
-            }
-            return amount;
-        } catch (NumberFormatException e) {
-            throw new RLADException("Invalid amount: '" + amountStr + "'");
-        }
     }
 
     /**
