@@ -199,28 +199,6 @@ public class Ui {
     }
 
     /**
-     * Prints detailed help for the 'filter' command.
-     */
-    public void printFilterManual() {
-        System.out.println("\n📝 Command: filter");
-        System.out.println("Description: Display transactions matching filter criteria.");
-        System.out.println("\nFormat:");
-        System.out.println("  filter [filters...]");
-        System.out.println("\nAvailable filters (same as 'list'):");
-        System.out.println("  type:credit|debit  - Filter by transaction type");
-        System.out.println("  cat:category       - Filter by category (partial match)");
-        System.out.println("  from:YYYY-MM-DD    - Transactions on or after this date");
-        System.out.println("  to:YYYY-MM-DD      - Transactions on or before this date");
-        System.out.println("  min:amount         - Minimum amount");
-        System.out.println("  max:amount         - Maximum amount");
-        System.out.println("\nExamples:");
-        System.out.println("  filter type:debit");
-        System.out.println("  filter cat:food");
-        System.out.println("  filter from:2026-01-01 to:2026-06-30");
-        System.out.println("  filter type:debit cat:food min:10");
-    }
-
-    /**
      * Prints detailed help for the 'summarize' command.
      */
     public void printSummaryManual() {

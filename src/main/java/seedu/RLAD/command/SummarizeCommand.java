@@ -10,8 +10,6 @@ import java.math.RoundingMode;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 public class SummarizeCommand extends Command {
     public SummarizeCommand(String rawArgs) {
@@ -20,10 +18,10 @@ public class SummarizeCommand extends Command {
 
     @Override
     public void execute(TransactionManager transactions, Ui ui) throws RLADException {
-        Predicate<Transaction> filter = FilterCommand.buildPredicate(rawArgs);
-        List<Transaction> filtered = transactions.getTransactions().stream()
-                .filter(filter)
-                .collect(Collectors.toList());
+        List<Transaction> filtered = transactions.getTransactions();
+        if (rawArgs != null && !rawArgs.trim().isEmpty()) {
+            filtered = FilterCommand.applyColonFilters(filtered, rawArgs.trim());
+        }
 
         if (filtered.isEmpty()) {
             ui.showResult("No transactions found for the given filters.");

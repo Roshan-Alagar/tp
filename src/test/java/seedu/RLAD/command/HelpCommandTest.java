@@ -126,10 +126,11 @@ class HelpCommandTest {
     }
 
     @Test
-    void execute_filterArg_showsFilterManual() {
+    void execute_filterArg_showsUnknownCommand() {
         HelpCommand cmd = new HelpCommand("filter");
         cmd.execute(tm, createUi());
-        assertTrue(getOutput().contains("filter"), "Output should show filter command help");
+        assertTrue(getOutput().contains("Unknown command"),
+                "Output should show unknown command for filter");
     }
 
     @Test

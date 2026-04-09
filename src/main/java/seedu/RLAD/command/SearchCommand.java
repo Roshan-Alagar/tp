@@ -66,8 +66,10 @@ public class SearchCommand extends Command {
                     t.getType().toUpperCase(),
                     t.getDate().toString(),
                     String.format("$%.2f", t.getAmount()),
-                    t.getCategory().isEmpty() ? "(none)" : t.getCategory(),
-                    t.getDescription().isEmpty() ? "(none)" : t.getDescription()));
+                    (t.getCategory() == null || t.getCategory().isEmpty())
+                            ? "(none)" : t.getCategory(),
+                    (t.getDescription() == null || t.getDescription().isEmpty())
+                            ? "(none)" : t.getDescription()));
         }
         ui.showResult(DIVIDER);
         ui.showResult("  " + results.size() + " transaction(s) found for: \"" + keyword + "\"");

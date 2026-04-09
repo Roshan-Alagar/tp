@@ -84,10 +84,6 @@ public class Parser {
             return new String[]{"noop", ""};
         }
 
-        if (commandToParse.isEmpty()) {
-            throw new RLADException("Empty command. Type 'help' for available commands.");
-        }
-
         // Split into action (first word) and the rest (arguments)
         String[] parts = commandToParse.split("\\s+", 2);
         String action = parts[0].toLowerCase();
@@ -175,7 +171,7 @@ public class Parser {
             return new SummarizeCommand(arguments);
 
         case "modify":
-            return new ModifyCommand(action, arguments);
+            return new ModifyCommand(arguments);
 
         case "budget":
             return new BudgetCommand(arguments);

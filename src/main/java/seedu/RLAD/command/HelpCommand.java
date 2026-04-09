@@ -46,9 +46,6 @@ public class HelpCommand extends Command {
         case "budget":
             ui.printBudgetManual();
             break;
-        case "filter":
-            ui.printFilterManual();
-            break;
         case "search":
             ui.printSearchManual();
             break;
