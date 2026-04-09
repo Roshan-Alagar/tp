@@ -53,6 +53,7 @@
 The output JAR is placed in `build/libs/`.
 
 ---
+<div style="page-break-after: always;"></div>
 
 ## 3. Design
 
@@ -462,6 +463,7 @@ classDiagram
 ```
 
 ---
+<div style="page-break-after: always;"></div>
 
 ## 4. Implementation
 
@@ -1246,6 +1248,7 @@ sequenceDiagram
 - Adding help for a new command requires one new `Ui` method and one new `case` in `HelpCommand`.
 
 ---
+<div style="page-break-after: always;"></div>
 
 ## Appendix A: Product Scope
 
@@ -1258,6 +1261,7 @@ NUS students or young adults managing personal finances from the command line wh
 RLAD lets users record, filter, sort, and summarize financial transactions entirely from the terminal — faster than GUI apps for keyboard-driven users. The budget system provides proactive spending awareness, and CSV export/import enables data portability and compatibility with spreadsheet tools.
 
 ---
+<div style="page-break-after: always;"></div>
 
 ## Appendix B: User Stories
 
@@ -1280,6 +1284,7 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
 | v2.0    | user          | clear all transaction data with confirmation               | start fresh without accidental data loss          |
 
 ---
+<div style="page-break-after: always;"></div>
 
 ## Appendix C: Non-Functional Requirements
 
@@ -1291,6 +1296,7 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
 - **Usability:** All error messages must state the invalid input and what was expected. No stack traces are exposed to the user.
 
 ---
+<div style="page-break-after: always;"></div>
 
 ## Appendix D: Glossary
 
@@ -1308,6 +1314,7 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
 | ImportResult      | A value object returned by `CsvStorageManager` containing success count, failure count, and errors. |
 
 ---
+<div style="page-break-after: always;"></div>
 
 ## Appendix E: Instructions for Manual Testing
 
