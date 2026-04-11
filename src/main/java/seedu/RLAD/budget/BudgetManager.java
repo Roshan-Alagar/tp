@@ -34,7 +34,7 @@ public class BudgetManager {
 
     private static final Logger logger = Logger.getLogger(BudgetManager.class.getName());
     private static final String SAVE_DIR = "data";
-    private static final String SAVE_FILE = SAVE_DIR + File.separator + "budget.csv";
+    private static final String SAVE_FILE = SAVE_DIR + File.separator + "rlad_budget.csv";
     private static final String CSV_HEADER = "Month,CategoryCode,Amount";
 
     private final Map<String, Set<Integer>> notifiedThresholds = new HashMap<>();
@@ -477,7 +477,7 @@ public class BudgetManager {
     }
 
     /**
-     * Loads budget entries from data/budget.csv on startup.
+     * Loads budget entries from data/rlad_budget.csv on startup.
      * Uses CsvStorageManager.parseCsvLine() so quoted commas are handled correctly.
      * Silently skips the header and any malformed lines.
      */
