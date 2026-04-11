@@ -185,7 +185,7 @@ public class CsvStorageManager {
      * @param field the field value to escape
      * @return the escaped field value
      */
-    static String escapeCsvField(String field) {
+    public static String escapeCsvField(String field) {
         if (field == null) {
             return "";
         }
@@ -202,7 +202,7 @@ public class CsvStorageManager {
      * @param line the CSV line to parse
      * @return array of field values
      */
-    static String[] parseCsvLine(String line) {
+    public static String[] parseCsvLine(String line) {
         ArrayList<String> fields = new ArrayList<>();
         StringBuilder current = new StringBuilder();
         boolean inQuotes = false;
