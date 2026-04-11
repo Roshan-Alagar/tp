@@ -95,6 +95,8 @@ public class TransactionManager {
      * TODO: Replace O(N) list search with a HashSet for O(1) lookups to improve scaling.
      */
     private boolean idExists(String hashId) {
+        // allows for case-insensitive input
+        hashId = hashId.toLowerCase();
         return transMap.containsKey(hashId);
     }
 
@@ -114,6 +116,8 @@ public class TransactionManager {
      * @return the Transaction if found, null otherwise
      */
     public Transaction findTransaction(String id) {
+        // allows for case-insensitive input
+        id = id.toLowerCase();
         return transMap.containsKey(id) ? transMap.get(id) : null;
     }
 
@@ -124,6 +128,8 @@ public class TransactionManager {
      * @return true if deletion was successful, false if ID not found
      */
     public boolean deleteTransaction(String id) {
+        // allows for case-insensitive input
+        id = id.toLowerCase();
         Transaction toDelete = findTransaction(id);
         if (toDelete != null) {
             transactions.remove(toDelete);
@@ -148,6 +154,8 @@ public class TransactionManager {
      * @return true if update was successful, false if ID not found
      */
     public boolean updateTransaction(String id, Transaction updated) {
+        // allows for case-insensitive input
+        id = id.toLowerCase();
         Transaction old = findTransaction(id);
         if (old != null) {
             // 1. Update the Map

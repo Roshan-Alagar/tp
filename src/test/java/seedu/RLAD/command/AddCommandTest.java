@@ -72,6 +72,56 @@ public class AddCommandTest {
             System.out.println("✓ PASS (Expected - Invalid type): " + e.getMessage() + "\n");
         }
 
+        // Test 7: Reserved category keyword "none"
+        System.out.println("Test 7: Reserved category keyword 'none'");
+        try {
+            AddCommand cmd7 = new AddCommand("debit 10.00 2026-03-05 none \"literal none\"");
+            cmd7.execute(tm, ui);
+            System.out.println("✗ FAIL (Expected to throw exception but didn't)\n");
+        } catch (RLADException e) {
+            System.out.println("✓ PASS (Expected - Reserved keyword): " + e.getMessage() + "\n");
+        }
+
+        // Test 8: Reserved category keyword "(none)"
+        System.out.println("Test 8: Reserved category keyword '(none)'");
+        try {
+            AddCommand cmd8 = new AddCommand("debit 10.00 2026-03-05 (none) \"literal (none)\"");
+            cmd8.execute(tm, ui);
+            System.out.println("✗ FAIL (Expected to throw exception but didn't)\n");
+        } catch (RLADException e) {
+            System.out.println("✓ PASS (Expected - Reserved keyword): " + e.getMessage() + "\n");
+        }
+
+        // Test 9: Reserved keyword case-insensitive "NONE"
+        System.out.println("Test 9: Reserved keyword case-insensitive 'NONE'");
+        try {
+            AddCommand cmd9 = new AddCommand("debit 10.00 2026-03-05 NONE \"uppercase none\"");
+            cmd9.execute(tm, ui);
+            System.out.println("✗ FAIL (Expected to throw exception but didn't)\n");
+        } catch (RLADException e) {
+            System.out.println("✓ PASS (Expected - Reserved keyword): " + e.getMessage() + "\n");
+        }
+
+        // Test 10: Valid category not rejected
+        System.out.println("Test 10: Valid category 'food' not rejected");
+        try {
+            AddCommand cmd10 = new AddCommand("debit 10.00 2026-03-05 food \"regular food\"");
+            cmd10.execute(tm, ui);
+            System.out.println("✓ PASS\n");
+        } catch (RLADException e) {
+            System.out.println("✗ FAIL: " + e.getMessage() + "\n");
+        }
+
+        // Test 11: Null category not rejected
+        System.out.println("Test 11: Null category not rejected");
+        try {
+            AddCommand cmd11 = new AddCommand("debit 10.00 2026-03-05");
+            cmd11.execute(tm, ui);
+            System.out.println("✓ PASS\n");
+        } catch (RLADException e) {
+            System.out.println("✗ FAIL: " + e.getMessage() + "\n");
+        }
+
         // Show final transactions
         System.out.println("\n=== FINAL TRANSACTIONS ===");
         if (tm.getTransactions().isEmpty()) {

@@ -551,7 +551,7 @@ list cat:food,transport             # Show food AND transport transactions
 summarize cat:food,transport,health # Summary across three categories
 ```
 
-> **Note:** The `none` and `(none)` values are reserved keywords that match transactions with **no category assigned**. To find transactions in a category named `salary`, use `cat:salary` explicitly.
+> **Note:** `none` and `(none)` are reserved keywords. They cannot be used as category names when adding transactions, and using `cat:none` or `cat:(none)` in filters will show only transactions with no category assigned.
 
 ---
 
@@ -688,9 +688,9 @@ Budget definitions and amounts are preserved. Only transaction data is deleted. 
 
 ---
 
-**Q: Why does `list cat:none` not show my uncategorised transactions?**
+**Q: Can I name a category "none" or "(none)"?**
 
-`none` and `(none)` are reserved keywords that match transactions with **no category at all**. If your transaction has an explicit category label (e.g. `salary`), use `list cat:salary` to find it.
+No. These are reserved keywords that represent transactions with no category. The application prevents you from creating a category with these names, and using `list cat:none` or `list cat:(none)` will show only transactions that have no category assigned.
 
 ---
 

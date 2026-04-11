@@ -299,10 +299,16 @@ public class FilterCommand extends Command {
                 break;
             case "cat":
             case "category":
-                result = result.stream()
-                        .filter(t -> t.getCategory() != null
-                                && t.getCategory().toLowerCase().contains(value))
-                        .collect(Collectors.toList());
+                if (value.trim().equalsIgnoreCase("none") || value.trim().equalsIgnoreCase("(none)")) {
+                    result = result.stream()
+                            .filter(t -> t.getCategory() == null || t.getCategory().isBlank())
+                            .collect(Collectors.toList());
+                } else {
+                    result = result.stream()
+                            .filter(t -> t.getCategory() != null
+                                    && t.getCategory().toLowerCase().contains(value))
+                            .collect(Collectors.toList());
+                }
                 break;
             case "from":
                 LocalDate fromDate = parseColonDate(value);

@@ -55,8 +55,8 @@ public class Transaction {
         return String.format("[%s] %s | %s | $%.2f | %s | %s",
                 hashId, type.toUpperCase(), date, amount, category, description);
     }
-
+    // HashID must be lowercase only!
     public void regenerateHashId() {
-        this.hashId = UUID.randomUUID().toString().substring(0, 6);
+        this.hashId = UUID.randomUUID().toString().substring(0, 6).toLowerCase();
     }
 }

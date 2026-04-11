@@ -84,6 +84,9 @@ public class AddCommand extends Command {
         String category = optionalFields.category;
         String description = optionalFields.description;
 
+        // Validate category is not a reserved keyword
+        validateCategory(category);
+
         // Create and add the transaction
         Transaction newTransaction = new Transaction(type, category, amount, date, description);
         transactions.addTransaction(newTransaction);
@@ -256,6 +259,24 @@ public class AddCommand extends Command {
                 "  add credit 3000 2026-03-01 salary \"March salary\"\n" +
                 "  add debit 15.50 2026-03-05 food \"Chicken rice\"\n" +
                 "  add debit 5.00 2026-03-06";
+    }
+
+    /**
+     * Validates that the category is not a reserved keyword.
+     * Reserved keywords: "none", "(none)"
+     *
+     * @param category The category to validate (may be null)
+     * @throws RLADException If category is a reserved keyword
+     */
+    private void validateCategory(String category) throws RLADException {
+        if (category == null) {
+            return;
+        }
+        String trimmed = category.trim();
+        if (trimmed.equalsIgnoreCase("none") || trimmed.equalsIgnoreCase("(none)")) {
+            throw new RLADException("'" + category + "' is a reserved keyword. "
+                    + "Use a different category name or omit the category.");
+        }
     }
 
     /**
