@@ -48,8 +48,8 @@ public class DeleteCommand extends Command {
             throw new RLADException(getUsageHelp());
         }
 
-        // Clean and extract HashID (remove any extra whitespace)
-        String hashId = rawArgs.trim();
+        // Clean and extract HashID case (remove any extra whitespace and make case insensitive)
+        String hashId = rawArgs.trim().toLowerCase();
 
         // Find the transaction
         Transaction toDelete = transactions.findTransaction(hashId);

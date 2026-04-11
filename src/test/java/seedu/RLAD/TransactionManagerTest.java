@@ -119,4 +119,133 @@ public class TransactionManagerTest {
     void addTransaction_notifiesBudgetManager() {
         // TODO: Implement mock BudgetManager to verify notification signal
     }
+
+    // ===== Case-insensitive HashID Tests =====
+
+    @Test
+    void findTransaction_uppercaseInput_matchesLowercaseStoredId() {
+        Transaction t = new Transaction("debit", "food", 10.0, LocalDate.now(), "Lunch");
+        tm.addTransaction(t);
+
+        String storedId = t.getHashId(); // stored as lowercase
+        String uppercaseInput = storedId.toUpperCase();
+
+        assertNotNull(tm.findTransaction(uppercaseInput),
+                "Should find transaction using uppercase hashID");
+    }
+
+    @Test
+    void findTransaction_mixedCaseInput_matchesLowercaseStoredId() {
+        Transaction t = new Transaction("debit", "food", 10.0, LocalDate.now(), "Lunch");
+        tm.addTransaction(t);
+
+        String storedId = t.getHashId(); // stored as lowercase
+        String mixedCaseInput = storedId.substring(0, 3).toUpperCase()
+                + storedId.substring(3).toLowerCase();
+
+        assertNotNull(tm.findTransaction(mixedCaseInput),
+                "Should find transaction using mixed-case hashID");
+    }
+
+    @Test
+    void findTransaction_lowercaseInput_stillMatches() {
+        Transaction t = new Transaction("debit", "food", 10.0, LocalDate.now(), "Lunch");
+        tm.addTransaction(t);
+
+        String storedId = t.getHashId(); // stored as lowercase
+
+        assertNotNull(tm.findTransaction(storedId),
+                "Should find transaction using exact lowercase hashID");
+    }
+
+    @Test
+    void deleteTransaction_uppercaseInput_deletesCorrectTransaction() {
+        Transaction t = new Transaction("debit", "food", 10.0, LocalDate.now(), "Lunch");
+        tm.addTransaction(t);
+
+        String storedId = t.getHashId();
+        String uppercaseInput = storedId.toUpperCase();
+
+        assertTrue(tm.deleteTransaction(uppercaseInput),
+                "Delete should succeed with uppercase hashID");
+        assertNull(tm.findTransaction(storedId),
+                "Transaction should no longer exist after deletion");
+        assertEquals(0, tm.getTransactions().size(),
+                "All transactions should be deleted");
+    }
+
+    @Test
+    void deleteTransaction_mixedCaseInput_deletesCorrectTransaction() {
+        Transaction t = new Transaction("debit", "food", 10.0, LocalDate.now(), "Lunch");
+        tm.addTransaction(t);
+
+        String storedId = t.getHashId();
+        String mixedCaseInput = storedId.substring(0, 2).toUpperCase()
+                + storedId.substring(2);
+
+        assertTrue(tm.deleteTransaction(mixedCaseInput),
+                "Delete should succeed with mixed-case hashID");
+        assertNull(tm.findTransaction(storedId),
+                "Transaction should no longer exist after deletion");
+    }
+
+    @Test
+    void updateTransaction_uppercaseInput_updatesCorrectTransaction() {
+        Transaction oldT = new Transaction("debit", "food", 10.0, LocalDate.now(), "Original");
+        tm.addTransaction(oldT);
+
+        String storedId = oldT.getHashId();
+        String uppercaseInput = storedId.toUpperCase();
+
+        Transaction updated = new Transaction("credit", "salary", 50.0, LocalDate.now(), "Updated");
+        updated.setHashId(storedId);
+
+        assertTrue(tm.updateTransaction(uppercaseInput, updated),
+                "Update should succeed with uppercase hashID");
+        assertEquals("Updated", tm.findTransaction(storedId).getDescription(),
+                "Transaction description should be updated");
+    }
+
+    @Test
+    void updateTransaction_mixedCaseInput_updatesCorrectTransaction() {
+        Transaction oldT = new Transaction("debit", "food", 10.0, LocalDate.now(), "Original");
+        tm.addTransaction(oldT);
+
+        String storedId = oldT.getHashId();
+        String mixedCaseInput = storedId.substring(0, 4).toUpperCase()
+                + storedId.substring(4).toLowerCase();
+
+        Transaction updated = new Transaction("credit", "salary", 50.0, LocalDate.now(), "Updated");
+        updated.setHashId(storedId);
+
+        assertTrue(tm.updateTransaction(mixedCaseInput, updated),
+                "Update should succeed with mixed-case hashID");
+        assertEquals("Updated", tm.findTransaction(storedId).getDescription(),
+                "Transaction description should be updated");
+    }
+
+    @Test
+    void findTransaction_allCaseVariations_findSameTransaction() {
+        Transaction t = new Transaction("debit", "food", 10.0, LocalDate.now(), "Lunch");
+        tm.addTransaction(t);
+
+        String storedId = t.getHashId();
+        String uppercase = storedId.toUpperCase();
+        String lowercase = storedId.toLowerCase();
+        String mixedCase = storedId.substring(0, 2).toUpperCase()
+                + storedId.substring(2, 4).toLowerCase()
+                + storedId.substring(4).toUpperCase();
+
+        Transaction foundUpper = tm.findTransaction(uppercase);
+        Transaction foundLower = tm.findTransaction(lowercase);
+        Transaction foundMixed = tm.findTransaction(mixedCase);
+
+        assertNotNull(foundUpper, "Uppercase should match");
+        assertNotNull(foundLower, "Lowercase should match");
+        assertNotNull(foundMixed, "Mixed case should match");
+
+        assertEquals(t.getHashId(), foundUpper.getHashId(), "All variants should return same transaction");
+        assertEquals(t.getHashId(), foundLower.getHashId(), "All variants should return same transaction");
+        assertEquals(t.getHashId(), foundMixed.getHashId(), "All variants should return same transaction");
+    }
 }

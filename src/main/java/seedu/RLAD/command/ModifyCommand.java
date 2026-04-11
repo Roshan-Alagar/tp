@@ -31,7 +31,8 @@ public class ModifyCommand extends Command {
         }
 
         String[] parts = rawArgs.trim().split("\\s+", 2);
-        String id = parts[0];
+        // Allows for uppercase and lowercase hashID in the input
+        String id = parts[0].toLowerCase();
         String updatesStr = parts.length > 1 ? parts[1] : "";
 
         Transaction existing = transactions.findTransaction(id);
