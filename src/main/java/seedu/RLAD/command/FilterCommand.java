@@ -279,6 +279,8 @@ public class FilterCommand extends Command {
      */
     public static List<Transaction> applyColonFilters(List<Transaction> transactions, String filterStr)
             throws RLADException {
+        // Normalize "key: value" to "key:value" so spaces after colons are accepted
+        filterStr = filterStr.replaceAll("([a-zA-Z]+):\\s+", "$1:");
         String[] parts = filterStr.split("\\s+");
         List<Transaction> result = new ArrayList<>(transactions);
 

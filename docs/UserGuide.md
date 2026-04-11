@@ -544,10 +544,12 @@ list from:last-month to:this-month type:debit    # Last month's expenses
 
 ### 5.3 Multi-Category Filtering
 
-To filter by more than one category simultaneously, provide a comma-separated list with no spaces:
+To filter by more than one category simultaneously, provide a comma-separated list with no spaces.
+The comma acts as **OR** — a transaction matches if its category is any one of the listed values.
+This is different from combining separate filters (e.g. `type:debit cat:food`), where each filter uses AND logic.
 
 ```
-list cat:food,transport             # Show food AND transport transactions
+list cat:food,transport             # Show food OR transport transactions
 summarize cat:food,transport,health # Summary across three categories
 ```
 
