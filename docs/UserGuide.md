@@ -22,6 +22,7 @@
    - [4.10 `clear` — Clear All Data](#410-clear--clear-all-data)
    - [4.11 `help` — Get Help](#411-help--get-help)
    - [4.12 `exit` — Exit RLAD](#412-exit--exit-rlad)
+   - [4.13 `search` — Search Transactions](#413-search--search-transactions)
 5. [Advanced Usage](#5-advanced-usage)
    - [5.1 Combined Filters](#51-combined-filters)
    - [5.2 Relative Date Keywords](#52-relative-date-keywords)
@@ -348,7 +349,7 @@ budget yearly [YYYY]
 | Subcommand | Description |
 |---|---|
 | `set` | Create a new monthly budget for a category |
-| `view` | Display all budgets for a given month (defaults to current month) |
+| `view` | Display budgets for a given month; if no month is given, shows all months |
 | `edit` | Update the amount for an existing budget entry |
 | `delete` | Remove a budget entry for a specific category and month |
 | `yearly` | Display a full-year budget summary (defaults to current year) |
@@ -501,6 +502,37 @@ Saves all data and exits the application.
 ```
 exit
 ```
+
+---
+
+### 4.13 `search` — Search Transactions
+
+Searches all transactions for a keyword and displays every match. The search is case-insensitive and checks the description, category, HashID, and amount fields.
+
+**Syntax:**
+```
+search <keyword>
+```
+
+**Examples:**
+```
+search chicken          # Find transactions whose description contains "chicken"
+search food             # Find transactions in the food category
+search 15.50            # Find transactions with amount 15.50
+search a7b2c3           # Look up a transaction by HashID
+```
+
+**Expected output:**
+```
+---------------------------------------------------------------------------
+  ID     TYPE     DATE           AMOUNT  CATEGORY      DESCRIPTION
+---------------------------------------------------------------------------
+  a7b2c3 DEBIT    2026-03-05     $15.50  food          Chicken rice
+---------------------------------------------------------------------------
+  1 transaction(s) found for: "chicken"
+```
+
+> **Note:** `search` and `find` are aliases — both work identically.
 
 ---
 
@@ -714,5 +746,6 @@ RLAD loads `data/rlad.txt` relative to the directory you launch it from. Always 
 | `export` | `export [filename]` |
 | `import` | `import <filename> [merge]` |
 | `clear` | `clear [--force]` |
+| `search` | `search <keyword>` |
 | `help` | `help [command]` |
 | `exit` | `exit` |
