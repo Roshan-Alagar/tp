@@ -120,7 +120,7 @@ public class BudgetCommand extends Command {
         }
 
         budgetManager.setBudget(month, categoryCode, amount);
-        ui.showResult(String.format("✅ Budget set: %s - Category %d: $%.2f", month, categoryCode, amount));
+        ui.showResult(String.format("✅ Budget set: %s - Category %d: $%,.2f", month, categoryCode, amount));
     }
 
     // ========== handleView METHOD ==========
@@ -145,7 +145,7 @@ public class BudgetCommand extends Command {
         double amount = parseAmount(parts[3]);
 
         budgetManager.editBudget(month, categoryCode, amount);
-        ui.showResult(String.format("✅ Budget updated: %s - Category %d: $%.2f", month, categoryCode, amount));
+        ui.showResult(String.format("✅ Budget updated: %s - Category %d: $%,.2f", month, categoryCode, amount));
     }
 
     // ========== handleDelete METHOD ==========
@@ -217,7 +217,7 @@ public class BudgetCommand extends Command {
                 BudgetManager.BudgetProgress progress = budgetManager.getProgress(month, category);
                 String progressBar = progress.getProgressBar(PROGRESS_BAR_LENGTH);
 
-                output.add(String.format("[%d] %-21s | $%8.2f | $%8.2f | $%8.2f | %s %3d%%",
+                output.add(String.format("[%d] %-21s | $%,12.2f | $%,12.2f | $%,12.2f | %s %3d%%",
                         category.getCode(),
                         category.getDisplayName(),
                         progress.getAllocated(),
@@ -238,7 +238,7 @@ public class BudgetCommand extends Command {
         BudgetManager.BudgetProgress disposableProgress = budgetManager.getDisposableIncomeProgress(month);
         String disposableBar = disposableProgress.getProgressBar(PROGRESS_BAR_LENGTH);
 
-        output.add(String.format("%-25s | $%8.2f | $%8.2f | $%8.2f | %s %3d%%",
+        output.add(String.format("%-25s | $%,12.2f | $%,12.2f | $%,12.2f | %s %3d%%",
                 "Disposable Income",
                 disposableProgress.getAllocated(),
                 disposableProgress.getSpent(),
@@ -295,7 +295,7 @@ public class BudgetCommand extends Command {
                 BudgetManager.BudgetProgress progress = budgetManager.getProgress(month, category);
 
                 String monthStr = firstRow ? month.toString() : "";
-                output.add(String.format("%-10s | [%d] %-18s | $%8.2f | $%8.2f | $%8.2f",
+                output.add(String.format("%-10s | [%d] %-18s | $%,12.2f | $%,12.2f | $%,12.2f",
                         monthStr,
                         category.getCode(),
                         category.getDisplayName(),
@@ -308,7 +308,7 @@ public class BudgetCommand extends Command {
 
             // Disposable income for this month
             BudgetManager.BudgetProgress disposableProgress = budgetManager.getDisposableIncomeProgress(month);
-            output.add(String.format("%-10s | %-22s | $%8.2f | $%8.2f | $%8.2f",
+            output.add(String.format("%-10s | %-22s | $%,12.2f | $%,12.2f | $%,12.2f",
                     "",
                     "Disposable Income",
                     disposableProgress.getAllocated(),

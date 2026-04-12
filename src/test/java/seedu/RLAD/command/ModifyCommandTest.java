@@ -130,4 +130,11 @@ class ModifyCommandTest {
         Transaction updated = manager.findTransaction(existingId);
         assertEquals(existingId, updated.getHashId());
     }
+
+    @Test
+    void execute_amountRoundsToZero_throwsException() {
+        RLADException ex = assertThrows(RLADException.class, () ->
+                new ModifyCommand(existingId + " amount=0.001").execute(manager, ui));
+        assertTrue(ex.getMessage().contains("$0.00") || ex.getMessage().contains("0.01"));
+    }
 }

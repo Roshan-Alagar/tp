@@ -199,7 +199,7 @@ public class AddCommand extends Command {
         String successMessage = String.format(
                 "✅ Transaction added successfully!\n" +
                         "   ID: %s\n" +
-                        "   %s: $%.2f on %s\n" +
+                        "   %s: $%,.2f on %s\n" +
                         "   Category: %s\n" +
                         "   Description: %s",
                 transaction.getHashId(),

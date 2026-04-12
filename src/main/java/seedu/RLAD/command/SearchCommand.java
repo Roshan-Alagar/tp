@@ -62,7 +62,7 @@ public class SearchCommand extends Command {
                     t.getHashId(),
                     t.getType().toUpperCase(),
                     t.getDate().toString(),
-                    String.format("$%.2f", t.getAmount()),
+                    String.format("$%,.2f", t.getAmount()),
                     (t.getCategory() == null || t.getCategory().isEmpty())
                             ? "(none)" : t.getCategory(),
                     (t.getDescription() == null || t.getDescription().isEmpty())

@@ -1,3 +1,18 @@
+<style>
+@media print {
+  /* Hide GitHub UI elements in PDF */
+  .gh-header-actions, .file-navigation, .repository-content > .Box,
+  .markdown-body .zeroclipboard-container, button.js-clipboard-copy,
+  .position-relative button, .copilot-notice, nav, footer,
+  .Header, .js-header-wrapper, .flash, .pagehead { display: none !important; }
+
+  /* Clean page breaks */
+  h2 { page-break-before: always; }
+  h3 { page-break-after: avoid; }
+  pre, table, .mermaid { page-break-inside: avoid; }
+}
+</style>
+
 # RLAD Developer Guide
 
 ## Table of Contents
@@ -62,6 +77,7 @@ The output JAR is placed in `build/libs/`.
 RLAD follows the **MVC (Model-View-Controller)** pattern combined with the **Command Design Pattern**.
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"fontSize": "16px", "fontFamily": "arial", "lineColor": "#333333", "textColor": "#000000", "actorTextColor": "#000000", "signalColor": "#333333", "signalTextColor": "#000000", "noteBkgColor": "#fff5ad", "noteTextColor": "#000000", "labelTextColor": "#000000"}}}%%
 flowchart TD
     User[User Input] --> Ui[Ui.java<br/>View: Handles I/O]
     Ui --> Parser[Parser.java<br/>Controller: Tokenises input,<br/>creates Command objects]
@@ -150,6 +166,7 @@ The following ASCII UML class diagrams capture the key relationships.
 #### Core Architecture
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"fontSize": "16px", "fontFamily": "arial", "lineColor": "#333333", "textColor": "#000000", "actorTextColor": "#000000", "signalColor": "#333333", "signalTextColor": "#000000", "noteBkgColor": "#fff5ad", "noteTextColor": "#000000", "labelTextColor": "#000000"}}}%%
 classDiagram
     class RLAD {
         -Ui ui
@@ -245,6 +262,7 @@ classDiagram
 #### Transaction Model
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"fontSize": "16px", "fontFamily": "arial", "lineColor": "#333333", "textColor": "#000000", "actorTextColor": "#000000", "signalColor": "#333333", "signalTextColor": "#000000", "noteBkgColor": "#fff5ad", "noteTextColor": "#000000", "labelTextColor": "#000000"}}}%%
 classDiagram
     class TransactionManager {
         -ArrayList~Transaction~ transactions
@@ -353,6 +371,7 @@ classDiagram
 #### Command Hierarchy
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"fontSize": "16px", "fontFamily": "arial", "lineColor": "#333333", "textColor": "#000000", "actorTextColor": "#000000", "signalColor": "#333333", "signalTextColor": "#000000", "noteBkgColor": "#fff5ad", "noteTextColor": "#000000", "labelTextColor": "#000000"}}}%%
 classDiagram
     class Command {
         <<abstract>>
@@ -424,6 +443,7 @@ classDiagram
 #### Storage Component
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"fontSize": "16px", "fontFamily": "arial", "lineColor": "#333333", "textColor": "#000000", "actorTextColor": "#000000", "signalColor": "#333333", "signalTextColor": "#000000", "noteBkgColor": "#fff5ad", "noteTextColor": "#000000", "labelTextColor": "#000000"}}}%%
 classDiagram
     class CsvStorageManager {
         +exportToCsv(List~Transaction~, String, String) String
@@ -501,6 +521,7 @@ Input: 'add debit 15.50 2026-03-05 food "Chicken rice at hawker"'
 **Sequence:**
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"fontSize": "16px", "fontFamily": "arial", "lineColor": "#333333", "textColor": "#000000", "actorTextColor": "#000000", "signalColor": "#333333", "signalTextColor": "#000000", "noteBkgColor": "#fff5ad", "noteTextColor": "#000000", "labelTextColor": "#000000"}}}%%
 sequenceDiagram
     participant User
     participant Parser
@@ -566,6 +587,7 @@ sequenceDiagram
 **Sequence:**
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"fontSize": "16px", "fontFamily": "arial", "lineColor": "#333333", "textColor": "#000000", "actorTextColor": "#000000", "signalColor": "#333333", "signalTextColor": "#000000", "noteBkgColor": "#fff5ad", "noteTextColor": "#000000", "labelTextColor": "#000000"}}}%%
 sequenceDiagram
     participant User
     participant Parser
@@ -658,6 +680,7 @@ ui.showResult("Transaction updated successfully!")
 **Sequence:**
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"fontSize": "16px", "fontFamily": "arial", "lineColor": "#333333", "textColor": "#000000", "actorTextColor": "#000000", "signalColor": "#333333", "signalTextColor": "#000000", "noteBkgColor": "#fff5ad", "noteTextColor": "#000000", "labelTextColor": "#000000"}}}%%
 sequenceDiagram
     participant User
     participant ListCommand
@@ -744,6 +767,7 @@ sequenceDiagram
 Predicates are composed using `Predicate.and()` — each active flag adds a new AND condition. The starting predicate is `t -> true` (match all), and each flag narrows it:
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"fontSize": "16px", "fontFamily": "arial", "lineColor": "#333333", "textColor": "#000000", "actorTextColor": "#000000", "signalColor": "#333333", "signalTextColor": "#000000", "noteBkgColor": "#fff5ad", "noteTextColor": "#000000", "labelTextColor": "#000000"}}}%%
 flowchart LR
     subgraph Input
         Args["--type debit --category food --amount -gt 50"]
@@ -780,6 +804,7 @@ This design means `FilterCommand` can be reused by any command that needs transa
 
 **Sort priority:**
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"fontSize": "16px", "fontFamily": "arial", "lineColor": "#333333", "textColor": "#000000", "actorTextColor": "#000000", "signalColor": "#333333", "signalTextColor": "#000000", "noteBkgColor": "#fff5ad", "noteTextColor": "#000000", "labelTextColor": "#000000"}}}%%
 flowchart TD
     Start["list command executed"] --> CheckFlag{"--sort flag present?"}
 
@@ -808,6 +833,7 @@ flowchart TD
 `SortCommand` does not sort transactions itself — it writes the desired sort field and direction to `TransactionManager` via `setGlobalSort()`. `ListCommand` reads these stored values on each invocation.
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"fontSize": "16px", "fontFamily": "arial", "lineColor": "#333333", "textColor": "#000000", "actorTextColor": "#000000", "signalColor": "#333333", "signalTextColor": "#000000", "noteBkgColor": "#fff5ad", "noteTextColor": "#000000", "labelTextColor": "#000000"}}}%%
 sequenceDiagram
     participant User
     participant Parser
@@ -884,6 +910,7 @@ ui.showResult(formatted summary)
 #### Setting a Budget
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"fontSize": "16px", "fontFamily": "arial", "lineColor": "#333333", "textColor": "#000000", "actorTextColor": "#000000", "signalColor": "#333333", "signalTextColor": "#000000", "noteBkgColor": "#fff5ad", "noteTextColor": "#000000", "labelTextColor": "#000000"}}}%%
 sequenceDiagram
     participant User
     participant Parser
@@ -930,6 +957,7 @@ sequenceDiagram
 `BudgetManager` reacts to transaction lifecycle events:
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"fontSize": "16px", "fontFamily": "arial", "lineColor": "#333333", "textColor": "#000000", "actorTextColor": "#000000", "signalColor": "#333333", "signalTextColor": "#000000", "noteBkgColor": "#fff5ad", "noteTextColor": "#000000", "labelTextColor": "#000000"}}}%%
 sequenceDiagram
     participant User
     participant AddCommand
@@ -994,6 +1022,7 @@ This feature is implemented across three new command classes and one new storage
 #### 4.8.1 Export (`ExportCommand` + `CsvStorageManager.exportToCsv`)
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"fontSize": "16px", "fontFamily": "arial", "lineColor": "#333333", "textColor": "#000000", "actorTextColor": "#000000", "signalColor": "#333333", "signalTextColor": "#000000", "noteBkgColor": "#fff5ad", "noteTextColor": "#000000", "labelTextColor": "#000000"}}}%%
 sequenceDiagram
     participant User
     participant Parser
@@ -1039,6 +1068,7 @@ sequenceDiagram
 #### 4.8.2 Import (`ImportCommand` + `CsvStorageManager.importFromCsv`)
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"fontSize": "16px", "fontFamily": "arial", "lineColor": "#333333", "textColor": "#000000", "actorTextColor": "#000000", "signalColor": "#333333", "signalTextColor": "#000000", "noteBkgColor": "#fff5ad", "noteTextColor": "#000000", "labelTextColor": "#000000"}}}%%
 sequenceDiagram
     participant User
     participant ImportCommand
@@ -1096,6 +1126,7 @@ sequenceDiagram
 #### 4.8.3 Clear (`ClearCommand`)
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"fontSize": "16px", "fontFamily": "arial", "lineColor": "#333333", "textColor": "#000000", "actorTextColor": "#000000", "signalColor": "#333333", "signalTextColor": "#000000", "noteBkgColor": "#fff5ad", "noteTextColor": "#000000", "labelTextColor": "#000000"}}}%%
 sequenceDiagram
     participant User
     participant Parser
@@ -1156,6 +1187,7 @@ This is separate from the CSV export/import feature — autosave is internal and
 #### Save/Load Flow
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"fontSize": "16px", "fontFamily": "arial", "lineColor": "#333333", "textColor": "#000000", "actorTextColor": "#000000", "signalColor": "#333333", "signalTextColor": "#000000", "noteBkgColor": "#fff5ad", "noteTextColor": "#000000", "labelTextColor": "#000000"}}}%%
 sequenceDiagram
     participant User
     participant RLAD
@@ -1220,6 +1252,7 @@ The description field is last, so pipes within descriptions are preserved (the p
 Supported commands: `add`, `modify`, `delete`, `list`, `search`, `sort`, `summarize`, `budget`, `export`, `import`, `clear`, `help`, `exit`. Unrecognised command names produce an error message.
 
 ```mermaid
+%%{init: {"theme": "base", "themeVariables": {"fontSize": "16px", "fontFamily": "arial", "lineColor": "#333333", "textColor": "#000000", "actorTextColor": "#000000", "signalColor": "#333333", "signalTextColor": "#000000", "noteBkgColor": "#fff5ad", "noteTextColor": "#000000", "labelTextColor": "#000000"}}}%%
 sequenceDiagram
     participant User
     participant HC as HelpCommand

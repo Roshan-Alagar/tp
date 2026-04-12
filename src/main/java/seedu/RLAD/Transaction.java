@@ -52,7 +52,7 @@ public class Transaction {
 
     @Override
     public String toString() {
-        return String.format("[%s] %s | %s | $%.2f | %s | %s",
+        return String.format("[%s] %s | %s | $%,.2f | %s | %s",
                 hashId, type.toUpperCase(), date, amount, category, description);
     }
     // HashID must be lowercase only!

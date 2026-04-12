@@ -23,3 +23,4 @@ text-ui-test/EXPECTED.filtered.TXT
 
 # Autosave data
 /data/
+*.hprof

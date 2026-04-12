@@ -51,12 +51,12 @@ public class SummarizeCommand extends Command {
 
         StringBuilder sb = new StringBuilder();
         sb.append("===== Financial Summary =====\n");
-        sb.append(String.format("  Total Credit : $%.2f%n", totalCredit.doubleValue()));
-        sb.append(String.format("  Total Debit  : $%.2f%n", totalDebit.doubleValue()));
-        sb.append(String.format("  Net Balance  : $%.2f%n", net.doubleValue()));
+        sb.append(String.format("  Total Credit : $%,.2f%n", totalCredit.doubleValue()));
+        sb.append(String.format("  Total Debit  : $%,.2f%n", totalDebit.doubleValue()));
+        sb.append(String.format("  Net Balance  : $%,.2f%n", net.doubleValue()));
         sb.append("\n--- Category Breakdown ---\n");
         for (Map.Entry<String, BigDecimal> entry : categoryTotals.entrySet()) {
-            sb.append(String.format("  %-20s $%.2f%n", entry.getKey() + ":", entry.getValue().doubleValue()));
+            sb.append(String.format("  %-20s $%,.2f%n", entry.getKey() + ":", entry.getValue().doubleValue()));
         }
         sb.append("=============================");
 

@@ -51,9 +51,9 @@ class SummarizeCommandTest {
         new SummarizeCommand("").execute(manager, ui);
         String result = output.get(0);
 
-        assertTrue(result.contains("3000.00"), "Total credit should be 3000.00");
+        assertTrue(result.contains("3,000.00"), "Total credit should be 3,000.00");
         assertTrue(result.contains("75.50"), "Total debit should be 75.50");
-        assertTrue(result.contains("2924.50"), "Net balance should be 2924.50");
+        assertTrue(result.contains("2,924.50"), "Net balance should be 2,924.50");
     }
 
     @Test

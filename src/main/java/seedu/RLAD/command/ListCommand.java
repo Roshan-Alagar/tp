@@ -142,7 +142,7 @@ public class ListCommand extends Command {
      * @return Formatted string (e.g., "$15.50")
      */
     private String formatAmount(double amount) {
-        return String.format("$%.2f", amount);
+        return String.format("$%,.2f", amount);
     }
 
     /**

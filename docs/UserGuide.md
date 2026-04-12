@@ -1,3 +1,18 @@
+<style>
+@media print {
+  /* Hide GitHub UI elements in PDF */
+  .gh-header-actions, .file-navigation, .repository-content > .Box,
+  .markdown-body .zeroclipboard-container, button.js-clipboard-copy,
+  .position-relative button, .copilot-notice, nav, footer,
+  .Header, .js-header-wrapper, .flash, .pagehead { display: none !important; }
+
+  /* Clean page breaks */
+  h2 { page-break-before: always; }
+  h3 { page-break-after: avoid; }
+  pre, table { page-break-inside: avoid; }
+}
+</style>
+
 # RLAD User Guide
 
 > **RLAD** — *Record Losses And Debt* — is a fast, keyboard-driven personal finance manager for the command line.
@@ -19,10 +34,10 @@
    - [4.7 `budget` — Budget Management](#47-budget--budget-management)
    - [4.8 `export` — Export to CSV](#48-export--export-to-csv)
    - [4.9 `import` — Import from CSV](#49-import--import-from-csv)
-   - [4.10 `clear` — Clear All Data](#410-clear--clear-all-data)
-   - [4.11 `help` — Get Help](#411-help--get-help)
-   - [4.12 `exit` — Exit RLAD](#412-exit--exit-rlad)
-   - [4.13 `search` — Search Transactions](#413-search--search-transactions)
+   - [4.10 `search` — Search Transactions](#410-search--search-transactions)
+   - [4.11 `clear` — Clear All Data](#411-clear--clear-all-data)
+   - [4.12 `help` — Get Help](#412-help--get-help)
+   - [4.13 `exit` — Exit RLAD](#413-exit--exit-rlad)
 5. [Advanced Usage](#5-advanced-usage)
    - [5.1 Combined Filters](#51-combined-filters)
    - [5.2 Relative Date Keywords](#52-relative-date-keywords)
@@ -44,13 +59,13 @@ RLAD is a lightweight, terminal-native personal finance tracker built for users 
 
 **Core capabilities:**
 
-| Capability | Description |
-|---|---|
-| Transaction logging | Record credits (income) and debits (expenses) with full metadata |
-| Filtering & sorting | Query your history by type, category, date range, and amount range |
-| Budget tracking | Set monthly spending budgets per category and monitor usage |
-| CSV I/O | Export data for Excel/Sheets; import from CSV backups |
-| Persistent storage | Data is saved automatically after every change |
+| Capability          | Description                                                       |
+|---------------------|-------------------------------------------------------------------|
+| Transaction logging | Record credits (income) and debits (expenses) with full metadata  |
+| Filtering & sorting | Query your history by type, category, date range, and amount range|
+| Budget tracking     | Set monthly spending budgets per category and monitor usage        |
+| CSV I/O             | Export data for Excel/Sheets; import from CSV backups              |
+| Persistent storage  | Data is saved automatically after every change                     |
 
 RLAD is designed for NUS students and young professionals who are comfortable in the terminal and want a no-overhead tool to stay on top of their personal finances.
 
@@ -95,20 +110,21 @@ exit
 
 ## 3. Features Overview
 
-| Command | Description |
-|---|---|
-| `add` | Record a credit (income) or debit (expense) transaction |
-| `delete` | Permanently remove a transaction by its HashID |
-| `modify` | Update one or more fields of an existing transaction |
-| `list` | View all transactions with optional filters and sorting |
-| `sort` | Set a persistent global sort order for all `list` output |
-| `summarize` | View income/expense totals and a per-category breakdown |
-| `budget` | Set, view, edit, or delete monthly category budgets |
-| `export` | Export all transactions to a CSV file |
-| `import` | Import transactions from a CSV file (replace or merge) |
-| `clear` | Permanently delete all transaction data |
-| `help` | Display usage instructions for any command |
-| `exit` | Quit the application |
+| Command     | Description                                              |
+|-------------|----------------------------------------------------------|
+| `add`       | Record a credit (income) or debit (expense) transaction  |
+| `delete`    | Permanently remove a transaction by its HashID           |
+| `modify`    | Update one or more fields of an existing transaction     |
+| `list`      | View all transactions with optional filters and sorting  |
+| `sort`      | Set a persistent global sort order for all `list` output |
+| `summarize` | View income/expense totals and a per-category breakdown  |
+| `budget`    | Set, view, edit, or delete monthly category budgets      |
+| `export`    | Export all transactions to a CSV file                    |
+| `import`    | Import transactions from a CSV file (replace or merge)   |
+| `clear`     | Permanently delete all transaction data                  |
+| `search`    | Search transactions by keyword                           |
+| `help`      | Display usage instructions for any command               |
+| `exit`      | Quit the application                                     |
 
 ---
 
@@ -171,9 +187,9 @@ delete <hashID>
 
 **Parameters:**
 
-| Parameter | Required | Description |
-|---|---|---|
-| `hashID` | ✅ Yes | The 6-character ID assigned when the transaction was created |
+| Parameter | Required | Description                                                  |
+|-----------|----------|--------------------------------------------------------------|
+| `hashID`  | ✅ Yes    | The 6-character ID assigned when the transaction was created |
 
 **Example:**
 ```
@@ -202,12 +218,12 @@ modify <hashID> [field=value ...]
 
 **Modifiable fields:**
 
-| Field | Example value |
-|---|---|
-| `type` | `credit` or `debit` |
-| `amount` | `25.00` |
-| `date` | `2026-03-10` |
-| `category` | `transport` |
+| Field         | Example value           |
+|---------------|-------------------------|
+| `type`        | `credit` or `debit`     |
+| `amount`      | `25.00`                 |
+| `date`        | `2026-03-10`            |
+| `category`    | `transport`             |
 | `description` | `"Updated description"` |
 
 **Examples:**
@@ -237,24 +253,24 @@ list [filter:value ...]
 
 **Available filters:**
 
-| Filter | Example | Description |
-|---|---|---|
-| `type:` | `list type:debit` | Show only debits or only credits |
-| `cat:` | `list cat:food` | Filter by category (use commas for multiple: `cat:food,transport`) |
-| `from:` | `list from:2026-03-01` | Show transactions on or after this date |
-| `to:` | `list to:2026-03-31` | Show transactions on or before this date |
-| `min:` | `list min:50` | Show transactions with amount ≥ this value |
-| `max:` | `list max:100` | Show transactions with amount ≤ this value |
+| Filter  | Example                | Description                                                       |
+|---------|------------------------|-------------------------------------------------------------------|
+| `type:` | `list type:debit`      | Show only debits or only credits                                  |
+| `cat:`  | `list cat:food`        | Filter by category (use commas for multiple: `cat:food,transport`) |
+| `from:` | `list from:2026-03-01` | Show transactions on or after this date                           |
+| `to:`   | `list to:2026-03-31`   | Show transactions on or before this date                          |
+| `min:`  | `list min:50`          | Show transactions with amount ≥ this value                        |
+| `max:`  | `list max:100`         | Show transactions with amount ≤ this value                        |
 
 **Examples:**
 ```
-list                                        # Show all transactions
-list type: debit                             # Show only expenses
-list cat: food                               # Show food-related transactions
-list from: 2026-03-01 to: 2026-03-31          # Show transactions in March 2026
-list min: 50 max: 200                         # Show transactions between $50 and $200
-list type: debit cat: food                    # Show food expenses only
-list type: debit from: 2026-03-01 min: 10      # Expenses from March, $10 and above
+list                                     # Show all transactions
+list type:debit                          # Show only expenses
+list cat:food                            # Show food-related transactions
+list from:2026-03-01 to:2026-03-31       # Show transactions in March 2026
+list min:50 max:200                      # Show transactions between $50 and $200
+list type:debit cat:food                 # Show food expenses only
+list type:debit from:2026-03-01 min:10   # Expenses from March, $10 and above
 ```
 
 **Expected output:**
@@ -283,14 +299,14 @@ sort
 
 **Options:**
 
-| Usage | Effect |
-|---|---|
-| `sort` | Displays the current global sort setting |
-| `sort amount` | Sort by amount, ascending (default direction) |
-| `sort amount desc` | Sort by amount, descending |
-| `sort date` | Sort by date, ascending |
-| `sort date desc` | Sort by date, newest first |
-| `sort reset` | Clear the global sort; revert to insertion order |
+| Usage              | Effect                                          |
+|--------------------|-------------------------------------------------|
+| `sort`             | Displays the current global sort setting         |
+| `sort amount`      | Sort by amount, ascending (default direction)    |
+| `sort amount desc` | Sort by amount, descending                       |
+| `sort date`        | Sort by date, ascending                          |
+| `sort date desc`   | Sort by date, newest first                       |
+| `sort reset`       | Clear the global sort; revert to insertion order |
 
 **Examples:**
 ```
@@ -315,10 +331,10 @@ summarize [filter:value ...]
 
 **Examples:**
 ```
-summarize                                   # Summary of all transactions
-summarize type:debit                        # Summary of expenses only
-summarize from:2026-01-01 to:2026-03-31     # Q1 2026 summary
-summarize cat:food                          # Food category summary
+summarize                               # Summary of all transactions
+summarize type:debit                    # Summary of expenses only
+summarize from:2026-01-01 to:2026-03-31 # Q1 2026 summary
+summarize cat:food                      # Food category summary
 ```
 
 **Expected output:**
@@ -351,13 +367,13 @@ budget yearly [YYYY]
 
 **Subcommands:**
 
-| Subcommand | Description |
-|---|---|
-| `set` | Create a new monthly budget for a category |
-| `view` | Display budgets for a given month; if no month is given, shows all months |
-| `edit` | Update the amount for an existing budget entry |
-| `delete` | Remove a budget entry for a specific category and month |
-| `yearly` | Display a full-year budget summary (defaults to current year) |
+| Subcommand | Description                                                              |
+|------------|--------------------------------------------------------------------------|
+| `set`      | Create a new monthly budget for a category                               |
+| `view`     | Display budgets for a given month; if no month is given, shows all months|
+| `edit`     | Update the amount for an existing budget entry                           |
+| `delete`   | Remove a budget entry for a specific category and month                  |
+| `yearly`   | Display a full-year budget summary (defaults to current year)            |
 
 **Examples:**
 ```
@@ -384,8 +400,8 @@ export [filename]
 
 **Examples:**
 ```
-export                  # Creates transactions_YYYY-MM-DD.csv in the current directory
-export backup.csv       # Creates backup.csv in the current directory
+export              # Creates transactions_YYYY-MM-DD.csv in the current directory
+export backup.csv   # Creates backup.csv in the current directory
 ```
 
 **Expected output:**
@@ -415,15 +431,15 @@ import <filename> [merge]
 
 **Parameters:**
 
-| Parameter | Required | Description |
-|---|---|---|
-| `filename` | ✅ Yes | Path to the CSV file (relative or absolute) |
-| `merge` | ❌ No | If specified, imported records are appended rather than replacing existing data |
+| Parameter  | Required | Description                                                                    |
+|------------|----------|--------------------------------------------------------------------------------|
+| `filename` | ✅ Yes    | Path to the CSV file (relative or absolute)                                    |
+| `merge`    | ❌ No     | If specified, imported records are appended rather than replacing existing data |
 
 **Examples:**
 ```
-import backup.csv           # Replace all existing data with backup.csv
-import backup.csv merge     # Add records from backup.csv to existing data
+import backup.csv         # Replace all existing data with backup.csv
+import backup.csv merge   # Add records from backup.csv to existing data
 ```
 
 **Expected output:**
@@ -439,7 +455,38 @@ Import complete: 23 succeeded, 2 failed.
 
 ---
 
-### 4.10 `clear` — Clear All Data
+### 4.10 `search` — Search Transactions
+
+Searches all transactions for a keyword and displays every match. The search is case-insensitive and checks the description, category, HashID, and amount fields.
+
+**Syntax:**
+```
+search <keyword>
+```
+
+**Examples:**
+```
+search chicken    # Find transactions whose description contains "chicken"
+search food       # Find transactions in the food category
+search 15.50      # Find transactions with amount 15.50
+search a7b2c3     # Look up a transaction by HashID
+```
+
+**Expected output:**
+```
+---------------------------------------------------------------------------
+  ID     TYPE     DATE           AMOUNT  CATEGORY      DESCRIPTION
+---------------------------------------------------------------------------
+  a7b2c3 DEBIT    2026-03-05     $15.50  food          Chicken rice
+---------------------------------------------------------------------------
+  1 transaction(s) found for: "chicken"
+```
+
+> **Note:** `search` and `find` are aliases — both work identically.
+
+---
+
+### 4.11 `clear` — Clear All Data
 
 Permanently deletes **all** transaction records. Budget definitions are **not** affected.
 
@@ -470,7 +517,7 @@ Cleared 47 transactions.
 
 ---
 
-### 4.11 `help` — Get Help
+### 4.12 `help` — Get Help
 
 Displays usage instructions. With no argument, lists all available commands. With a command name, shows detailed usage for that specific command.
 
@@ -481,15 +528,15 @@ help [command]
 
 **Examples:**
 ```
-help            # List all commands
-help add        # Usage for the add command
-help list       # Usage for the list command
-help budget     # Usage for the budget command
+help          # List all commands
+help add      # Usage for the add command
+help list     # Usage for the list command
+help budget   # Usage for the budget command
 ```
 
 ---
 
-### 4.12 `exit` — Exit RLAD
+### 4.13 `exit` — Exit RLAD
 
 Saves all data and exits the application.
 
@@ -497,37 +544,6 @@ Saves all data and exits the application.
 ```
 exit
 ```
-
----
-
-### 4.13 `search` — Search Transactions
-
-Searches all transactions for a keyword and displays every match. The search is case-insensitive and checks the description, category, HashID, and amount fields.
-
-**Syntax:**
-```
-search <keyword>
-```
-
-**Examples:**
-```
-search chicken          # Find transactions whose description contains "chicken"
-search food             # Find transactions in the food category
-search 15.50            # Find transactions with amount 15.50
-search a7b2c3           # Look up a transaction by HashID
-```
-
-**Expected output:**
-```
----------------------------------------------------------------------------
-  ID     TYPE     DATE           AMOUNT  CATEGORY      DESCRIPTION
----------------------------------------------------------------------------
-  a7b2c3 DEBIT    2026-03-05     $15.50  food          Chicken rice
----------------------------------------------------------------------------
-  1 transaction(s) found for: "chicken"
-```
-
-> **Note:** `search` and `find` are aliases — both work identically.
 
 ---
 
@@ -549,15 +565,15 @@ This returns all food expenses in March 2026 that are at least $10.
 
 For `from:` and `to:` filters, you may use the following relative keywords instead of a full `YYYY-MM-DD` date:
 
-| Keyword | Resolves to |
-|---|---|
-| `today` | Today's date |
-| `yesterday` | Yesterday's date |
-| `tomorrow` | Tomorrow's date |
-| `this-week` | Start of the current week |
+| Keyword      | Resolves to                |
+|--------------|----------------------------|
+| `today`      | Today's date               |
+| `yesterday`  | Yesterday's date           |
+| `tomorrow`   | Tomorrow's date            |
+| `this-week`  | Start of the current week  |
 | `this-month` | Start of the current month |
-| `last-month` | Start of the previous month |
-| `last-year` | Start of the previous year |
+| `last-month` | Start of the previous month|
+| `last-year`  | Start of the previous year |
 
 **Example:**
 ```
@@ -588,20 +604,20 @@ summarize cat:food,transport,health # Summary across three categories
 
 The `budget` command uses fixed numeric category codes. Free-text category names (used in `add` and `list`) are a separate, independent system.
 
-| Code | Category |
-|---|---|
-| 1 | Food |
-| 2 | Transport |
-| 3 | Utilities |
-| 4 | Housing |
-| 5 | Health & Insurance |
-| 6 | Debt & Financial Obligations |
-| 7 | Child & Dependent Care |
-| 8 | Shopping & Personal Care |
-| 9 | Gifts & Donations |
-| 10 | Investments |
-| 11 | Emergency Fund |
-| 12 | Savings |
+| Code | Category                       |
+|------|--------------------------------|
+| 1    | Food                           |
+| 2    | Transport                      |
+| 3    | Utilities                      |
+| 4    | Housing                        |
+| 5    | Health & Insurance             |
+| 6    | Debt & Financial Obligations   |
+| 7    | Child & Dependent Care         |
+| 8    | Shopping & Personal Care       |
+| 9    | Gifts & Donations              |
+| 10   | Investments                    |
+| 11   | Emergency Fund                 |
+| 12   | Savings                        |
 
 **Example:**
 ```
@@ -617,21 +633,21 @@ budget set 2026-03 10 500   # Set $500 Investments budget for March
 
 All date inputs must use `YYYY-MM-DD` format.
 
-| Input | Valid? |
-|---|---|
-| `2026-03-15` | ✅ |
-| `15-03-2026` | ❌ |
-| `2026/03/15` | ❌ |
-| `03-15-2026` | ❌ |
+| Input        | Valid? |
+|--------------|--------|
+| `2026-03-15` | ✅      |
+| `15-03-2026` | ❌      |
+| `2026/03/15` | ❌      |
+| `03-15-2026` | ❌      |
 
 ### 7.2 Amount Format
 
-| Rule | Detail |
-|---|---|
-| Must be positive | Values ≤ 0 are rejected |
-| Maximum value | 10,000,000 |
-| Decimal places | Up to 2 (e.g. `15.50`, `3000`, `0.99`) |
-| No currency symbol | Do not include `$` or any currency prefix |
+| Rule               | Detail                                        |
+|--------------------|-----------------------------------------------|
+| Must be positive   | Values ≤ 0 are rejected                       |
+| Maximum value      | 10,000,000                                    |
+| Decimal places     | Up to 2 (e.g. `15.50`, `3000`, `0.99`)        |
+| No currency symbol | Do not include `$` or any currency prefix     |
 
 | Input             | Valid?                                                  |
 |-------------------|---------------------------------------------------------|
@@ -648,9 +664,10 @@ All date inputs must use `YYYY-MM-DD` format.
 
 RLAD automatically saves all transactions to a local file after every change. No manual save step is required.
 
-| File | Purpose |
-|---|---|
-| `data/rlad.txt` | Primary data store — transactions and budgets |
+| File              | Purpose                                        |
+|-------------------|------------------------------------------------|
+| `data/rlad.txt`   | Primary data store — transactions               |
+| `data/rlad_budget.csv` | Budget definitions and allocations          |
 
 Your data is restored automatically the next time you launch RLAD from the same directory. Use `export` to create a portable CSV backup that can be opened in Excel or Google Sheets.
 
@@ -662,14 +679,14 @@ Your data is restored automatically the next time you launch RLAD from the same 
 
 ### Common Mistakes
 
-| Incorrect Command | Problem | Correct Usage |
-|---|---|---|
-| `add --amount 50` | Missing required parameters | `add debit 50 2026-03-05` |
-| `add pizza 10 2026-03-05` | Invalid type value | `add debit 10 2026-03-05 food pizza` |
-| `list cat:salary food` | Space instead of comma for multiple categories | `list cat:salary,food` |
-| `delete a7b2c3 b8c9d0` | Only one HashID accepted per command | Run `delete` twice |
-| `modify a7b2c3` | No fields to update specified | `modify a7b2c3 amount=25.00` |
-| `add debit 15.50 2026-03-05 "Chicken rice"` | Description in position 4 (category position) | `add debit 15.50 2026-03-05 food "Chicken rice"` |
+| Incorrect Command                            | Problem                                           | Correct Usage                                      |
+|----------------------------------------------|---------------------------------------------------|----------------------------------------------------|
+| `add --amount 50`                            | Missing required parameters                       | `add debit 50 2026-03-05`                          |
+| `add pizza 10 2026-03-05`                    | Invalid type value                                | `add debit 10 2026-03-05 food pizza`               |
+| `list cat:salary food`                       | Space instead of comma for multiple categories    | `list cat:salary,food`                             |
+| `delete a7b2c3 b8c9d0`                      | Only one HashID accepted per command              | Run `delete` twice                                 |
+| `modify a7b2c3`                              | No fields to update specified                     | `modify a7b2c3 amount=25.00`                       |
+| `add debit 15.50 2026-03-05 "Chicken rice"` | Description in position 4 (category position)     | `add debit 15.50 2026-03-05 food "Chicken rice"`   |
 
 ### Known Limitations
 
@@ -730,18 +747,18 @@ RLAD loads `data/rlad.txt` relative to the directory you launch it from. Always 
 
 ## 11. Command Summary
 
-| Command | Syntax |
-|---|---|
-| `add` | `add <type> <amount> <date> [category] [description]` |
-| `delete` | `delete <hashID>` |
-| `modify` | `modify <hashID> [field=value ...]` |
-| `list` | `list [type:T] [cat:C] [from:D] [to:D] [min:A] [max:A]` |
-| `sort` | `sort [field [direction]]` \| `sort reset` |
-| `summarize` | `summarize [type:T] [cat:C] [from:D] [to:D]` |
-| `budget` | `budget <set\|view\|edit\|delete\|yearly> [args...]` |
-| `export` | `export [filename]` |
-| `import` | `import <filename> [merge]` |
-| `clear` | `clear [--force]` |
-| `search` | `search <keyword>` |
-| `help` | `help [command]` |
-| `exit` | `exit` |
+| Command     | Syntax                                                    |
+|-------------|-----------------------------------------------------------|
+| `add`       | `add <type> <amount> <date> [category] [description]`     |
+| `delete`    | `delete <hashID>`                                         |
+| `modify`    | `modify <hashID> [field=value ...]`                       |
+| `list`      | `list [type:T] [cat:C] [from:D] [to:D] [min:A] [max:A]`  |
+| `sort`      | `sort [field [direction]]` \| `sort reset`                |
+| `summarize` | `summarize [type:T] [cat:C] [from:D] [to:D]`             |
+| `budget`    | `budget <set\|view\|edit\|delete\|yearly> [args...]`      |
+| `export`    | `export [filename]`                                       |
+| `import`    | `import <filename> [merge]`                               |
+| `clear`     | `clear [--force]`                                         |
+| `search`    | `search <keyword>`                                        |
+| `help`      | `help [command]`                                          |
+| `exit`      | `exit`                                                    |

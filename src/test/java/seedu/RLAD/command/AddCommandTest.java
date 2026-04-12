@@ -122,6 +122,36 @@ public class AddCommandTest {
             System.out.println("✗ FAIL: " + e.getMessage() + "\n");
         }
 
+        // Test 12: Empty quoted string should be rejected
+        System.out.println("Test 12: Empty quoted string \"\"");
+        try {
+            AddCommand cmd12 = new AddCommand("credit 100 2026-03-01 food \"\"");
+            cmd12.execute(tm, ui);
+            System.out.println("✗ FAIL: Should have thrown exception\n");
+        } catch (RLADException e) {
+            System.out.println("✓ PASS: " + e.getMessage() + "\n");
+        }
+
+        // Test 13: Whitespace-only quoted string should be rejected
+        System.out.println("Test 13: Whitespace quoted string \" \"");
+        try {
+            AddCommand cmd13 = new AddCommand("credit 100 2026-03-01 food \" \"");
+            cmd13.execute(tm, ui);
+            System.out.println("✗ FAIL: Should have thrown exception\n");
+        } catch (RLADException e) {
+            System.out.println("✓ PASS: " + e.getMessage() + "\n");
+        }
+
+        // Test 14: Unclosed quote should be rejected
+        System.out.println("Test 14: Unclosed quote");
+        try {
+            AddCommand cmd14 = new AddCommand("credit 100 2026-03-01 food \"unclosed");
+            cmd14.execute(tm, ui);
+            System.out.println("✗ FAIL: Should have thrown exception\n");
+        } catch (RLADException e) {
+            System.out.println("✓ PASS: " + e.getMessage() + "\n");
+        }
+
         // Show final transactions
         System.out.println("\n=== FINAL TRANSACTIONS ===");
         if (tm.getTransactions().isEmpty()) {

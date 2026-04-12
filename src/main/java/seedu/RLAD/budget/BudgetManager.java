@@ -559,13 +559,13 @@ public class BudgetManager {
             if (percentInt >= 100) {
                 message = String.format(
                         "🎉 AMAZING! You have reached or exceeded your savings goal for %s!\n" +
-                                "   Saved: $%.2f / $%.2f. Outstanding dedication to your financial future!",
+                                "   Saved: $%,.2f / $%,.2f. Outstanding dedication to your financial future!",
                         monthStr, spentRounded, budgetRounded
                 );
             } else {
                 message = String.format(
                         "🎉 GREAT JOB! You have reached %d%% of your savings goal for %s!\n" +
-                                "   Saved: $%.2f / $%.2f. Keep up the great work!",
+                                "   Saved: $%,.2f / $%,.2f. Keep up the great work!",
                         percentInt, monthStr, spentRounded, budgetRounded
                 );
             }
@@ -575,7 +575,7 @@ public class BudgetManager {
             String warningType = percentInt >= 100 ? "EXCEEDED" : "WARNING";
             String message = String.format(
                     "⚠️ %s: You have used %d%% of your %s budget for %s!\n" +
-                            "   Spent: $%.2f / $%.2f. Consider reducing your spending.",
+                            "   Spent: $%,.2f / $%,.2f. Consider reducing your spending.",
                     warningType, percentInt, category.getDisplayName(), monthStr, spentRounded, budgetRounded
             );
             ui.showResult(message);
@@ -675,7 +675,7 @@ public class BudgetManager {
             double remaining = budget - spent;
             int percentage = budget > 0 ? (int) Math.min(100, (spent / budget) * 100) : 0;
             String bar = createProgressBar(percentage, 14);
-            sb.append(String.format("%-10s | $%7.2f | $%7.2f | $%7.2f | %3d%%  | %s %d%%%n",
+            sb.append(String.format("%-10s | $%,11.2f | $%,11.2f | $%,11.2f | %3d%%  | %s %d%%%n",
                     monthNames.get(m - 1), budget, spent, remaining, percentage, bar, percentage));
             annualBudget += budget;
             annualSpent += spent;
@@ -698,20 +698,20 @@ public class BudgetManager {
             double diff = catBudget - catSpent;
             String status = diff >= 0 ? "✓ Under" : "⚠ Over";
             String diffStr = diff >= 0
-                    ? String.format("+$%.2f", diff)
-                    : String.format("-$%.2f", Math.abs(diff));
-            sb.append(String.format("%-30s | $%9.2f | $%9.2f | %-10s | %s%n",
+                    ? String.format("+$%,.2f", diff)
+                    : String.format("-$%,.2f", Math.abs(diff));
+            sb.append(String.format("%-30s | $%,13.2f | $%,13.2f | %-10s | %s%n",
                     category.getDisplayName(), catBudget, catSpent, diffStr, status));
         }
 
         double netBalance = annualBudget - annualSpent;
         double avgMonthly = monthsWithData > 0 ? annualSpent / monthsWithData : 0;
         sb.append("\n=== ANNUAL TOTALS ===\n\n");
-        sb.append(String.format("Total Budget:     $%.2f%n", annualBudget));
-        sb.append(String.format("Total Spent:      $%.2f%n", annualSpent));
-        sb.append(String.format("Net Balance:      %s$%.2f%n",
+        sb.append(String.format("Total Budget:     $%,.2f%n", annualBudget));
+        sb.append(String.format("Total Spent:      $%,.2f%n", annualSpent));
+        sb.append(String.format("Net Balance:      %s$%,.2f%n",
                 netBalance >= 0 ? "+" : "-", Math.abs(netBalance)));
-        sb.append(String.format("Average Monthly:  $%.2f%n", avgMonthly));
+        sb.append(String.format("Average Monthly:  $%,.2f%n", avgMonthly));
         return sb.toString();
     }
 

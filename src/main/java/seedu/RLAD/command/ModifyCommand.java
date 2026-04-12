@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Command to modify an existing transaction's fields.
@@ -226,7 +225,11 @@ public class ModifyCommand extends Command {
             if (value > 10_000_000.00) {
                 throw new RLADException("Amount cannot exceed $10,000,000. Type 'help modify' for usage.");
             }
-            return Math.round(value * 100.0) / 100.0;
+            double rounded = Math.round(value * 100.0) / 100.0;
+            if (rounded <= 0) {
+                throw new RLADException("Amount rounds to $0.00. Minimum is $0.01.");
+            }
+            return rounded;
         } catch (NumberFormatException e) {
             throw new RLADException("Invalid amount format. Type 'help modify' for usage.");
         }
@@ -254,7 +257,7 @@ public class ModifyCommand extends Command {
      * @return A formatted string containing transaction details
      */
     private String formatTransaction(Transaction t) {
-        return String.format("%s | $%.2f | %s | %s | %s",
+        return String.format("%s | $%,.2f | %s | %s | %s",
                 t.getType().toUpperCase(), t.getAmount(), t.getDate(),
                 (t.getCategory() == null || t.getCategory().isEmpty())
                         ? "(none)" : t.getCategory(),
