@@ -4,6 +4,7 @@ import seedu.RLAD.command.Command;
 import seedu.RLAD.exception.RLADException;
 import seedu.RLAD.budget.BudgetManager;
 import seedu.RLAD.budget.BudgetCommand;
+import java.util.NoSuchElementException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -76,6 +77,11 @@ public class RLAD {
                     ui.printPossibleOptions();
                 }
 
+            } catch (NoSuchElementException e) {
+                // EOF reached (e.g., piped input ended) — exit gracefully
+                isExit = true;
+                ui.showExit();
+                continue;
             } catch (RLADException e) {
                 ui.showError(e.getMessage());
             } catch (Exception e) {
