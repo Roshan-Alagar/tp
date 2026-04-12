@@ -17,7 +17,15 @@ public class SearchCommand extends Command {
     }
 
     private String parseKeyword() {
-        return (rawArgs != null && !rawArgs.trim().isEmpty()) ? rawArgs.trim() : null;
+        if (rawArgs == null || rawArgs.trim().isEmpty()) {
+            return null;
+        }
+        String trimmed = rawArgs.trim();
+        // Support legacy --keyword flag for backward compatibility
+        if (trimmed.startsWith("--keyword")) {
+            trimmed = trimmed.substring("--keyword".length()).trim();
+        }
+        return trimmed.isEmpty() ? null : trimmed;
     }
 
     private boolean matchesKeyword(Transaction t, String keyword) {
@@ -40,7 +48,7 @@ public class SearchCommand extends Command {
     @Override
     public void execute(TransactionManager transactions, Ui ui) throws RLADException {
         if (!hasValidArgs()) {
-            throw new RLADException("Missing required field: --keyword");
+            throw new RLADException("Usage: search <keyword>. Example: search food");
         }
 
         String keyword = parseKeyword();
