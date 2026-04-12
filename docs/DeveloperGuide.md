@@ -1,3 +1,18 @@
+<style>
+@media print {
+  /* Hide GitHub UI elements in PDF */
+  .gh-header-actions, .file-navigation, .repository-content > .Box,
+  .markdown-body .zeroclipboard-container, button.js-clipboard-copy,
+  .position-relative button, .copilot-notice, nav, footer,
+  .Header, .js-header-wrapper, .flash, .pagehead { display: none !important; }
+
+  /* Clean page breaks */
+  h2 { page-break-before: always; }
+  h3 { page-break-after: avoid; }
+  pre, table, .mermaid { page-break-inside: avoid; }
+}
+</style>
+
 # RLAD Developer Guide
 
 ## Table of Contents
