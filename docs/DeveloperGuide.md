@@ -574,7 +574,7 @@ sequenceDiagram
     participant BM as BudgetManager
     participant Ui
     
-    User->>Parser: delete --hashID a7b2c3
+    User->>Parser: delete a7b2c3
     Parser->>DeleteCommand: new DeleteCommand(rawArgs)
     DeleteCommand->>DeleteCommand: hasValidArgs()
     
@@ -622,7 +622,7 @@ sequenceDiagram
 **Sequence:**
 
 ```
-Parser.parse("modify a7b2c3 --amount 20.00")
+Parser.parse("modify a7b2c3 amount=20.00")
     |
     v
 ModifyCommand(action, rawArgs) created
@@ -666,7 +666,7 @@ sequenceDiagram
     participant Sorter as TransactionSorter
     participant Ui
 
-    User->>ListCommand: list --type debit --category food --sort amount
+    User->>ListCommand: list type:debit cat:food
     activate ListCommand
 
     ListCommand->>FilterCommand: parseFlags(rawArgs)
@@ -892,7 +892,7 @@ sequenceDiagram
     participant MonthlyBudget
     participant Ui
 
-    User->>Parser: budget set --month 2026-03 --category 1 --amount 500
+    User->>Parser: budget set 2026-03 1 500
     Parser->>BudgetCommand: new BudgetCommand(rawArgs)
 
     User->>BudgetCommand: execute(transactions, ui, budgetManager)
@@ -938,7 +938,7 @@ sequenceDiagram
     participant MonthlyBudget
     participant Ui
 
-    User->>AddCommand: add --type debit --amount 80 --date 2026-03-15
+    User->>AddCommand: add debit 80 2026-03-15
     AddCommand->>TM: addTransaction(t)
 
     activate TM
@@ -1003,14 +1003,13 @@ sequenceDiagram
     participant CSV as CsvStorageManager
     participant Ui
 
-    User->>Parser: export --file backup.csv
-    Parser->>ExportCommand: new ExportCommand("--file backup.csv")
+    User->>Parser: export backup.csv
+    Parser->>ExportCommand: new ExportCommand("backup.csv")
 
     User->>ExportCommand: execute(transactions, ui)
     activate ExportCommand
 
-    ExportCommand->>FilterCommand: parseFlags(rawArgs)
-    FilterCommand-->>ExportCommand: {file: "backup.csv"}
+    ExportCommand->>ExportCommand: parse filename from rawArgs
 
     ExportCommand->>TM: getTransactions()
     TM-->>ExportCommand: ArrayList of transactions
@@ -1048,7 +1047,7 @@ sequenceDiagram
     participant BM as BudgetManager
     participant Ui
 
-    User->>ImportCommand: import --file backup.csv
+    User->>ImportCommand: import backup.csv
     ImportCommand->>ImportCommand: hasValidArgs()
 
     User->>ImportCommand: execute(transactions, ui)
@@ -1218,7 +1217,7 @@ The description field is last, so pipes within descriptions are preserved (the p
 
 `HelpCommand` provides built-in usage instructions. When invoked with no arguments (`help`), it calls `Ui.printPossibleOptions()` to list all available commands. When invoked with a command name (e.g. `help add`), it calls the corresponding manual method in `Ui` (e.g. `Ui.printAddManual()`).
 
-Supported commands: `add`, `modify`, `delete`, `list`, `filter`, `search`, `sort`, `summarize`, `budget`, `export`, `import`, `clear`, `help`, `exit`. Unrecognised command names produce an error message.
+Supported commands: `add`, `modify`, `delete`, `list`, `search`, `sort`, `summarize`, `budget`, `export`, `import`, `clear`, `help`, `exit`. Unrecognised command names produce an error message.
 
 ```mermaid
 sequenceDiagram
@@ -1324,27 +1323,27 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
 
 1. Add a credit:
    ```
-   add --type credit --amount 3000.00 --date 2026-03-01 --category salary --description "March salary"
+   add credit 3000.00 2026-03-01 salary "March salary"
    ```
    Expected: success message with a HashID.
 
 2. Add a debit:
    ```
-   add --type debit --amount 15.50 --date 2026-03-05 --category food --description "Chicken rice"
+   add debit 15.50 2026-03-05 food "Chicken rice"
    ```
    Expected: success message with a different HashID.
 
 3. Add without optional fields:
    ```
-   add --type debit --amount 5.00 --date 2026-03-06
+   add debit 5.00 2026-03-06
    ```
    Expected: success. Category and Description show as `(none)`.
 
 4. Add with invalid type:
    ```
-   add --type cash --amount 10.00 --date 2026-03-07
+   add cash 10.00 2026-03-07
    ```
-   Expected: error message — Invalid `--type`.
+   Expected: error message — invalid type.
 
 ### E.2 List and Filter
 
@@ -1356,25 +1355,26 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
 
 6. Filter by type:
    ```
-   list --type credit
+   list type:credit
    ```
    Expected: only the salary transaction.
 
-7. Filter by amount:
+7. Filter by minimum amount:
    ```
-   list --amount -gt 10.00
+   list min:10
    ```
    Expected: salary ($3000) and chicken rice ($15.50) shown.
 
 8. Filter by date range:
    ```
-   list --date-from 2026-03-05 --date-to 2026-03-06
+   list from:2026-03-05 to:2026-03-06
    ```
    Expected: chicken rice and the $5.00 debit shown.
 
 9. Sort by amount descending:
    ```
-   list --sort amount desc
+   sort amount desc
+   list
    ```
    Expected: salary first, then chicken rice, then $5.00.
 
@@ -1407,9 +1407,9 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
 
 ### E.5 Modify
 
-14. Note the HashID of the chicken rice transaction from step 2. Modify its amount:
+14. Note the HashID of the chicken rice transaction from step 2. Modify its amount and description:
     ```
-    modify --hashID <ID> --amount 20.00 --description "Fancy chicken rice"
+    modify <ID> amount=20.00 description="Fancy chicken rice"
     ```
     Expected: success. Verify with `list`.
 
@@ -1417,13 +1417,13 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
 
 15. Note the HashID of the $5.00 transaction. Delete it:
     ```
-    delete --hashID <ID>
+    delete <ID>
     ```
     Expected: success. Verify with `list` — only 2 transactions remain.
 
 16. Attempt to delete with an invalid ID:
     ```
-    delete --hashID zzzzzz
+    delete zzzzzz
     ```
     Expected: error — Transaction not found.
 
@@ -1431,25 +1431,25 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
 
 17. Set a food budget for March:
     ```
-    budget set --month 2026-03 --category 1 --amount 200.00
+    budget set 2026-03 1 200.00
     ```
     Expected: success.
 
 18. View the budget:
     ```
-    budget view --month 2026-03
+    budget view 2026-03
     ```
     Expected: Food row with progress bar. Spent amount reflects debit transactions in March.
 
 19. Edit the budget:
     ```
-    budget edit --month 2026-03 --category 1 --amount 250.00
+    budget edit 2026-03 1 250.00
     ```
     Expected: success.
 
 20. Delete the budget:
     ```
-    budget delete --month 2026-03 --category 1
+    budget delete 2026-03 1
     ```
     Expected: success.
 
@@ -1463,7 +1463,7 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
 
 22. Export with custom filename:
     ```
-    export --file test_backup.csv
+    export test_backup.csv
     ```
     Expected: file `test_backup.csv` created.
 
@@ -1471,20 +1471,20 @@ RLAD lets users record, filter, sort, and summarize financial transactions entir
 
 23. Import with replace mode:
     ```
-    import --file test_backup.csv
+    import test_backup.csv
     ```
     Expected: existing transactions replaced with imported ones. Counts match.
 
 24. Add a new transaction, then merge:
     ```
-    add --type debit --amount 50.00 --date 2026-03-10 --category transport
-    import --file test_backup.csv --merge
+    add debit 50.00 2026-03-10 transport
+    import test_backup.csv merge
     ```
     Expected: new transaction preserved, CSV transactions added on top.
 
 25. Import a non-existent file:
     ```
-    import --file nonexistent.csv
+    import nonexistent.csv
     ```
     Expected: error — file not found.
 
