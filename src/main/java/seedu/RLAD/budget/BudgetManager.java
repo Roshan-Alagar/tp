@@ -32,6 +32,11 @@ public class BudgetManager {
     private static final double THRESHOLD_90 = 0.90;
     private static final double THRESHOLD_100 = 1.00;
 
+    private static final String SAVE_DIR = "data";
+    private static final String SAVE_FILE = "data" + File.separator + "budgets.csv";
+    private static final String CSV_HEADER = "Month,CategoryCode,Amount";
+    private static final Logger logger = Logger.getLogger(BudgetManager.class.getName());
+
     /**
      * Maps user-friendly keywords to BudgetCategory display names.
      *
@@ -88,11 +93,6 @@ public class BudgetManager {
     public void setUi(Ui ui) {
         this.ui = ui;
     }
-
-    private static final String SAVE_DIR = "data";
-    private static final String SAVE_FILE = "data" + File.separator + "budgets.csv";
-    private static final String CSV_HEADER = "Month,CategoryCode,Amount";
-    private static final Logger logger = Logger.getLogger(BudgetManager.class.getName());
 
     /**
      * Gets or creates a monthly budget.
