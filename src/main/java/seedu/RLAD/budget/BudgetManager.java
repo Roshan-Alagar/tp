@@ -23,6 +23,49 @@ public class BudgetManager {
     private static final double THRESHOLD_90 = 0.90;
     private static final double THRESHOLD_100 = 1.00;
 
+    /**
+     * Maps user-friendly keywords to BudgetCategory display names.
+     *
+     * <p>This mapping allows users to enter simple keywords like "health"
+     * instead of the full display name "Health & Insurance". It improves
+     * usability by reducing the need to remember exact category names.
+     *
+     * <p>Fixes Issue #93: Multi-word budget categories showing $0.00 spent.
+     *
+     * @see #getSpentForCategory(YearMonth, BudgetCategory)
+     */
+    private static final Map<String, BudgetCategory> CATEGORY_KEYWORDS = new HashMap<>();
+
+    static {
+        // Initialize keyword mappings
+        CATEGORY_KEYWORDS.put("food", BudgetCategory.FOOD);
+        CATEGORY_KEYWORDS.put("transport", BudgetCategory.TRANSPORT);
+        CATEGORY_KEYWORDS.put("transportation", BudgetCategory.TRANSPORT);
+        CATEGORY_KEYWORDS.put("bus", BudgetCategory.TRANSPORT);
+        CATEGORY_KEYWORDS.put("utilities", BudgetCategory.UTILITIES);
+        CATEGORY_KEYWORDS.put("utility", BudgetCategory.UTILITIES);
+        CATEGORY_KEYWORDS.put("electricity", BudgetCategory.UTILITIES);
+        CATEGORY_KEYWORDS.put("water", BudgetCategory.UTILITIES);
+        CATEGORY_KEYWORDS.put("housing", BudgetCategory.HOUSING);
+        CATEGORY_KEYWORDS.put("rent", BudgetCategory.HOUSING);
+        CATEGORY_KEYWORDS.put("health", BudgetCategory.HEALTH_INSURANCE);
+        CATEGORY_KEYWORDS.put("insurance", BudgetCategory.HEALTH_INSURANCE);
+        CATEGORY_KEYWORDS.put("medical", BudgetCategory.HEALTH_INSURANCE);
+        CATEGORY_KEYWORDS.put("debt", BudgetCategory.DEBT_OBLIGATION);
+        CATEGORY_KEYWORDS.put("loan", BudgetCategory.DEBT_OBLIGATION);
+        CATEGORY_KEYWORDS.put("childcare", BudgetCategory.CHILD_CARE);
+        CATEGORY_KEYWORDS.put("child", BudgetCategory.CHILD_CARE);
+        CATEGORY_KEYWORDS.put("shopping", BudgetCategory.SHOPPING);
+        CATEGORY_KEYWORDS.put("personal", BudgetCategory.SHOPPING);
+        CATEGORY_KEYWORDS.put("gifts", BudgetCategory.GIFTS);
+        CATEGORY_KEYWORDS.put("donations", BudgetCategory.GIFTS);
+        CATEGORY_KEYWORDS.put("investments", BudgetCategory.INVESTMENTS);
+        CATEGORY_KEYWORDS.put("investing", BudgetCategory.INVESTMENTS);
+        CATEGORY_KEYWORDS.put("emergency", BudgetCategory.EMERGENCY_FUND);
+        CATEGORY_KEYWORDS.put("savings", BudgetCategory.SAVINGS);
+        CATEGORY_KEYWORDS.put("save", BudgetCategory.SAVINGS);
+    }
+
     private final Map<String, Set<Integer>> notifiedThresholds = new HashMap<>();
     private final Map<YearMonth, MonthlyBudget> budgets;
     private final TransactionManager transactionManager;
@@ -119,18 +162,61 @@ public class BudgetManager {
     }
 
     /**
-     * Calculates spent amount for a category in a specific month.
+     * Gets spent amount for a category, with keyword matching support.
+     *
+     * <p>This method matches transaction categories against budget categories
+     * using both exact display name matching and keyword mapping. For example,
+     * a transaction with category "health" will match the "Health & Insurance"
+     * budget category.
+     *
+     * <p>Fixes Issue #93: Multi-word budget categories showing $0.00 spent.
+     *
      * @param month The target month
-     * @param category The budget category
-     * @return The total spent amount
+     * @param category The budget category to check
+     * @return The total spent amount for transactions matching this category
      */
     public double getSpentForCategory(YearMonth month, BudgetCategory category) {
+        String displayName = category.getDisplayName();
+
         return transactionManager.getTransactions().stream()
                 .filter(t -> YearMonth.from(t.getDate()).equals(month))
                 .filter(t -> "debit".equalsIgnoreCase(t.getType()))
-                .filter(t -> category.getDisplayName().equalsIgnoreCase(t.getCategory()))
+                .filter(t -> {
+                    String tCategory = t.getCategory();
+                    if (tCategory == null) return false;
+
+                    // Direct match with display name
+                    if (displayName.equalsIgnoreCase(tCategory)) {
+                        return true;
+                    }
+
+                    // Check keyword mappings (Issue #93 fix)
+                    BudgetCategory mappedCategory = CATEGORY_KEYWORDS.get(tCategory.toLowerCase());
+                    return mappedCategory != null && mappedCategory == category;
+                })
                 .mapToDouble(Transaction::getAmount)
                 .sum();
+    }
+
+    /**
+     * Checks if a transaction category matches a budget category.
+     *
+     * @param transactionCategory The transaction's category (may be null)
+     * @param budgetCategory The budget category to match against
+     * @param displayName The display name of the budget category
+     * @return true if the transaction category matches the budget category
+     */
+    private boolean matchesCategory(String transactionCategory, BudgetCategory budgetCategory, String displayName) {
+        if (transactionCategory == null) return false;
+
+        // Direct match with display name
+        if (displayName.equalsIgnoreCase(transactionCategory)) {
+            return true;
+        }
+
+        // Check keyword mappings
+        BudgetCategory mappedCategory = CATEGORY_KEYWORDS.get(transactionCategory.toLowerCase());
+        return mappedCategory != null && mappedCategory == budgetCategory;
     }
 
     // Add this method to update budgets when a transaction is added
@@ -173,32 +259,49 @@ public class BudgetManager {
         if (transaction.getType().equalsIgnoreCase("credit")) {
             updateTotalIncome(month);
         } else if (transaction.getType().equalsIgnoreCase("debit")) {
-            // Re-check thresholds after deletion (spending decreased)
-            // This might need to reset notifications if spending falls below threshold
+            // Reset notifications for this month to allow re-firing (Issue #92 fix)
+            resetNotificationsForMonth(month);
             checkBudgetThresholds(month);
         }
-        // For debits, the spent amount will automatically update on next view
     }
 
     public void onTransactionUpdated(Transaction oldTransaction, Transaction newTransaction) {
         YearMonth oldMonth = YearMonth.from(oldTransaction.getDate());
         YearMonth newMonth = YearMonth.from(newTransaction.getDate());
 
-        // If month changed, update both months
+        // Reset notifications for affected months to allow re-firing (Issue #92 fix)
+        resetNotificationsForMonth(oldMonth);
+        if (!oldMonth.equals(newMonth)) {
+            resetNotificationsForMonth(newMonth);
+        }
+
         if (!oldMonth.equals(newMonth)) {
             updateTotalIncome(oldMonth);
             updateTotalIncome(newMonth);
         } else if (oldTransaction.getType().equalsIgnoreCase("credit") !=
                 newTransaction.getType().equalsIgnoreCase("credit")) {
-            // Type changed between credit/debit
             updateTotalIncome(oldMonth);
         }
 
-        // Check thresholds for the affected month(s)
         checkBudgetThresholds(oldMonth);
         if (!oldMonth.equals(newMonth)) {
             checkBudgetThresholds(newMonth);
         }
+    }
+
+    /**
+     * Resets all notification records for a specific month.
+     *
+     * <p>This method is called when transactions are deleted or updated,
+     * allowing thresholds to be re-triggered if spending crosses them again.
+     *
+     * <p>Fixes Issue #92: Budget threshold warning does not re-fire.
+     *
+     * @param month The month to reset notifications for
+     */
+    private void resetNotificationsForMonth(YearMonth month) {
+        String prefix = month.toString() + "_";
+        notifiedThresholds.keySet().removeIf(key -> key.startsWith(prefix));
     }
 
     /**
@@ -328,13 +431,19 @@ public class BudgetManager {
 
     /**
      * Checks all budgets for a given month and sends notifications if thresholds are crossed.
-     * Call this method after transactions are added, deleted, or modified.
      *
-     * @param month The month to check
+     * <p>This method checks spending against budget thresholds (80%, 90%, 100%)
+     * and sends notifications when thresholds are crossed. It also handles
+     * resetting notifications when spending drops below a threshold.
+     *
+     * <p>Fixes Issue #92: Budget threshold warning does not re-fire after a
+     * transaction is deleted and re-added.
+     *
+     * @param month The month to check budgets for
      */
     public void checkBudgetThresholds(YearMonth month) {
         if (ui == null) {
-            return; //No UI to display notifications
+            return;
         }
 
         MonthlyBudget budget = budgets.get(month);
@@ -351,31 +460,56 @@ public class BudgetManager {
                 continue;
             }
 
-            // Calculate percentage spent
             double percentage = (spent / allocated) * 100;
-
-            // Create unique key for this month and category
             String key = month.toString() + "_" + category.getCode();
             Set<Integer> notified = notifiedThresholds.getOrDefault(key, new HashSet<>());
 
-            // Check each threshold
-            if (percentage >= 80 && !notified.contains(80)) {
-                sendNotification(category, month, percentage, spent, allocated);
-                notified.add(80);
+            // Find the highest threshold crossed (80, 90, or 100)
+            int highestThresholdCrossed = -1;
+            for (int threshold : new int[]{100, 90, 80}) {  // Check from highest to lowest
+                if (percentage >= threshold) {
+                    highestThresholdCrossed = threshold;
+                    break;  // Found the highest one
+                }
             }
 
-            if (percentage >= 90 && !notified.contains(90)) {
-                sendNotification(category, month, percentage, spent, allocated);
-                notified.add(90);
+            if (highestThresholdCrossed != -1) {
+                boolean wasNotified = notified.contains(highestThresholdCrossed);
+
+                if (!wasNotified) {
+                    // Only send ONE notification for the highest threshold crossed
+                    sendNotification(category, month, percentage, spent, allocated);
+                    notified.add(highestThresholdCrossed);
+                }
+
+                // Also mark lower thresholds as notified to prevent future notifications
+                // when they would have been triggered by incremental spending
+                for (int threshold : new int[]{80, 90, 100}) {
+                    if (threshold <= highestThresholdCrossed && !notified.contains(threshold)) {
+                        notified.add(threshold);
+                    }
+                }
+            } else {
+                // Below all thresholds - check if we need to reset any notifications
+                boolean hadAnyNotification = false;
+                for (int threshold : new int[]{80, 90, 100}) {
+                    if (notified.contains(threshold)) {
+                        hadAnyNotification = true;
+                        break;
+                    }
+                }
+
+                if (hadAnyNotification) {
+                    // Spending dropped below all thresholds - clear all notifications for this category
+                    notified.clear();
+                }
             }
 
-            if (percentage >= 100 && !notified.contains(100)) {
-                sendNotification(category, month, percentage, spent, allocated);
-                notified.add(100);
+            if (notified.isEmpty()) {
+                notifiedThresholds.remove(key);
+            } else {
+                notifiedThresholds.put(key, notified);
             }
-
-            // Store back the updated notified set
-            notifiedThresholds.put(key, notified);
         }
     }
 

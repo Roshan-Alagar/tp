@@ -84,8 +84,6 @@ public class TransactionManager {
         // Notify budget manager about the new transaction
         if (budgetManager != null) {
             budgetManager.onTransactionAdded(t);
-            // Check threshold after adding
-            budgetManager.checkBudgetThresholds(YearMonth.from(t.getDate()));
         }
         autoSaveManager.save(transactions);
     }
@@ -131,8 +129,6 @@ public class TransactionManager {
             // Notify budget manager about the deleted transaction
             if (budgetManager != null) {
                 budgetManager.onTransactionDeleted(toDelete);
-                // Re-check thresholds after deletion
-                budgetManager.checkBudgetThresholds(YearMonth.from(toDelete.getDate()));
             }
             autoSaveManager.save(transactions);
             return true;
@@ -160,8 +156,6 @@ public class TransactionManager {
             // Notify budget manager about the updated transaction
             if (budgetManager != null) {
                 budgetManager.onTransactionUpdated(old, updated);
-                // Check thresholds for the month of the updated transaction
-                budgetManager.checkBudgetThresholds(YearMonth.from(updated.getDate()));
             }
             autoSaveManager.save(transactions);
             return true;

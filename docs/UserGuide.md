@@ -71,10 +71,14 @@ Once the welcome banner appears, you are ready to enter commands. Try these to g
 
 ```
 # Record your monthly salary
-add credit 3000.00 2026-03-01 salary "March salary"
-
+add credit 3000.00 2026-03-01 salary "March salary"             # Single-word category
+-----OR-----
+add credit 3000.00 2026-03-01 "Work salary" "March salary"      # Multi-word category
+"
 # Record a meal expense
-add debit 15.50 2026-03-05 food "Chicken rice"
+add debit 15.50 2026-03-05 food "Chicken rice"                  # Single-word category
+-----OR-----
+add debit 15.50 2026-03-05 "Nice food" "Chicken rice"           # Multi-word category
 
 # View all transactions
 list
@@ -124,13 +128,13 @@ add <type> <amount> <date> [category] [description]
 
 **Parameters:**
 
-| Position | Parameter | Required | Accepted Values |
-|---|---|---|---|
-| 1 | `type` | ✅ Yes | `credit` or `debit` |
-| 2 | `amount` | ✅ Yes | Positive number, up to 2 decimal places (e.g. `15.50`, `3000`) |
-| 3 | `date` | ✅ Yes | `YYYY-MM-DD` format |
-| 4 | `category` | ❌ No | Single word (e.g. `food`, `salary`, `transport`) |
-| 5 | `description` | ❌ No | Free text; use quotes for multiple words (e.g. `"Chicken rice"`) |
+| Position | Parameter | Required | Accepted Values                                                                                                               |
+|---|---|---|-------------------------------------------------------------------------------------------------------------------------------|
+| 1 | `type` | ✅ Yes | `credit` or `debit`                                                                                                           |
+| 2 | `amount` | ✅ Yes | Positive number, up to 2 decimal places (e.g. `15.50`, `3000`)                                                                |
+| 3 | `date` | ✅ Yes | `YYYY-MM-DD` format                                                                                                           |
+| 4 | `category` | ❌ No | Single Word (e.g. `food`, `salary`, `transport`)<br/>Free text; use quotes (e.g. `"Nice food"`, `"Work salary"`, `"Bus transport"`) |
+| 5 | `description` | ❌ No | Free text; use quotes for multiple words (e.g. `"Chicken rice"`)                                                              |
 
 **Examples:**
 ```
@@ -139,6 +143,7 @@ add debit 15.50 2026-03-05 food "Chicken rice"
 add debit 5.00 2026-03-06
 add credit 500 2026-03-10 freelance
 ```
+>**Note:** Using quotes " " on single-word categories is accepted also!
 
 **Expected output:**
 ```
@@ -357,20 +362,10 @@ budget yearly [YYYY]
 ```
 budget set 2026-03 1 500        # Set a $500 food budget for March 2026
 budget view 2026-03             # View all March 2026 budgets
+budet view                      # View all monthly budgets across valid years
 budget edit 2026-03 1 600       # Increase the March food budget to $600
 budget delete 2026-03 1         # Remove the March food budget
 budget yearly 2026              # View all budgets across 2026
-```
-
-**Expected output for `budget view`:**
-```
-=== BUDGET SUMMARY FOR 2026-03 ===
-Category                  |     Budget |      Spent |  Remaining | Progress
----------------------------+------------+------------+------------+----------------------
-[1] Food                  | $  500.00 | $    0.00 | $  500.00 | ░░░░░░░░░░░░░░░░░░░░   0%
----------------------------+------------+------------+------------+----------------------
-Disposable Income         | $ 3500.00 | $    0.00 | $ 3500.00 | ░░░░░░░░░░░░░░░░░░░░   0%
-TOTAL                     | $ 4000.00 | $    0.00 | $ 4000.00 | ░░░░░░░░░░░░░░░░░░░░   0%
 ```
 
 > **Note:** *Disposable Income* is your total recorded credits minus all budget allocations for that month. A negative value means your allocated budgets exceed your recorded income.
@@ -604,14 +599,14 @@ All date inputs must use `YYYY-MM-DD` format.
 | Decimal places | Up to 2 (e.g. `15.50`, `3000`, `0.99`) |
 | No currency symbol | Do not include `$` or any currency prefix |
 
-| Input | Valid? |
-|---|---|
-| `15.50` | ✅ |
-| `3000` | ✅ |
-| `0.99` | ✅ |
-| `$15.50` | ❌ (no currency symbol) |
-| `-10` | ❌ (must be positive) |
-| `15.999` | ❌ (max 2 decimal places) |
+| Input             | Valid?                                                  |
+|-------------------|---------------------------------------------------------|
+| `15.50`           | ✅                                                       |
+| `3000`            | ✅                                                       |
+| `0.99`            | ✅                                                       |
+| `15.978`/`15.974` | ✅ (rounds to nearest 2 decimal places, `15.98`/`15.97`) |
+| `$15.50`          | ❌ (no currency symbol)                                  |
+| `-10`             | ❌ (must be positive)                                    |
 
 ---
 

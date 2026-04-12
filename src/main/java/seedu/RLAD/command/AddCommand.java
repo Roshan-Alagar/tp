@@ -1,3 +1,4 @@
+// AddCommand.java - Fixed
 package seedu.RLAD.command;
 
 import seedu.RLAD.TransactionManager;
@@ -11,216 +12,175 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Command to add a new transaction to the ledger.
- *
- * <p>This command uses position-based arguments for intuitive typing:
- * <pre>
- * add credit 3000 2026-03-01 salary "March salary"
- * add debit 15.50 2026-03-05 food "Chicken rice"
- * </pre>
- *
- * <p>The argument order is: type, amount, date, [category], [description]
- *
- * @version 2.0
- */
 public class AddCommand extends Command {
 
-    /** Formatter for strict date parsing in YYYY-MM-DD format */
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
-    /** Maximum allowed transaction amount to prevent overflow */
     private static final double MAX_AMOUNT = 10_000_000.00;
 
-    /**
-     * Constructs an AddCommand with raw user input.
-     *
-     * @param rawArgs The raw argument string (everything after "add")
-     */
     public AddCommand(String rawArgs) {
         super(rawArgs);
     }
 
-    /**
-     * Executes the add command by parsing arguments and creating a transaction.
-     *
-     * <p>The parsing strategy:
-     * <ol>
-     *   <li>Split input by spaces</li>
-     *   <li>Token 0 = type (credit/debit)</li>
-     *   <li>Token 1 = amount (positive number)</li>
-     *   <li>Token 2 = date (YYYY-MM-DD)</li>
-     *   <li>Remaining tokens = category (optional) + description (optional, may use quotes)</li>
-     * </ol>
-     *
-     * @param transactions The transaction manager to add to
-     * @param ui The UI component for displaying results
-     * @throws RLADException If arguments are invalid or missing
-     */
     @Override
     public void execute(TransactionManager transactions, Ui ui) throws RLADException {
-        // Validate input exists
         if (!hasValidArgs()) {
             throw new RLADException(getUsageHelp());
         }
 
-        // Parse position-based arguments
-        String[] parts = rawArgs.trim().split("\\s+");
+        // Check for unclosed quotes first (Issue #98)
+        if (hasUnclosedQuotes(rawArgs)) {
+            throw new RLADException("Unclosed quote in command. Missing closing quote (\").\n" +
+                    "Use quotes for multi-word descriptions or categories.\n" +
+                    "Example: add debit 15.50 2026-04-12 food \"Lunch at hawker\"\n" +
+                    "Type 'help add' for usage.");
+        }
 
-        // Validate minimum required fields (type, amount, date)
-        if (parts.length < 3) {
+        // Parse with quote support for both category and description
+        List<String> parts = parseWithQuotes(rawArgs.trim());
+
+        if (parts.size() < 3) {
             throw new RLADException(getUsageHelp());
         }
 
-        // ========== Parse required fields (positions 0, 1, 2) ==========
-        String type = parseAndValidateType(parts[0]);
-        double amount = parseAndValidateAmount(parts[1]);
-        LocalDate date = parseAndValidateDate(parts[2]);
+        String type = parseAndValidateType(parts.get(0));
+        double amount = parseAndValidateAmount(parts.get(1));
+        LocalDate date = parseAndValidateDate(parts.get(2));
 
-        // ========== Parse optional fields (positions 3+) ==========
-        ParsedOptionalFields optionalFields = parseOptionalFields(parts);
-        String category = optionalFields.category;
-        String description = optionalFields.description;
+        String category = null;
+        String description = null;
 
-        // Create and add the transaction
+        if (parts.size() >= 4) {
+            category = parts.get(3);
+        }
+        if (parts.size() >= 5) {
+            description = parts.get(4);
+        }
+
         Transaction newTransaction = new Transaction(type, category, amount, date, description);
         transactions.addTransaction(newTransaction);
 
-        // Display success message to user
         displaySuccessMessage(ui, newTransaction, category, description);
     }
 
     /**
-     * Validates and parses the transaction type.
+     * Checks for unclosed quotes in the input string.
      *
-     * @param typeStr The type string from user input
-     * @return Validated type ("credit" or "debit")
-     * @throws RLADException If type is not "credit" or "debit"
+     * <p>This method counts the number of double quote characters in the input.
+     * If the count is odd, there is an unclosed quote. This validation prevents
+     * silent data loss when users forget to close a quoted string.
+     *
+     * @param input The input string to check
+     * @return true if there is an unclosed quote (odd number of quotes), false otherwise
      */
+    private boolean hasUnclosedQuotes(String input) {
+        int quoteCount = 0;
+        for (char c : input.toCharArray()) {
+            if (c == '"') {
+                quoteCount++;
+            }
+        }
+        return quoteCount % 2 != 0;
+    }
+
+    /**
+     * Parses a string with support for quoted values (preserves spaces within quotes).
+     *
+     * <p>This method tokenizes the input string while respecting double quotes.
+     * Text inside quotes is treated as a single token even if it contains spaces.
+     * Both categories and descriptions can be quoted for multi-word values.
+     *
+     * <p>Example: {@code debit 15.50 2026-04-12 "health insurance" "Monthly payment"}
+     * <br>Returns: {@code ["debit", "15.50", "2026-04-12", "health insurance", "Monthly payment"]}
+     *
+     * @param input The input string to parse
+     * @return A list of tokens with quotes removed from quoted sections
+     */
+    private List<String> parseWithQuotes(String input) {
+        List<String> tokens = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        boolean inQuotes = false;
+
+        for (int i = 0; i < input.length(); i++) {
+            char c = input.charAt(i);
+            if (c == '"') {
+                inQuotes = !inQuotes;
+                current.append(c);
+            } else if (c == ' ' && !inQuotes) {
+                if (current.length() > 0) {
+                    String token = current.toString();
+                    // Remove surrounding quotes if present
+                    if (token.startsWith("\"") && token.endsWith("\"")) {
+                        token = token.substring(1, token.length() - 1);
+                    }
+                    tokens.add(token);
+                    current = new StringBuilder();
+                }
+            } else {
+                current.append(c);
+            }
+        }
+        if (current.length() > 0) {
+            String token = current.toString();
+            if (token.startsWith("\"") && token.endsWith("\"")) {
+                token = token.substring(1, token.length() - 1);
+            }
+            tokens.add(token);
+        }
+        return tokens;
+    }
+
+    /**
+     * Removes surrounding double quotes from a string if present.
+     *
+     * @param token The token that may have surrounding quotes
+     * @return The token without surrounding quotes, or the original if no quotes
+     */
+    private String removeSurroundingQuotes(String token) {
+        if (token.startsWith("\"") && token.endsWith("\"")) {
+            return token.substring(1, token.length() - 1);
+        }
+        return token;
+    }
+
     private String parseAndValidateType(String typeStr) throws RLADException {
         String type = typeStr.toLowerCase();
         if (!type.equals("credit") && !type.equals("debit")) {
-            throw new RLADException("Invalid type: '" + typeStr + "'. Use 'credit' or 'debit'.");
+            throw new RLADException("Invalid type: '" + typeStr + "'. Use 'credit' or 'debit'.\nType 'help add' for usage.");
         }
         return type;
     }
 
-    /**
-     * Validates and parses the transaction amount.
-     *
-     * @param amountStr The amount string from user input
-     * @return Validated amount as double
-     * @throws RLADException If amount is not a positive number or exceeds limits
-     */
     private double parseAndValidateAmount(String amountStr) throws RLADException {
         double amount;
         try {
             amount = Double.parseDouble(amountStr);
         } catch (NumberFormatException e) {
-            throw new RLADException("Invalid amount: '" + amountStr + "'. Please enter a number (e.g., 15.50)");
+            throw new RLADException("Invalid amount: '" + amountStr + "'. Please enter a number (e.g., 15.50)\nType 'help add' for usage.");
         }
 
         if (Double.isNaN(amount) || Double.isInfinite(amount)) {
-            throw new RLADException("Invalid amount: '" + amountStr + "'. Please enter a number (e.g., 15.50)");
+            throw new RLADException("Invalid amount: '" + amountStr + "'. Please enter a number.\nType 'help add' for usage.");
         }
 
         if (amount <= 0) {
-            throw new RLADException("Amount must be greater than 0. Got: " + amount);
+            throw new RLADException("Amount must be greater than 0. Got: " + amount + "\nType 'help add' for usage.");
         }
 
         if (amount > MAX_AMOUNT) {
-            throw new RLADException(String.format("Amount cannot exceed $%,.2f. Got: $%,.2f", MAX_AMOUNT, amount));
+            throw new RLADException(String.format("Amount cannot exceed $%,.2f. Got: $%,.2f\nType 'help add' for usage.", MAX_AMOUNT, amount));
         }
 
-        // Round to 2 decimal places for consistency
         return Math.round(amount * 100.0) / 100.0;
     }
 
-    /**
-     * Validates and parses the transaction date.
-     *
-     * @param dateStr The date string from user input
-     * @return Validated date as LocalDate
-     * @throws RLADException If date format is invalid
-     */
     private LocalDate parseAndValidateDate(String dateStr) throws RLADException {
         try {
             return LocalDate.parse(dateStr, DATE_FORMATTER);
         } catch (DateTimeParseException e) {
-            throw new RLADException("Invalid date: '" + dateStr + "'. Use YYYY-MM-DD (e.g., 2026-03-01)");
+            throw new RLADException("Invalid date: '" + dateStr + "'. Use YYYY-MM-DD (e.g., 2026-03-01)\nType 'help add' for usage.");
         }
     }
 
-    /**
-     * Parses optional fields (category and description) from remaining arguments.
-     *
-     * <p>Handles quoted descriptions that may contain spaces.
-     *
-     * @param parts All argument parts from split input
-     * @return ParsedOptionalFields containing category and description (may be null)
-     */
-    private ParsedOptionalFields parseOptionalFields(String[] parts) {
-        if (parts.length < 4) {
-            return new ParsedOptionalFields(null, null);
-        }
-
-        List<String> remainingParts = new ArrayList<>();
-        boolean inQuotes = false;
-        StringBuilder quotedDesc = new StringBuilder();
-        String description = null;
-
-        // Process remaining arguments (from index 3 onward)
-        for (int i = 3; i < parts.length; i++) {
-            String part = parts[i];
-
-            // Handle quoted description start
-            if (part.startsWith("\"") && !inQuotes) {
-                inQuotes = true;
-                quotedDesc.append(part.substring(1));
-
-                // Handle case where quote ends in same token
-                if (part.endsWith("\"")) {
-                    description = quotedDesc.toString();
-                    description = description.substring(0, description.length() - 1);
-                    inQuotes = false;
-                    quotedDesc.setLength(0);
-                }
-            }
-            // Continue building quoted description
-            else if (inQuotes) {
-                quotedDesc.append(" ").append(part);
-                if (part.endsWith("\"")) {
-                    description = quotedDesc.toString();
-                    description = description.substring(0, description.length() - 1);
-                    inQuotes = false;
-                    quotedDesc.setLength(0);
-                }
-            }
-            // Normal word (not in quotes)
-            else {
-                remainingParts.add(part);
-            }
-        }
-
-        // First remaining part is category (if exists)
-        String category = remainingParts.isEmpty() ? null : remainingParts.get(0);
-
-        // If we have more parts and no quoted description, join them as description
-        if (description == null && remainingParts.size() > 1) {
-            description = String.join(" ", remainingParts.subList(1, remainingParts.size()));
-        }
-
-        return new ParsedOptionalFields(category, description);
-    }
-
-    /**
-     * Displays a formatted success message to the user.
-     *
-     * @param ui The UI component
-     * @param transaction The newly created transaction
-     * @param category The category (may be null)
-     * @param description The description (may be null)
-     */
     private void displaySuccessMessage(Ui ui, Transaction transaction, String category, String description) {
         String categoryDisplay = (category == null || category.trim().isEmpty()) ? "(none)" : category;
         String descriptionDisplay = (description == null || description.trim().isEmpty())
@@ -242,44 +202,23 @@ public class AddCommand extends Command {
         ui.showResult(successMessage);
     }
 
-    /**
-     * Generates usage help text for this command.
-     *
-     * @return Formatted usage instructions
-     */
     private String getUsageHelp() {
         return "Usage: add <type> <amount> <date> [category] [description]\n" +
                 "  type: credit or debit\n" +
                 "  amount: positive number (max $10,000,000)\n" +
                 "  date: YYYY-MM-DD\n" +
-                "  category: optional single word\n" +
-                "  description: optional (use quotes for spaces)\n\n" +
+                "  category: optional (use quotes for multi-word: \"health insurance\")\n" +
+                "  description: optional (use quotes for spaces: \"Lunch at hawker\")\n\n" +
                 "Examples:\n" +
                 "  add credit 3000 2026-03-01 salary \"March salary\"\n" +
                 "  add debit 15.50 2026-03-05 food \"Chicken rice\"\n" +
-                "  add debit 5.00 2026-03-06";
+                "  add debit 5.00 2026-03-06\n" +
+                "  add debit 10.50 2026-04-12 \"health insurance\" \"Monthly payment\"\n" +
+                "Type 'help add' for more details.";
     }
 
-    /**
-     * Validates that the command has sufficient arguments to execute.
-     *
-     * @return true if rawArgs is not null or empty
-     */
     @Override
     public boolean hasValidArgs() {
         return rawArgs != null && !rawArgs.trim().isEmpty();
-    }
-
-    /**
-     * Container for parsed optional fields.
-     */
-    private static class ParsedOptionalFields {
-        final String category;
-        final String description;
-
-        ParsedOptionalFields(String category, String description) {
-            this.category = category;
-            this.description = description;
-        }
     }
 }
