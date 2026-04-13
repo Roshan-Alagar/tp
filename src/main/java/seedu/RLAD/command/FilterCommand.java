@@ -349,6 +349,29 @@ public class FilterCommand extends Command {
         String[] parts = filterStr.split("\\s+");
         List<Transaction> result = new ArrayList<>(transactions);
 
+        // Pre-scan for min/max to validate range before filtering
+        boolean hasMin = false;
+        boolean hasMax = false;
+        double minVal = 0;
+        double maxVal = 0;
+
+        for (String part : parts) {
+            String token = part.toLowerCase();
+            if (token.startsWith("min:")) {
+                minVal = parseColonAmount(token.substring(4));
+                hasMin = true;
+            } else if (token.startsWith("max:")) {
+                maxVal = parseColonAmount(token.substring(4));
+                hasMax = true;
+            }
+        }
+
+        if (hasMin && hasMax && minVal > maxVal) {
+            throw new RLADException(String.format(
+                    "min:%.2f is greater than max:%.2f. "
+                            + "This range will never match any transactions.", minVal, maxVal));
+        }
+
         for (String part : parts) {
             String token = part.toLowerCase();
             if (!token.contains(":")) {
@@ -406,6 +429,7 @@ public class FilterCommand extends Command {
                         + "'. Available: type, cat, from, to, min, max");
             }
         }
+
         return result;
     }
 
