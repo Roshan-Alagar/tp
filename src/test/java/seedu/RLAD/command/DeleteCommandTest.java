@@ -149,6 +149,15 @@ public class DeleteCommandTest {
     }
 
     @Test
+    void execute_extraArguments_throwsException() {
+        TestUi ui = new TestUi();
+        RLADException ex = assertThrows(RLADException.class, () ->
+                        new DeleteCommand(sampleHashId + " extra").execute(tm, ui),
+                "Should throw when extra arguments are provided");
+        assertTrue(ex.getMessage().contains("Too many arguments"));
+    }
+
+    @Test
     void execute_emptyManager_throwsException() {
         TestUi ui = new TestUi();
         TransactionManager emptyTm = new TransactionManager();
