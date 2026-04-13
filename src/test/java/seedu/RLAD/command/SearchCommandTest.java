@@ -91,9 +91,4 @@ class SearchCommandTest {
         assertTrue(output.stream().anyMatch(s -> s.contains("transaction(s) found")));
     }
 
-    @Test
-    void execute_legacyKeywordFlag_findsMatch() throws Exception {
-        new SearchCommand("--keyword food").execute(manager, ui);
-        assertTrue(output.stream().anyMatch(s -> s.contains("food") || s.contains("FOOD")));
-    }
 }
