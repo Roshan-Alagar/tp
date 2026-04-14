@@ -401,6 +401,8 @@ a7b2c3,credit,salary,3000.00,2026-03-01,March salary
 d4e5f6,debit,food,15.50,2026-03-05,"Chicken rice at Clementi"
 ```
 
+> **Note:** Fields whose content starts with `=`, `+`, `-`, or `@` are automatically prefixed with a tab character in the exported file. This prevents spreadsheet applications such as Excel and Google Sheets from interpreting them as formulas. When the file is re-imported into RLAD the tab is stripped and the original value is restored exactly.
+
 > **Tip:** Use `export` before any destructive operation (`clear`, `import` without `merge`) to preserve a backup of your data.
 
 ---
@@ -652,11 +654,14 @@ RLAD automatically saves all transactions to a local file after every change. No
 | File              | Purpose                                        |
 |-------------------|------------------------------------------------|
 | `data/rlad.csv`        | Primary data store — transactions               |
+| `data/rlad.csv.sha256` | Integrity hash — verified on every startup      |
 | `data/rlad_budget.csv` | Budget definitions and allocations              |
 
 Your data is restored automatically the next time you launch RLAD from the same directory. Use `export` to create a portable CSV backup that can be opened in Excel or Google Sheets.
 
 > **Note:** If `data/rlad.csv` is deleted or corrupted, RLAD will start with an empty state. Keep regular CSV exports as offsite backups.
+
+> **Note:** On every startup RLAD verifies `data/rlad.csv` against its stored SHA-256 hash. If the file was modified outside of RLAD you will see a warning — your data still loads, but you should review your transactions for unexpected changes.
 
 ---
 
@@ -702,7 +707,13 @@ It is the portion of your recorded credits for that month that has not been allo
 
 **Q: Can I import a CSV I edited in Excel?**
 
-Yes. Ensure the first row contains the exact headers: `HashID,Type,Category,Amount,Date,Description`. Rows with missing or invalid fields are skipped with a warning.
+Yes. Ensure the first row contains the exact headers: `HashID,Type,Category,Amount,Date,Description`. Rows with missing or invalid fields are skipped with a warning. Note that if you edit the file outside RLAD, the integrity check will show a warning on the next startup — this is expected and does not prevent your data from loading.
+
+---
+
+**Q: Some of my descriptions show a leading space in Excel — is that a bug?**
+
+No. RLAD automatically prepends a tab character to any field that starts with `=`, `+`, `-`, or `@` to prevent spreadsheet applications from treating the cell as a formula. The tab appears as a leading space in Excel but is invisible to RLAD — re-importing the file restores the original value exactly.
 
 ---
 

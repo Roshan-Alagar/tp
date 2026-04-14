@@ -1050,6 +1050,7 @@ sequenceDiagram
 **CSV escaping rules:**
 - If a field contains a comma, double-quote, or newline, wrap it in double-quotes.
 - Any existing double-quote characters within the field are doubled (`"` becomes `""`).
+- If a field's first non-whitespace character is `=`, `+`, `-`, or `@`, a tab character is prepended to neutralise CSV formula injection. Spreadsheet applications such as Excel and Google Sheets treat any cell that starts with a tab as plain text rather than a formula. The tab is stripped by `String.stripLeading()` + `.trim()` during re-import so the original value is restored exactly. Leading whitespace in the raw user input is normalised at write time so a manually typed tab cannot bypass this check.
 
 #### 4.8.2 Import (`ImportCommand` + `CsvStorageManager.importFromCsv`)
 
@@ -1228,6 +1229,16 @@ Fields containing commas or quotes are wrapped in double quotes per RFC 4180. If
 **Why overwrite the entire file?** The transaction list is small enough that a full rewrite on every change is fast and avoids the complexity of incremental updates or journaling. This also guarantees the file is always in a consistent state.
 
 **Graceful degradation:** If the autosave file is missing or corrupted, RLAD starts with an empty transaction list. Malformed lines are skipped with a log warning rather than crashing.
+
+#### Integrity Verification
+
+After every save, `AutoSaveManager` computes the SHA-256 digest of `data/rlad.csv` and writes it as a 64-character hex string to `data/rlad.csv.sha256`. On the next startup, before any rows are parsed, the stored digest is compared against a freshly computed digest of the file:
+
+- **Match** — file is intact, load proceeds silently.
+- **Mismatch** — a warning is printed to stdout before the welcome screen. Data still loads; the user is advised to review their transactions.
+- **Hash file absent** — treated as a match (first run or pre-feature install). No warning is shown.
+
+This provides a lightweight tamper-detection signal without blocking the user. The hash file is not a cryptographic authentication mechanism — a user who edits the CSV can also update the hash file — but it catches accidental corruption and makes unintended external edits visible.
 
 ### 4.10 Help Command
 

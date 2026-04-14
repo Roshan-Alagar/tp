@@ -7,6 +7,10 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.logging.Logger;
@@ -24,18 +28,22 @@ public class AutoSaveManager {
     private static final String SAVE_DIR = "data";
     private static final String SAVE_FILE = "rlad.csv";
     private static final String LEGACY_SAVE_FILE = "rlad.txt";
+    private static final String HASH_FILE_NAME = "rlad.csv.sha256";
 
     private final String filePath;
     private final String legacyFilePath;
+    private final String hashFilePath;
 
     public AutoSaveManager() {
         this.filePath = SAVE_DIR + File.separator + SAVE_FILE;
         this.legacyFilePath = SAVE_DIR + File.separator + LEGACY_SAVE_FILE;
+        this.hashFilePath = SAVE_DIR + File.separator + HASH_FILE_NAME;
     }
 
     /**
-     * Saves all transactions to the autosave CSV file.
-     * Delegates to CsvStorageManager.exportToCsv() which handles all escaping.
+     * Saves all transactions to the autosave CSV file, then writes a SHA-256 hash of
+     * the file alongside it so that accidental or malicious edits can be detected on
+     * the next load.
      *
      * @param transactions the list of transactions to save
      */
@@ -46,9 +54,68 @@ public class AutoSaveManager {
                 dir.mkdirs();
             }
             CsvStorageManager.exportToCsv(transactions, filePath);
+            saveHash();
             logger.fine("Autosaved " + transactions.size() + " transactions.");
         } catch (RLADException e) {
             logger.warning("Autosave failed: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Computes the SHA-256 digest of a file and writes it as a hex string to the
+     * companion hash file ({@code rlad.csv.sha256}).
+     */
+    private void saveHash() {
+        try {
+            String hash = computeSha256(filePath);
+            Files.write(Paths.get(hashFilePath), hash.getBytes());
+            logger.fine("Integrity hash saved.");
+        } catch (IOException e) {
+            logger.warning("Could not save integrity hash: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Verifies the autosave file against the stored SHA-256 hash.
+     *
+     * @return {@code true} if the file matches the stored hash (or no hash file exists
+     *         yet), {@code false} if the file has been modified since the last save
+     */
+    private boolean verifyIntegrity() {
+        File hashFile = new File(hashFilePath);
+        if (!hashFile.exists()) {
+            return true; // No hash yet (e.g. first run or pre-feature install) — skip check
+        }
+        try {
+            String stored = new String(Files.readAllBytes(Paths.get(hashFilePath))).trim();
+            String computed = computeSha256(filePath);
+            return stored.equals(computed);
+        } catch (IOException e) {
+            logger.warning("Integrity verification failed: " + e.getMessage());
+            return true; // Cannot verify — proceed rather than block the user
+        }
+    }
+
+    /**
+     * Returns the SHA-256 hex digest of the file at {@code path}.
+     *
+     * @param path path of the file to hash
+     * @return lowercase hex SHA-256 string
+     * @throws IOException if the file cannot be read or SHA-256 is unavailable
+     */
+    private String computeSha256(String path) throws IOException {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] fileBytes = Files.readAllBytes(Paths.get(path));
+            byte[] hashBytes = digest.digest(fileBytes);
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hashBytes) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (NoSuchAlgorithmException e) {
+            // SHA-256 is mandated by the Java SE spec; this branch is unreachable in practice
+            throw new IOException("SHA-256 algorithm unavailable: " + e.getMessage());
         }
     }
 
@@ -75,6 +142,12 @@ public class AutoSaveManager {
         ArrayList<Transaction> loaded = new ArrayList<>();
         if (!csvFile.exists()) {
             return loaded;
+        }
+
+        if (!verifyIntegrity()) {
+            System.out.println("⚠️  WARNING: Autosave integrity check failed.");
+            System.out.println("   The data file may have been modified outside of RLAD.");
+            System.out.println("   Loading data anyway — please verify your transactions.");
         }
 
         try {

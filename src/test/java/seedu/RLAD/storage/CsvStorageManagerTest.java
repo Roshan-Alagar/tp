@@ -47,6 +47,43 @@ class CsvStorageManagerTest {
         assertEquals("", CsvStorageManager.escapeCsvField(null));
     }
 
+    @Test
+    void escapeCsvField_formulaEquals_prefixedWithTab() {
+        // Fields starting with '=' must be tab-prefixed to prevent spreadsheet injection
+        assertEquals("\t=CMD|'/C calc'!A0", CsvStorageManager.escapeCsvField("=CMD|'/C calc'!A0"));
+    }
+
+    @Test
+    void escapeCsvField_formulaPlus_prefixedWithTab() {
+        assertEquals("\t+1+1", CsvStorageManager.escapeCsvField("+1+1"));
+    }
+
+    @Test
+    void escapeCsvField_formulaMinus_prefixedWithTab() {
+        assertEquals("\t-1+1", CsvStorageManager.escapeCsvField("-1+1"));
+    }
+
+    @Test
+    void escapeCsvField_formulaAt_prefixedWithTab() {
+        assertEquals("\t@SUM(A1)", CsvStorageManager.escapeCsvField("@SUM(A1)"));
+    }
+
+    @Test
+    void exportAndImport_formulaDescription_roundTripPreservesOriginal() throws RLADException {
+        // A description that starts with '=' should survive an export-then-import cycle
+        // with the original value intact (the tab prefix is stripped on import).
+        ArrayList<Transaction> original = new ArrayList<>();
+        original.add(new Transaction("debit", "food", 9.90,
+                LocalDate.of(2026, 3, 1), "=evil formula"));
+
+        String filePath = tempDir.resolve("formula.csv").toString();
+        CsvStorageManager.exportToCsv(original, filePath);
+
+        CsvStorageManager.CsvImportResult result = CsvStorageManager.importFromCsv(filePath);
+        assertEquals(1, result.getSuccessCount());
+        assertEquals("=evil formula", result.getTransactions().get(0).getDescription());
+    }
+
     // === parseCsvLine tests ===
 
     @Test

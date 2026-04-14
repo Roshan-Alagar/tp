@@ -183,12 +183,24 @@ public class CsvStorageManager {
      * Wraps in double quotes if the value contains commas, quotes, or newlines.
      * Doubles any existing double-quote characters.
      *
+     * <p>Also prefixes a tab character before fields that start with {@code =}, {@code +},
+     * {@code -}, or {@code @} to neutralise CSV formula injection when the file is opened
+     * in spreadsheet applications such as Excel or Google Sheets.  The tab is transparent
+     * on re-import because every field is already trimmed by the CSV parser.
+     *
      * @param field the field value to escape
      * @return the escaped field value
      */
     public static String escapeCsvField(String field) {
         if (field == null) {
             return "";
+        }
+        // Neutralise formula injection: prefix a tab so spreadsheet apps treat the cell
+        // as plain text.  The tab is stripped automatically by .trim() during re-import.
+        // Use trimmed first char so a user-supplied leading tab doesn't bypass this check.
+        String trimmed = field.stripLeading();
+        if (!trimmed.isEmpty() && "=+-@".indexOf(trimmed.charAt(0)) >= 0) {
+            field = "\t" + trimmed;
         }
         if (field.contains(",") || field.contains("\"") || field.contains("\n")) {
             return "\"" + field.replace("\"", "\"\"") + "\"";

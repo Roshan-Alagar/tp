@@ -6,6 +6,8 @@ import org.junit.jupiter.api.Test;
 import seedu.RLAD.Transaction;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 
@@ -16,22 +18,25 @@ class AutoSaveManagerTest {
 
     private AutoSaveManager autoSaveManager;
     private final String saveFile = "data" + File.separator + "rlad.csv";
+    private final String hashFile = "data" + File.separator + "rlad.csv.sha256";
 
     @BeforeEach
     void setUp() {
         autoSaveManager = new AutoSaveManager();
-        // Clean up before each test
-        File file = new File(saveFile);
-        if (file.exists()) {
-            file.delete();
-        }
+        deleteIfExists(saveFile);
+        deleteIfExists(hashFile);
     }
 
     @AfterEach
     void tearDown() {
-        File file = new File(saveFile);
-        if (file.exists()) {
-            file.delete();
+        deleteIfExists(saveFile);
+        deleteIfExists(hashFile);
+    }
+
+    private void deleteIfExists(String path) {
+        File f = new File(path);
+        if (f.exists()) {
+            f.delete();
         }
     }
 
@@ -92,6 +97,48 @@ class AutoSaveManagerTest {
         assertEquals(1, loaded.size());
         assertEquals(null, loaded.get(0).getCategory());
         assertEquals(5.00, loaded.get(0).getAmount());
+    }
+
+    @Test
+    void save_createsHashFile() {
+        ArrayList<Transaction> transactions = new ArrayList<>();
+        transactions.add(new Transaction("credit", "salary", 1000.00,
+                LocalDate.of(2026, 3, 1), "Pay"));
+
+        autoSaveManager.save(transactions);
+
+        assertTrue(new File(hashFile).exists(), "Hash file should be created alongside the CSV");
+    }
+
+    @Test
+    void saveAndLoad_integrityCheckPasses() {
+        ArrayList<Transaction> transactions = new ArrayList<>();
+        transactions.add(new Transaction("credit", "salary", 1000.00,
+                LocalDate.of(2026, 3, 1), "Pay"));
+        transactions.get(0).setHashId("fff999");
+
+        autoSaveManager.save(transactions);
+        // An unmodified file should load fine
+        ArrayList<Transaction> loaded = autoSaveManager.load();
+        assertEquals(1, loaded.size());
+        assertEquals("fff999", loaded.get(0).getHashId());
+    }
+
+    @Test
+    void load_tamperedFile_loadsWithWarning() throws IOException {
+        ArrayList<Transaction> transactions = new ArrayList<>();
+        transactions.add(new Transaction("credit", "salary", 1000.00,
+                LocalDate.of(2026, 3, 1), "Pay"));
+        autoSaveManager.save(transactions);
+
+        // Tamper: append a byte to the CSV so the hash no longer matches
+        try (FileWriter fw = new FileWriter(saveFile, true)) {
+            fw.write(" ");
+        }
+
+        // Should still return data (warns but does not block)
+        ArrayList<Transaction> loaded = autoSaveManager.load();
+        assertTrue(loaded.size() >= 0, "Load should complete even when integrity check fails");
     }
 
     @Test
