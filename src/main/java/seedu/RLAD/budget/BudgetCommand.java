@@ -82,15 +82,12 @@ public class BudgetCommand extends Command {
         }
     }
 
-    // ========== FIXED handleSet METHOD (Issue #100) ==========
     /**
      * Handles the "budget set" subcommand.
      *
      * <p>Sets a new budget for a category in a specific month.
      * If a budget already exists for this category and month, the command
      * will be rejected and the user will be instructed to use 'budget edit'.
-     *
-     * <p>Fixes Issue #100: budget set silently overwrites existing budgets.
      *
      * @param parts The command parts (set, month, category_code, amount)
      * @param budgetManager The budget manager instance
@@ -106,12 +103,14 @@ public class BudgetCommand extends Command {
         YearMonth month = parseMonth(parts[1]);
         int categoryCode = parseCategoryCode(parts[2]);
         double amount = parseAmount(parts[3]);
-        BudgetCategory category = BudgetCategory.fromCode(categoryCode);
 
-        // Check if budget already exists (Issue #100 fix)
+        // Fix: Renamed variable to 'budgetCategory' to avoid collision with existing 'category' variable
+        BudgetCategory budgetCategory = BudgetCategory.fromCode(categoryCode);
+
+        // Check if budget already exists
         Optional<MonthlyBudget> existingBudget = budgetManager.getBudget(month);
-        if (existingBudget.isPresent() && existingBudget.get().hasBudget(category)) {
-            double existingAmount = existingBudget.get().getBudgetForCategory(category);
+        if (existingBudget.isPresent() && existingBudget.get().hasBudget(budgetCategory)) {
+            double existingAmount = existingBudget.get().getBudgetForCategory(budgetCategory);
             throw new RLADException(String.format(
                     "A budget already exists for %s - Category %d ($%.2f).\n" +
                             "Use 'budget edit' to modify an existing budget.\n" +
@@ -123,7 +122,6 @@ public class BudgetCommand extends Command {
         ui.showResult(String.format("✅ Budget set: %s - Category %d: $%,.2f", month, categoryCode, amount));
     }
 
-    // ========== handleView METHOD ==========
     private void handleView(String[] parts, BudgetManager budgetManager, Ui ui) throws RLADException {
         if (parts.length >= 2) {
             YearMonth month = parseMonth(parts[1]);
@@ -133,7 +131,6 @@ public class BudgetCommand extends Command {
         }
     }
 
-    // ========== handleEdit METHOD ==========
     private void handleEdit(String[] parts, BudgetManager budgetManager, Ui ui) throws RLADException {
         if (parts.length < 4) {
             throw new RLADException("Usage: budget edit <YYYY-MM> <category_code> <amount>\n" +
@@ -148,7 +145,6 @@ public class BudgetCommand extends Command {
         ui.showResult(String.format("✅ Budget updated: %s - Category %d: $%,.2f", month, categoryCode, amount));
     }
 
-    // ========== handleDelete METHOD ==========
     private void handleDelete(String[] parts, BudgetManager budgetManager, Ui ui) throws RLADException {
         if (parts.length < 3) {
             throw new RLADException("Usage: budget delete <YYYY-MM> <category_code>\nType 'help budget' for details.");
@@ -161,7 +157,6 @@ public class BudgetCommand extends Command {
         ui.showResult(String.format("✅ Budget deleted: %s - Category %d", month, categoryCode));
     }
 
-    // ========== handleYearly METHOD ==========
     private void handleYearly(String[] parts, BudgetManager budgetManager, Ui ui) throws RLADException {
         int year;
         if (parts.length >= 2) {
@@ -173,22 +168,8 @@ public class BudgetCommand extends Command {
         ui.showResult(summary);
     }
 
-    // ========== FIXED displayMonthlyBudget METHOD (Issue #111) ==========
     /**
      * Displays a monthly budget summary in a formatted table.
-     *
-     * <p>The summary includes:
-     * <ul>
-     *   <li>Each budgeted category with budget, spent, remaining, and progress</li>
-     *   <li>Disposable income (total income - allocated budgets)</li>
-     *   <li>TOTAL row showing sum of all budgeted categories (excluding disposable income)</li>
-     * </ul>
-     *
-     * <p>Fixes Issue #111: TOTAL row displays monthly income instead of total budget allocation.
-     *
-     * @param budgetManager The budget manager instance
-     * @param month The month to display
-     * @param ui The UI component for displaying results
      */
     private void displayMonthlyBudget(BudgetManager budgetManager, YearMonth month, Ui ui) {
         Optional<MonthlyBudget> budgetOpt = budgetManager.getBudget(month);
@@ -247,7 +228,7 @@ public class BudgetCommand extends Command {
                 disposableProgress.getPercentage()
         ));
 
-        // TOTAL row - Fix Issue #111: Only sum category budgets, NOT including Disposable Income
+        // TOTAL row
         double totalRemaining = totalAllocated - totalSpent;
         int totalPercentage = totalAllocated > 0 ? (int) ((totalSpent / totalAllocated) * 100) : 0;
         String totalBar = createProgressBar(totalPercentage, PROGRESS_BAR_LENGTH);
@@ -272,7 +253,6 @@ public class BudgetCommand extends Command {
         output.forEach(ui::showResult);
     }
 
-    // ========== displayAllBudgets METHOD ==========
     private void displayAllBudgets(BudgetManager budgetManager, Ui ui) {
         Set<YearMonth> months = budgetManager.getMonthsWithBudgets();
 
@@ -314,7 +294,6 @@ public class BudgetCommand extends Command {
                 firstRow = false;
             }
 
-            // Disposable income for this month
             BudgetManager.BudgetProgress disposableProgress = budgetManager.getDisposableIncomeProgress(month);
             output.add(String.format("%-10s | %-22s | $%,12.2f | $%,12.2f | $%,12.2f",
                     "",
@@ -329,7 +308,6 @@ public class BudgetCommand extends Command {
         output.forEach(ui::showResult);
     }
 
-    // ========== Helper Methods ==========
     private String createProgressBar(int percentage, int length) {
         int filled = (int) Math.round((percentage / 100.0) * length);
         StringBuilder bar = new StringBuilder();
