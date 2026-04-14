@@ -1166,7 +1166,7 @@ sequenceDiagram
 
 **Classes involved:** `AutoSaveManager`, `TransactionManager`, `RLAD`
 
-RLAD automatically persists transaction data to a local file (`data/rlad.txt`) after every mutation (add, delete, modify, clear, import). On startup, `RLAD.java` calls `TransactionManager.loadFromAutoSave()` to restore the previous session's data.
+RLAD automatically persists transaction data to a local file (`data/rlad.csv`) after every mutation (add, delete, modify, clear, import). On startup, `RLAD.java` calls `TransactionManager.loadFromAutoSave()` to restore the previous session's data.
 
 This is separate from the CSV export/import feature — autosave is internal and automatic, while export/import is user-initiated and designed for data portability.
 
@@ -1179,16 +1179,16 @@ sequenceDiagram
     participant RLAD
     participant TM as TransactionManager
     participant ASM as AutoSaveManager
-    participant File as data/rlad.txt
+    participant File as data/rlad.csv
 
     Note over RLAD, File: On startup
     RLAD->>TM: loadFromAutoSave()
     activate TM
     TM->>ASM: load()
     activate ASM
-    ASM->>File: read lines
-    File-->>ASM: pipe-delimited rows
-    ASM->>ASM: parseLine() for each row
+    ASM->>File: read CSV rows
+    File-->>ASM: CSV rows
+    ASM->>ASM: parseCsvLine() for each row
     ASM-->>TM: ArrayList of Transactions
     deactivate ASM
     TM->>TM: add each to transactions + transMap
@@ -1207,23 +1207,23 @@ sequenceDiagram
 
 #### File Format
 
-Each transaction is stored as one line, fields separated by `|`:
+Each transaction is stored as one CSV row, reusing the same format as the user-facing `export` command:
 
 ```
-hashId|type|category|amount|date|description
+HashID,Type,Category,Amount,Date,Description
 ```
 
 Example:
 ```
-a7b2c3|debit|food|15.5|2026-03-05|Chicken rice at Clementi
-d4e5f6|credit|salary|3000.0|2026-03-01|March salary
+a7b2c3,debit,food,15.50,2026-03-05,Chicken rice at Clementi
+d4e5f6,credit,salary,3000.00,2026-03-01,March salary
 ```
 
-The description field is last, so pipes within descriptions are preserved (the parser limits the split to 6 fields).
+Fields containing commas or quotes are wrapped in double quotes per RFC 4180. If `data/rlad.txt` (the legacy pipe-delimited format) is detected on startup, it is automatically migrated to `data/rlad.csv`.
 
 #### Design Considerations
 
-**Why not reuse CsvStorageManager?** CSV export/import is user-facing and designed for data portability (Excel, Sheets). Autosave is internal and optimised for speed and simplicity. Keeping them separate avoids coupling internal persistence with the user-facing export format.
+**Why reuse CsvStorageManager?** Autosave now delegates to `CsvStorageManager.exportToCsv()` for writing, which ensures the internal save file uses the same well-tested CSV format as user-facing exports. This eliminates a separate pipe-delimited parser and ensures the autosave file can be inspected or recovered using `import`.
 
 **Why overwrite the entire file?** The transaction list is small enough that a full rewrite on every change is fast and avoids the complexity of incremental updates or journaling. This also guarantees the file is always in a consistent state.
 

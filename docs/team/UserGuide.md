@@ -639,7 +639,7 @@ All date inputs must use `YYYY-MM-DD` format.
 | `15.50`           | ✅                                                       |
 | `3000`            | ✅                                                       |
 | `0.99`            | ✅                                                       |
-| `15.978`/`15.974` | ✅ (rounds to nearest 2 decimal places, `15.98`/`15.97`) |
+| `15.978`/`15.974` | ❌ (more than 2 decimal places — rejected)               |
 | `$15.50`          | ❌ (no currency symbol)                                  |
 | `-10`             | ❌ (must be positive)                                    |
 
@@ -651,12 +651,12 @@ RLAD automatically saves all transactions to a local file after every change. No
 
 | File              | Purpose                                        |
 |-------------------|------------------------------------------------|
-| `data/rlad.txt`   | Primary data store — transactions               |
-| `data/rlad_budget.csv` | Budget definitions and allocations          |
+| `data/rlad.csv`        | Primary data store — transactions               |
+| `data/rlad_budget.csv` | Budget definitions and allocations              |
 
 Your data is restored automatically the next time you launch RLAD from the same directory. Use `export` to create a portable CSV backup that can be opened in Excel or Google Sheets.
 
-> **Note:** If `data/rlad.txt` is deleted or corrupted, RLAD will start with an empty state. Keep regular CSV exports as offsite backups.
+> **Note:** If `data/rlad.csv` is deleted or corrupted, RLAD will start with an empty state. Keep regular CSV exports as offsite backups.
 
 ---
 
@@ -708,7 +708,7 @@ Yes. Ensure the first row contains the exact headers: `HashID,Type,Category,Amou
 
 **Q: Does RLAD save my data automatically?**
 
-Yes. RLAD writes to `data/rlad.txt` after every modifying command. Your data is fully restored the next time you launch from the same directory.
+Yes. RLAD writes to `data/rlad.csv` after every modifying command. Your data is fully restored the next time you launch from the same directory.
 
 ---
 
@@ -726,7 +726,7 @@ No. These are reserved keywords that represent transactions with no category. Th
 
 **Q: I launched RLAD from a different directory and my data is gone.**
 
-RLAD loads `data/rlad.txt` relative to the directory you launch it from. Always run `java -jar RLAD.jar` from the same working directory, or use `export` to maintain portable CSV backups.
+RLAD loads `data/rlad.csv` relative to the directory you launch it from. Always run `java -jar RLAD.jar` from the same working directory, or use `export` to maintain portable CSV backups.
 
 ---
 
