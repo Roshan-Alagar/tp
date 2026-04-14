@@ -1,79 +1,84 @@
+---
+layout: page
+title: Roshan Alagar - Project Portfolio Page
+---
+
 # Roshan Alagar - Project Portfolio Page
 
-## Overview
+## **Overview**
 
 **Project:** Record Losses And Debt (RLAD)
 
 RLAD is a minimalist **Command-Line Interface (CLI) finance tracker** built for power users who prefer the speed and
 efficiency of a terminal. Unlike bloated apps or complex spreadsheets, RLAD allows users to track income/expenses,
 set budget goals, and get instant summaries with simple, intuitive commands.
-My primary role was to implement the **transaction listing and filtering feature**, the **delete command**, and the
-**budget yearly summary**, which together form the core of RLAD's data retrieval and reporting capabilities.
+
+My primary role was to implement the **data retrieval and reporting engine**, including the transaction listing,
+filtering, and searching features. I also led the effort in **Data Integrity**, implementing guard clauses and
+input validation to ensure the reliability of the financial data stored by the application.
+
+## **Summary of Contributions**
+
+**Primary Role:** Developer for Data Retrieval, Reporting, and Input Validation.
+
+**Code contributed:** [RepoSense Link](https://nus-cs2113-ay2526-s2.github.io/tp-dashboard/?search=roshan-alagar&breakdown=true)
 
 ---
 
-## Summary of Contributions
-
-### Code Contributed
-[RepoSense Link](https://nus-cs2113-ay2526-s2.github.io/tp-dashboard/?search=roshan-alagar&breakdown=true)
-
----
-
-### Enhancements Implemented
+### **Enhancements Implemented**
 
 | Enhancement | Description | Key Technical Highlights |
 | :--- | :--- | :--- |
-| **ListCommand — Transaction Filtering and Sorting** | Implemented the full `list` command allowing users to view, filter, and sort their transactions using any combination of supported flags. | - Supports filtering by `--type`, `--category`, `--amount` (with operators `-gt`, `-gte`, `-eq`, `-lt`, `-leq`), `--date`, `--date-from`, `--date-to`.<br>- Supports one-off sorting via `--sort date` or `--sort amount`.<br>- Displays results in a formatted table with transaction count.<br>- Handles "Empty Wallet" state gracefully. |
-| **FilterCommand — Shared Filtering Logic** | Implemented `FilterCommand.parseFlags()` and `FilterCommand.buildPredicate()` as shared utilities used by both `ListCommand` and `SummarizeCommand`. | - Used Java `Predicate<Transaction>` chaining with `.and()` for clean, composable filtering.<br>- Validates flag values (e.g., `--type` must be `credit` or `debit`, dates must follow `yyyy-MM-dd`).<br>- Supports amount comparison operators for flexible numeric filtering. |
-| **DeleteCommand — Remove Transactions by ID** | Implemented the `delete` command to permanently remove a transaction from `TransactionManager` by its HashID. | - Validates `--hashID` flag presence and value before execution.<br>- Throws `RLADException` with clear messages for missing or non-existent IDs.<br>- Shows success message with full details of the deleted transaction. |
-| **Budget Yearly Summary — `budget yearly`** | Implemented the `budget yearly` subcommand providing a comprehensive 12-month financial overview. | - Displays a monthly table with budget, spent, remaining, percentage used, and ASCII progress bar.<br>- Includes per-category yearly breakdown with over/under status.<br>- Shows annual totals: total budget, total spent, net balance, and average monthly spending.<br>- Supports `--year YYYY` flag with validation (2000–2100), defaulting to current year. |
+| **Transaction Filtering & Listing** | Implemented the full `list` command allowing users to query their financial history. | - Supports multi-flag filtering: `--type`, `--cat`, `--min`, `--max`, `--from`, and `--to`.<br>- Integrated a secondary sorting layer (`--sort`) to prioritize specific views during listing. |
+| **Shared Filtering Logic (`FilterCommand`)** | Architected the predicate-building engine used by both `ListCommand` and `SummarizeCommand`. | - Used **Java Predicate chaining** (`.and()`) to create composable, highly efficient filter conditions.<br>- Implemented **Amount Comparison Operators** (e.g., `-gt`, `-leq`) for flexible numeric queries. |
+| **Data Integrity & Guard Clauses** | Implemented strict validation for user input across `Add`, `Modify`, and `Budget` commands. | - Created **Regex-based guard clauses** (`matches("-?\\d+(\\.\\d+)?")`) to prevent purely numerical categories (e.g., "1111"), improving UX and data clarity.<br>- Resolved scope collision bugs in the `BudgetCommand` to prevent compilation failures. |
+| **Budget Yearly Summary** | Built a 12-month financial reporting tool. | - Developed a tabular yearly view showing budget allocations vs. actual spending.<br>- Created a **dynamic ASCII progress bar** to visualize budget utilization across the fiscal year. |
+
+---
+<div style="page-break-after: always;"></div>
+
+### **Contributions to User Experience Design**
+
+I focused on ensuring that RLAD handles user errors gracefully through **defensive programming**:
+
+*   **Input Sanitization:** I implemented validation logic to ensure categories remain descriptive. This prevents users from accidentally creating confusing data like `add debit 10 2026-03-05 1234`, where a user might mistake the category "1234" for an amount or ID.
+*   **Search Alias System:** I implemented the `find` alias for the `search` command, accommodating different user mental models for data retrieval.
 
 ---
 
-### Contributions to the User Guide (UG)
+### **Contributions to the User Guide (UG)**
 
-I authored and maintained the documentation for the features I implemented:
+I authored and maintained the documentation for the reporting features:
 
-- **ListCommand (Section 4.4):** Documented all supported filter flags, amount operators, sorting options, and provided expected output examples.
-- **DeleteCommand (Section 4.2):** Documented the `--hashID` parameter, expected output, and added a warning about permanent deletion.
-- **Budget Yearly Summary (Section 4.7.5):** Wrote the full section for `budget yearly` including format, parameters, and expected output.
+- **ListCommand (Section 4.4):** Documented the complex filtering syntax, including date range keywords (`today`, `this-month`) and amount operators.
+- **Budget Yearly Summary (Section 4.7.5):** Wrote the technical documentation for interpreting the yearly summary, explaining the "Disposable Income" calculation.
+- **Validation Rules:** Added documentation regarding restricted category names to help users avoid input errors.
 
 ---
 
-### Contributions to the Developer Guide (DG)
+### **Contributions to the Developer Guide (DG)**
 
 | Section | Contribution |
 |---------|-------------|
-| Architecture Overview | Authored the MVC architecture diagram showing interactions between `Parser`, `Command`, `TransactionManager`, `BudgetManager`, and `Ui`. |
-| 4.3 ListCommand Implementation | Documented the complete execution sequence including flag parsing, predicate building, filtering, sorting, and display. |
-| 4.4 FilterCommand Implementation | Documented `parseFlags()` and `buildPredicate()` with code snippets showing predicate chaining logic. |
-| 4.5 DeleteCommand Implementation | Documented the validation and deletion flow including error handling cases. |
-| Manual Testing Instructions | Authored test cases for `add`, `list`, `delete`, `summarize`, and `budget yearly` commands. |
+| **3. Design** | Authored the **MVC Architecture Diagram** showing the flow from the `Parser` to the `Command` and `Model` layers. |
+| **4.3 List Implementation** | Documented the technical sequence of the filtering engine, including how the `FilterCommand` composes predicates dynamically. |
+| **4.4 Filter Logic** | Provided a deep dive into the **Predicate Chaining** pattern used to enable multi-flag filtering. |
+| **Manual Testing** | Authored the comprehensive testing suite for `list`, `search`, and `delete` commands, covering edge cases like empty result sets and invalid regex patterns. |
 
 ---
 
-### Testing
+### **Reviewing Contributions**
 
-| Test File | Tests | Coverage |
-|-----------|-------|----------|
-| `ListCommandTest` | 17 tests | Filtering by type, category, amount operators, date, date range; sorting by date and amount; combined filters; empty results; data immutability |
-| `DeleteCommandTest` | 14 tests | Valid deletion, missing flag, null args, non-existent ID, correct transaction deleted when multiple exist, `TransactionManager` not modified on failure |
+I served as a core reviewer for the team, ensuring that all code entering the `master` branch met our quality standards:
 
----
-
-### Contributions to Team-Based Tasks
-
-- **Defensive Programming:** Added Java `assert` statements to `ListCommand` and `FilterCommand` for runtime safety.
-- **Logging:** Added `java.util.logging.Logger` to `ListCommand` and `FilterCommand` for runtime diagnostics.
-- **Assertions in Build:** Added `jvmArgs '-ea'` to `build.gradle` to enable assertions in the team repo's CI pipeline.
-- **Milestone Setup:** Created the `v2.0` milestone with a deadline on GitHub for the team repo.
+*   **PR Approvals:** Actively reviewed and approved Pull Requests for the `SummarizeCommand`, `Export/Import` logic, and `BudgetManager` updates.
+*   **Bug Detection:** During a code review of the `BudgetCommand` PR, I identified a critical **variable redefinition bug** that would have caused a build failure. I provided the fix to resolve the compilation error and unblock the team.
+*   **Consistency Checks:** Verified that new features implemented by teammates adhered to the project's design patterns, such as ensuring all new commands correctly implemented the `hasValidArgs()` contract.
 
 ---
 
-### Reviewing Contributions
+### **Team-Based & Beyond-Project Contributions**
 
-I actively reviewed teammates' pull requests to ensure code quality and correctness:
-
-- Reviewed `SummarizeCommand` and identified a bug where null categories were not handled correctly, causing CI failures across all PRs.
-- Left constructive comments on `TransactionManager` enhancements regarding null guard for `addTransaction(null)`, redundant casts, and stale TODO comments.
-- Left comments on the architecture flowchart PR regarding tight coupling between `TransactionManager` and `BudgetManager`, and suggested improvements to the diagram.
+- **Project Infrastructure:** Added `java.util.logging.Logger` to core parser classes and enabled assertions (`-ea`) in the `build.gradle` to ensure the CI pipeline catches logic errors during PRs.
+- **Quality Assurance:** Maintained a test suite of over 30 unit tests, ensuring that new features (like position-based parsing) did not break existing filtering logic.
+- **Documentation Coordination:** Standardized the format for the Command Summary tables across both the UG and DG to ensure a consistent look and feel for the project documentation.
