@@ -324,8 +324,8 @@ search 15.50
 5. Run seedu.RLAD.RLAD
 
 ## Documentation
-* [User Guide](https://github.com/AY2526S2-CS2113-W13-4/tp/blob/master/docs/UserGuide.md) - Complete command reference with examples
-* [Developer Guide](https://github.com/AY2526S2-CS2113-W13-4/tp/blob/master/docs/DeveloperGuide.md) - Architecture, design decisions, and implementation details
+* [User Guide](https://github.com/AY2526S2-CS2113-W13-4/tp/blob/master/docs/team/UserGuide.md) - Complete command reference with examples
+* [Developer Guide](https://github.com/AY2526S2-CS2113-W13-4/tp/blob/master/docs/team/DeveloperGuide.md) - Architecture, design decisions, and implementation details
 * [About Us](https://github.com/AY2526S2-CS2113-W13-4/tp/blob/master/docs/AboutUs.md) Meet the team
 
 ## 🙏 Acknowledgements
