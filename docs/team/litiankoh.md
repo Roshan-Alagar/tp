@@ -28,7 +28,6 @@ Here is a summary of my key enhancements to RLAD:
 | **Progressive Budget Notifications** | Real-time alerts at 80%, 90%, and 100% of budget limits. | - `Map<String, Set<Integer>>` tracks notifications per `(month, category)` to prevent duplicates<br>- Positive messages for Savings; warnings for all other categories                                                                                                                                                        |
 
 ---
-<div style="page-break-after: always;"></div>
 
 ### **Contributions to User Experience Design**
 
