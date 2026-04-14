@@ -191,6 +191,14 @@ public class ModifyCommand extends Command {
 
         String type = updates.getOrDefault("type", existing.getType());
         String category = updates.getOrDefault("category", existing.getCategory());
+
+        // Guard clause to prevent modifying to a purely numerical category
+        if (category != null && category.trim().matches("-?\\d+(\\.\\d+)?")) {
+            throw new RLADException("Category cannot be purely numerical.\n" +
+                    "Mixed alphanumerics (e.g., '1st Meeting') are acceptable.\n" +
+                    "Type 'help modify' for usage.");
+        }
+
         String description = updates.getOrDefault("description", existing.getDescription());
         double amount = updates.containsKey("amount") ?
                 parseAmount(updates.get("amount")) : existing.getAmount();
@@ -271,3 +279,4 @@ public class ModifyCommand extends Command {
         return rawArgs != null && !rawArgs.trim().isEmpty();
     }
 }
+

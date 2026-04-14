@@ -54,6 +54,12 @@ public class AddCommand extends Command {
         }
         if (parts.size() >= 5) {
             description = parts.get(4);
+            // Guard clause to prevent purely numerical categories
+            if (category.trim().matches("-?\\d+(\\.\\d+)?")) {
+                throw new RLADException("Category cannot be purely numerical.\n" +
+                        "Mixed alphanumerics (e.g., '1st Meeting') are acceptable.\n" +
+                        "Type 'help add' for usage.");
+            }
         }
 
         Transaction newTransaction = new Transaction(type, category, amount, date, description);
@@ -205,3 +211,4 @@ public class AddCommand extends Command {
         return rawArgs != null && !rawArgs.trim().isEmpty();
     }
 }
+
