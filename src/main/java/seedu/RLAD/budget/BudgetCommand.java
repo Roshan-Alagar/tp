@@ -119,18 +119,6 @@ public class BudgetCommand extends Command {
                     month, categoryCode, existingAmount));
         }
 
-        // Check if budget already exists for this category
-        category = BudgetCategory.fromCode(categoryCode);
-        Optional<MonthlyBudget> existing = budgetManager.getBudget(month);
-        if (existing.isPresent() && existing.get().getBudgetForCategory(category) > 0) {
-            throw new RLADException(String.format(
-                    "Budget already exists for %s in %s ($%,.2f). "
-                            + "Use 'budget edit %s %d <amount>' to update it.",
-                    category.getDisplayName(), month,
-                    existing.get().getBudgetForCategory(category),
-                    month, categoryCode));
-        }
-
         budgetManager.setBudget(month, categoryCode, amount);
         ui.showResult(String.format("✅ Budget set: %s - Category %d: $%,.2f", month, categoryCode, amount));
     }
